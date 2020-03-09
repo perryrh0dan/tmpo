@@ -1,0 +1,11 @@
+[package]
+name = "init"
+version = "0.1.0"
+authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { git = "https://github.com/clap-rs/clap/" }
+fs_extra = { git = "https://github.com/webdesus/fs_extra/" }
