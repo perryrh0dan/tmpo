@@ -2,9 +2,8 @@ use std::fs;
 use std::fs::File;
 use std::path::Path;
 use std::io::{self, Read, Write, Error};
-use fs_extra::dir;
 
-const DefaultTemplate: &str = "/home/thomas/dev/init/templates/default";
+const DEFAULT_TEMPLATE: &str = "/home/thomas/dev/init/templates/default";
 
 pub fn init_project(name: String, path: String) -> Result<(), Error> {
   //Create directory  
@@ -15,11 +14,8 @@ pub fn init_project(name: String, path: String) -> Result<(), Error> {
     Err(error) => return Err(error),
   };
 
-  //Copy files
-  let options = dir::CopyOptions::new(); //Initialize default values for CopyOptions
-
   // Loop at default templates directory
-  for entry in fs::read_dir(DefaultTemplate).unwrap() {
+  for entry in fs::read_dir(DEFAULT_TEMPLATE).unwrap() {
 
     let entry = &entry.unwrap();
     let source_file_path = &entry.path().to_string_lossy().into_owned();
@@ -38,7 +34,7 @@ fn replace_placeholders(src: &str, target: &str, name: &str) -> Result<(), io::E
   let mut data = String::new();
 
   // Write to data string
-  src.read_to_string(&mut data);
+  src.read_to_string(&mut data)?;
 
   // close file
   drop(src);

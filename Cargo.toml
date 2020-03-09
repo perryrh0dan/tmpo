@@ -8,4 +8,3 @@ edition = "2018"
 
 [dependencies]
 clap = { git = "https://github.com/clap-rs/clap/" }
-fs_extra = { git = "https://github.com/webdesus/fs_extra/" }
