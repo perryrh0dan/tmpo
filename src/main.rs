@@ -11,9 +11,11 @@ struct Opts {
 
 fn main() {
     let opts: Opts = Opts::parse();
-    println!("{}", opts.name);
-    println!("{}", opts.path);
 
-    init::initProject(opts.name, opts.path)
+    let r = init::init_project(opts.name, opts.path);
+    match r {
+        Ok(v) => println!("Succesfull"),
+        Err(e) => println!("Error")
+    };
 }
 
