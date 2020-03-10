@@ -3,11 +3,13 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{self, Read, Write, Error};
 
+mod config;
+
 const DEFAULT_TEMPLATE: &str = "/home/thomas/dev/init/templates/default";
 
-pub fn init_project(name: String, path: String) -> Result<(), Error> {
+pub fn init_project(config: &config::Config, path: &str, name: &str) -> Result<(), Error> {
   //Create directory  
-  let full_path = path + "/" + &name;
+  let full_path = path.to_string() + "/" + name;
   let r = fs::create_dir(Path::new(&full_path));
   let r = match r {
     Ok(fc) => fc,
