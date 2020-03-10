@@ -3,11 +3,9 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{self, Read, Write, Error};
 
-mod config;
+use crate::config::Config; 
 
-const DEFAULT_TEMPLATE: &str = "/home/thomas/dev/init/templates/default";
-
-pub fn init_project(config: &config::Config, path: &str, name: &str) -> Result<(), Error> {
+pub fn init_project(config: &Config, path: &str, name: &str) -> Result<(), Error> {
   //Create directory  
   let full_path = path.to_string() + "/" + name;
   let r = fs::create_dir(Path::new(&full_path));
@@ -17,7 +15,8 @@ pub fn init_project(config: &config::Config, path: &str, name: &str) -> Result<(
   };
 
   // Loop at default templates directory
-  for entry in fs::read_dir(DEFAULT_TEMPLATE).unwrap() {
+  println!("{}", &config.template_dir);
+  for entry in fs::read_dir(&config.template_dir).unwrap() {
 
     let entry = &entry.unwrap();
     let source_file_path = &entry.path().to_string_lossy().into_owned();

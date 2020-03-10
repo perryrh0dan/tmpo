@@ -12,12 +12,12 @@ struct Options {
 
 fn main() {
     let opts: Options = Options::parse();
-    let config = config::init();
+    let config = config::init().unwrap();
 
     let r = init::init_project(&config, &opts.path, &opts.name);
     match r {
         Ok(_v) => println!("Succesfull"),
-        Err(_e) => println!("Error")
+        Err(_e) => println!("{}", _e)
     };
 }
 
