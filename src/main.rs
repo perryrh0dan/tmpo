@@ -1,4 +1,5 @@
 use clap::Clap;
+mod config;
 mod init;
 
 /// Search for a pattern in a file and display the lines that contain it
@@ -11,11 +12,12 @@ struct Opts {
 
 fn main() {
     let opts: Opts = Opts::parse();
+    let config = config.init();
 
     let r = init::init_project(opts.name, opts.path);
     match r {
-        Ok(v) => println!("Succesfull"),
-        Err(e) => println!("Error")
+        Ok(_v) => println!("Succesfull"),
+        Err(_e) => println!("Error")
     };
 }
 
