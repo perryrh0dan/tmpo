@@ -3,8 +3,9 @@
 // This example demonstrates clap's "builder pattern" method of creating arguments
 // which the most flexible, but also most verbose.
 extern crate clap;
-use clap::{Arg, App, AppSettings};
+use clap::{Arg, App};
 
+pub mod git;
 pub mod config;
 pub mod template;
 mod core;

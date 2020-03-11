@@ -1,17 +1,19 @@
 use std::fs;
 use std::fs::File;
 use std::io::{Error, Read, Write};
-use serde::{Serialize, Deserialize};
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::git;
+
 extern crate dirs;
+extern crate serde;
 extern crate serde_json;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
     pub templates_dir: String,
-    pub email: String,
+    pub template_repo: String,
 }
 
 pub fn init() -> Result<Config, Error> {
@@ -25,9 +27,10 @@ pub fn init() -> Result<Config, Error> {
 
     ensure_init_dir(&dir)?;
     ensure_config_file(&dir)?;
-    ensure_template_dir(&dir)?;
+    let config = load_config(&dir)?;
 
-    load_config(&dir)
+    ensure_template_dir(&config)?;
+    Ok(config)
 }
 
 fn ensure_config_file(dir: &str) -> Result<(), Error> {
@@ -44,14 +47,16 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn ensure_template_dir(dir: &str) -> Result<(), Error> {
-    let dir = String::from(dir) + "/templates";
+fn ensure_template_dir(config: &Config) -> Result<(), Error> {
     // Create if dir not exists
-    let r = fs::create_dir_all(Path::new(&dir));
+    let r = fs::create_dir_all(Path::new(&config.templates_dir));
     match r {
         Ok(fc) => fc,
         Err(error) => return Err(error),
     }
+
+    // Initialize git repository
+    git::init(&config.template_repo, &config.templates_dir)?;
 
     Ok(())
 }
@@ -80,8 +85,8 @@ fn load_config(dir: &str) -> Result<Config, Error> {
 
 fn get_default_config() -> Config {
     let config = Config { 
-        templates_dir: String::from("/home/thomas/dev/init/templates/default"), 
-        email: String::from("test") 
+        templates_dir: String::from("/home/thomas/dev/init/templates/default"),
+        template_repo: String::from("https://github.com/perryrh0dan/templates")
     };
 
     return config;

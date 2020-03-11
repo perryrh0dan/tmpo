@@ -16,8 +16,8 @@
           "name": "(OSX) Launch",
           "type": "lldb",
           "request": "launch",
-          "program": "${workspaceRoot}/target/debug/init.exe",
-          "args": ["init", "default", "."],
+          "program": "${workspaceRoot}/target/debug/init",
+          "args": ["list"],
           "cwd": "${workspaceRoot}",
       }
   ]
