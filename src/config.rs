@@ -25,7 +25,9 @@ pub fn init() -> Result<Config, Error> {
 
     ensure_init_dir(&dir)?;
     ensure_config_file(&dir)?;
-    get(&dir)
+    ensure_template_dir(&dir)?;
+
+    load_config(&dir)
 }
 
 fn ensure_config_file(dir: &str) -> Result<(), Error> {
@@ -42,6 +44,18 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
     Ok(())
 }
 
+fn ensure_template_dir(dir: &str) -> Result<(), Error> {
+    let dir = String::from(dir) + "/templates";
+    // Create if dir not exists
+    let r = fs::create_dir_all(Path::new(&dir));
+    match r {
+        Ok(fc) => fc,
+        Err(error) => return Err(error),
+    }
+
+    Ok(())
+}
+
 fn ensure_init_dir(dir: &str) -> Result<(), Error> {
     let r = fs::create_dir_all(Path::new(dir));
     match r {
@@ -52,7 +66,7 @@ fn ensure_init_dir(dir: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn get(dir: &str) -> Result<Config, Error> {
+fn load_config(dir: &str) -> Result<Config, Error> {
   let dir = String::from(dir) + "/config.json";
     // Open file
   let mut src = File::open(Path::new(&dir))?;

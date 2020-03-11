@@ -3,7 +3,7 @@
 // This example demonstrates clap's "builder pattern" method of creating arguments
 // which the most flexible, but also most verbose.
 extern crate clap;
-use clap::{Arg, App};
+use clap::{Arg, App, AppSettings};
 
 pub mod config;
 pub mod template;
@@ -15,6 +15,7 @@ fn main() {
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Initialize new project")
     .subcommand(App::new("init")
+      .about("Initialize new project")
       .arg(Arg::with_name("name")
         .help("name of the project")
         .required(true)
@@ -28,7 +29,7 @@ fn main() {
         .required(true)
         .index(3)))
     .subcommand(App::new("list")
-      .about("list all available templates"))
+      .about("List all available templates"))
     .get_matches();
 
     let config = config::init().unwrap();
@@ -38,16 +39,21 @@ fn main() {
         let name = init_matches.value_of("name").unwrap();
         let template = init_matches.value_of("template").unwrap();
         let dir = init_matches.value_of("dir").unwrap();
-        let opts = core::InitOpts{
+        let opts = core::InitOpts {
           name: name.to_string(),
           template: template.to_string(),
           dir: dir.to_string()
         };
-        core::init(&config, opts);
-        println!("Initialize Project: {} at {}", init_matches.value_of("name").unwrap(), init_matches.value_of("dir").unwrap());
+        match core::init(&config, opts) {
+          Ok(fc) => fc,
+          Err(error) => println!("Error occured: {}", error)
+        };
       }
-      ("list", Some(list_matches)) => {
-        core::list(&config);
+      ("list", Some(_list_matches)) => {
+        match core::list(&config) {
+          Ok(fc) => fc,
+          Err(error) => println!("Error occured: {}", error)
+        };
       }
       ("", None) => println!("No subcommand was used"), // If no subcommand was usd it'll match the tuple ("", None)
       _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
