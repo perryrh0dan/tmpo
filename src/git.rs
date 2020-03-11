@@ -1,32 +1,39 @@
 use std::io;
-use git2::Repository;
-use git2::{Error};
 use std::io::{Write};
 use std::str;
 
-extern crate simple_error;
+extern crate git2;
+extern crate custom_error;
+use custom_error::custom_error;
 
-pub fn init(repository: &str, dir: &str) -> Result<(), io::Error> {
-    let repo = match Repository::init(dir) {
+// Note the use of braces rather than parentheses.
+custom_error!{pub GitError
+    InitError      = "Unable to initialize git",
+    AddRemoteError = "Unable to add remote",
+    UpdateError    = "Unable to update repository",
+}
+
+pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
+    let repo = match git2::Repository::init(dir) {
         Ok(repo) => repo,
-        Err(e) => panic!("failed to init: {}", e),
+        Err(e) => return Err(GitError::InitError),
     };
 
     match repo.remote_set_url("origin", repository) {
         Ok(()) => (),
-        Err(e) => panic!("failed to add remote: {}", e)
+        Err(e) => return Err(GitError::AddRemoteError)
     }
 
     match update(dir) {
         Ok(()) => (),
-        Err(e) => panic!("failed to update repository: {}", e),
+        Err(e) => return Err(GitError::UpdateError),
     };
 
     Ok(())
 }
 
-pub fn update(dir: &str) -> Result<(), Error> {
-    let repo = match Repository::open(dir) {
+pub fn update(dir: &str) -> Result<(), git2::Error> {
+    let repo = match git2::Repository::open(dir) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),
     };
@@ -99,7 +106,7 @@ fn do_fetch<'a>(
     Ok(repo.reference_to_annotated_commit(&fetch_head)?)
 }
 
-fn fast_forward(repo: &Repository, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<(), git2::Error> {
+fn fast_forward(repo: &git2::Repository, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<(), git2::Error> {
     let name = match lb.name() {
         Some(s) => s.to_string(),
         None => String::from_utf8_lossy(lb.name_bytes()).to_string(),
@@ -117,7 +124,7 @@ fn fast_forward(repo: &Repository, lb: &mut git2::Reference, rc: &git2::Annotate
 }
 
 fn normal_merge(
-    repo: &Repository,
+    repo: &git2::Repository,
     local: &git2::AnnotatedCommit,
     remote: &git2::AnnotatedCommit,
 ) -> Result<(), git2::Error> {
@@ -154,7 +161,7 @@ fn normal_merge(
 }
 
 fn do_merge<'a>(
-    repo: &'a Repository,
+    repo: &'a git2::Repository,
     remote_branch: &str,
     fetch_commit: git2::AnnotatedCommit<'a>,
 ) -> Result<(), git2::Error> {
