@@ -10,7 +10,7 @@ extern crate serde_json;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub template_dir: String,
+    pub templates_dir: String,
     pub email: String,
 }
 
@@ -34,8 +34,8 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
         return Ok(());
     }
 
-    let defaultconfig = Config{ template_dir: String::from("/home/thomas/dev/init/templates/default"), email: String::from("test") };
-    let new_data = serde_json::to_string(&defaultconfig).unwrap();
+    let default_config = get_default_config();
+    let new_data = serde_json::to_string(&default_config).unwrap();
     let mut dst = File::create(dir)?;
     dst.write(new_data.as_bytes())?;
 
@@ -44,7 +44,7 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
 
 fn ensure_init_dir(dir: &str) -> Result<(), Error> {
     let r = fs::create_dir_all(Path::new(dir));
-    let r = match r {
+    match r {
         Ok(fc) => fc,
         Err(error) => return Err(error),
     };
@@ -62,4 +62,13 @@ fn get(dir: &str) -> Result<Config, Error> {
   src.read_to_string(&mut data)?;
   let config: Config = serde_json::from_str(&data).unwrap();
   return Ok(config);
+}
+
+fn get_default_config() -> Config {
+    let config = Config { 
+        templates_dir: String::from("/home/thomas/dev/init/templates/default"), 
+        email: String::from("test") 
+    };
+
+    return config;
 }

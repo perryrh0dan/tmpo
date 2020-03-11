@@ -1,23 +1,55 @@
-use clap::Clap;
-pub mod config;
-mod init;
+// (Full example with detailed comments in examples/01a_quick_example.rs)
+//
+// This example demonstrates clap's "builder pattern" method of creating arguments
+// which the most flexible, but also most verbose.
+extern crate clap;
+use clap::{Arg, App};
 
-/// Search for a pattern in a file and display the lines that contain it
-#[derive(Clap)]
-#[clap(version = "0.1", author = "Thomas P.")]
-struct Options {
-    name: String,
-    path: String,
-}
+pub mod config;
+pub mod template;
+mod core;
 
 fn main() {
-    let opts: Options = Options::parse();
+  let matches = App::new("Init")
+    .version("0.1")
+    .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
+    .about("Initialize new project")
+    .subcommand(App::new("init")
+      .arg(Arg::with_name("name")
+        .help("name of the project")
+        .required(true)
+        .index(1))
+      .arg(Arg::with_name("template")
+        .help("template to use")
+        .required(true)
+        .index(2))
+      .arg(Arg::with_name("dir")
+        .help("Project directory")
+        .required(true)
+        .index(3)))
+    .subcommand(App::new("list")
+      .about("list all available templates"))
+    .get_matches();
+
     let config = config::init().unwrap();
 
-    let r = init::init_project(&config, &opts.path, &opts.name);
-    match r {
-        Ok(_v) => println!("Succesfull"),
-        Err(_e) => println!("{}", _e)
-    };
+    match matches.subcommand() {
+      ("init", Some(init_matches)) => {
+        let name = init_matches.value_of("name").unwrap();
+        let template = init_matches.value_of("template").unwrap();
+        let dir = init_matches.value_of("dir").unwrap();
+        let opts = core::InitOpts{
+          name: name.to_string(),
+          template: template.to_string(),
+          dir: dir.to_string()
+        };
+        core::init(&config, opts);
+        println!("Initialize Project: {} at {}", init_matches.value_of("name").unwrap(), init_matches.value_of("dir").unwrap());
+      }
+      ("list", Some(list_matches)) => {
+        core::list(&config);
+      }
+      ("", None) => println!("No subcommand was used"), // If no subcommand was usd it'll match the tuple ("", None)
+      _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
+    }
 }
-

@@ -6,7 +6,7 @@
           "type": "cppvsdbg",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/init.exe",
-          "args": ["test", "."],
+          "args": ["init", "default", "."],
           "stopAtEntry": false,
           "cwd": "${workspaceRoot}",
           "environment": [],
@@ -16,8 +16,8 @@
           "name": "(OSX) Launch",
           "type": "lldb",
           "request": "launch",
-          "program": "${workspaceRoot}/target/debug/init",
-          "args": ["test", "."],
+          "program": "${workspaceRoot}/target/debug/init.exe",
+          "args": ["init", "default", "."],
           "cwd": "${workspaceRoot}",
       }
   ]
