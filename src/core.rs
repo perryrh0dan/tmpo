@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::{Error};
 use std::path::{Path};
 
 use crate::config::Config;
@@ -14,14 +13,26 @@ pub struct InitOpts {
   pub repository: Option<String>,
 }
 
+extern crate custom_error;
+use custom_error::custom_error;
+
+custom_error!{pub CoreError
+    CreateProjectDir = "Unable to create project directory",
+    CopyTemplate     = "Unable to copy template",
+    InitializeRepo   = "Unable to initialize git",
+    LoadTemplates    = "Unable to load templates",
+}
+
 /// Initialize a new Project
-pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
+pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
   //Create directory the project directory 
   let dir = opts.dir + "/" + &opts.name;
-  let r = fs::create_dir(Path::new(&dir));
-  match r {
+  match fs::create_dir(Path::new(&dir)) {
     Ok(fc) => fc,
-    Err(error) => return Err(error),
+    Err(_error) => {
+      renderer::errors::create_directory(&dir);
+      return Err(CoreError::CreateProjectDir);
+    },
   };
 
   let copy_opts = template::CopyOpts {
@@ -31,12 +42,21 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
     repository: opts.repository.clone(),
   };
 
-  template::copy(config, copy_opts)?;
+  match template::copy(config, copy_opts){
+    Ok(()) => (),
+    Err(_error) => {
+      renderer::errors::copy_template();
+      return Err(CoreError::CopyTemplate);
+    }
+  };
 
   if !opts.repository.is_none() {
     match git::init(&dir, &opts.repository.unwrap()) {
       Ok(()) => (),
-      Err(_e) => renderer::error_init_repository(),
+      Err(_error) => {
+        renderer::errors::init_repository();
+        return Err(CoreError::InitializeRepo);
+      },
     }
   }
 
@@ -46,8 +66,11 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
 }
 
 /// List all available templates
-pub fn list(config: &Config) -> Result<(), Error> {
-  let templates = template::get_all_templates(config)?;
+pub fn list(config: &Config) -> Result<(), CoreError> {
+  let templates = match template::get_all_templates(config) {
+    Ok(templates) => templates,
+    Err(_error) => return Err(CoreError::LoadTemplates),
+  };
 
   renderer::list_templates(&templates);
 

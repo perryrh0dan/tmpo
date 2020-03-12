@@ -1,5 +1,3 @@
-use std::io::{Error};
-
 mod input;
 use crate::core;
 use crate::config::Config; 
@@ -7,7 +5,7 @@ use crate::config::Config;
 extern crate clap;
 use clap::{ArgMatches};
 
-pub fn init(config: &Config, args: &ArgMatches) -> std::result::Result<(), Error> {
+pub fn init(config: &Config, args: &ArgMatches) {
   let mut opts = core::InitOpts {
     name: String::from(""),
     template: String::from(""),
@@ -21,35 +19,49 @@ pub fn init(config: &Config, args: &ArgMatches) -> std::result::Result<(), Error
   
   // Get name
   if name.is_none() {
-    opts.name = input::get_value("name", true, None)?.unwrap();
+    opts.name = match input::get_value("name", true, None) {
+      Ok(name) => name.unwrap(),
+      Err(_error) => return,
+    };
   } else {
     opts.name = name.unwrap().to_string();
   }
 
   // Get template
   if template.is_none() {
-    opts.template = input::get_value("template", true, None)?.unwrap();
+    opts.template = match input::get_value("template", true, None) {
+      Ok(template) => template.unwrap(),
+      Err(_error) => return,
+    };
   } else {
     opts.template = template.unwrap().to_string();
   }
 
   // Get dir
   if dir.is_none() {
-    opts.dir = input::get_value("dir", true, None)?.unwrap();
+    opts.dir = match input::get_value("dir", true, None) {
+      Ok(dir) => dir.unwrap(),
+      Err(_error) => return,
+    };
   } else {
     opts.dir = dir.unwrap().to_string();
   }
 
   // Get repository
-  opts.repository = input::get_value("repository", false, None)?;
+  opts.repository = match input::get_value("repository", false, None) {
+    Ok(repository) => repository,
+    Err(_error) => return,
+  };
 
-  core::init(config, opts)?;
-
-  Ok(())
+  match core::init(config, opts){
+    Ok(()) => (),
+    Err(_error) => return,
+  };
 }
 
-pub fn list(config: &Config) -> std::result::Result<(), Error> {
-  core::list(config)?;
-
-  Ok(())
+pub fn list(config: &Config) {
+  match core::list(config) {
+    Ok(()) => (),
+    Err(_error) => return,
+  };
 }

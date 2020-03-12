@@ -1,5 +1,7 @@
 use colored::Colorize;
 
+pub mod errors;
+
 pub fn list_templates(templates: &Vec<String>) {
   for template in templates {
     println!("{}", template);
@@ -21,17 +23,7 @@ pub fn no_template_updates() {
   println!("{}", text);
 }
 
-pub fn error_init_repository() {
-  let text = format!("{}", "Error initializing git".red());
-  println!("{}", text);
-}
-
 pub fn success_update_templates() {
   let text = format!("{}", "Successful updated templates".green());
-  println!("{}", text);
-}
-
-pub fn error_update_templates() {
-  let text = format!("{}", "Error updating templates".red());
   println!("{}", text);
 }

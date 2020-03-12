@@ -46,16 +46,10 @@ fn main() {
 
     match matches.subcommand() {
       ("init", Some(init_matches)) => {
-        match cli::init(&config, init_matches) {
-          Ok(fc) => fc,
-          Err(error) => println!("Error occured: {}", error)
-        }
+        cli::init(&config, init_matches);
       }
       ("list", Some(_list_matches)) => {
-        match cli::list(&config) {
-          Ok(fc) => fc,
-          Err(error) => println!("Error occured: {}", error)
-        };
+        cli::list(&config);
       }
       ("", None) => println!("No subcommand was used"), // If no subcommand was usd it'll match the tuple ("", None)
       _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()

@@ -77,7 +77,7 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
 
     match git::update(&config.templates_dir) {
         Ok(()) => (),
-        Err(_e) => renderer::error_update_templates(),
+        Err(_e) => renderer::errors::update_templates(),
     }
 
     Ok(())
