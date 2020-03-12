@@ -141,6 +141,7 @@ fn do_merge<'a>(
                     .allow_conflicts(true)
                     .conflict_style_merge(true)
                     .force()))?;
+                renderer::success_update_templates()
             }
         };
     } else if analysis.0.is_normal() {

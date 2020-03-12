@@ -14,8 +14,9 @@ pub struct InitOpts {
   pub repository: Option<String>,
 }
 
+/// Initialize a new Project
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
-  //Create directory  
+  //Create directory the project directory 
   let dir = opts.dir + "/" + &opts.name;
   let r = fs::create_dir(Path::new(&dir));
   match r {
@@ -44,6 +45,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
   Ok(())
 }
 
+/// List all available templates
 pub fn list(config: &Config) -> Result<(), Error> {
   let templates = template::get_all_templates(config)?;
 

@@ -3,11 +3,23 @@ use std::io::{Error};
 use std::io::*;
 
 pub fn get_value(name: &str, required: bool, default: Option<&str>) -> std::result::Result<Option<String>, Error> {
+  let mut message;
+  
+  // check if required, add question mark for optional parameters
   if required {
-    print!("Enter {}: ", name);
+    message = format!("Enter {}: ", name);
   } else {
-    print!{"Enter {}?: ", name};
+    message = format!{"Enter {}?: ", name};
   }
+
+  // check if default values is provided
+  if !default.is_none() {
+    message = format!("message ({})", default.unwrap());
+  }
+
+  // finally print message
+  print!("{}", message);
+
   // directly print message
   io::stdout().flush()?;
 

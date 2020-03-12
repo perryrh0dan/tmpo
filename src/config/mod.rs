@@ -24,9 +24,9 @@ pub fn init() -> Result<Config, Error> {
     };
 
     let mut dir = dir.into_os_string().into_string().unwrap();
-    dir = dir + "/.init";
+    dir = dir + "/.charon";
 
-    ensure_init_dir(&dir)?;
+    ensure_root_dir(&dir)?;
     ensure_config_file(&dir)?;
     let config = load_config(&dir)?;
 
@@ -34,15 +34,25 @@ pub fn init() -> Result<Config, Error> {
     Ok(config)
 }
 
+fn ensure_root_dir(dir: &str) -> Result<(), Error> {
+    let r = fs::create_dir_all(Path::new(dir));
+    match r {
+        Ok(fc) => fc,
+        Err(error) => return Err(error),
+    };
+
+    Ok(())
+}
+
 fn ensure_config_file(dir: &str) -> Result<(), Error> {
-    let dir = String::from(dir) + "/config.json";
-    if Path::new(&dir).exists() {
+    let conf_path = String::from(dir) + "/config.json";
+    if Path::new(&conf_path).exists() {
         return Ok(());
     }
 
-    let default_config = get_default_config();
+    let default_config = get_default_config(dir);
     let new_data = serde_json::to_string(&default_config).unwrap();
-    let mut dst = File::create(dir)?;
+    let mut dst = File::create(conf_path)?;
     dst.write(new_data.as_bytes())?;
 
     Ok(())
@@ -67,18 +77,8 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
 
     match git::update(&config.templates_dir) {
         Ok(()) => (),
-        Err(error) => renderer::error_update_templates(),
+        Err(_e) => renderer::error_update_templates(),
     }
-
-    Ok(())
-}
-
-fn ensure_init_dir(dir: &str) -> Result<(), Error> {
-    let r = fs::create_dir_all(Path::new(dir));
-    match r {
-        Ok(fc) => fc,
-        Err(error) => return Err(error),
-    };
 
     Ok(())
 }
@@ -95,9 +95,11 @@ fn load_config(dir: &str) -> Result<Config, Error> {
   return Ok(config);
 }
 
-fn get_default_config() -> Config {
+fn get_default_config(dir: &str) -> Config {
+    let template_dir = format!("{}{}", dir, "/templates");
+
     let config = Config { 
-        templates_dir: String::from("/home/thomas/dev/init/templates/default"),
+        templates_dir: template_dir,
         templates_repo: String::from("https://github.com/perryrh0dan/templates")
     };
 

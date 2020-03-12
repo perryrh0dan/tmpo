@@ -6,12 +6,14 @@ pub mod core;
 mod cli;
 
 extern crate clap;
-use clap::{Arg, App};
+use clap::{Arg, App, crate_version};
 
 extern crate ctrlc;
 
 fn main() {
+  // catch ctrl + c
   match ctrlc::set_handler(move || {
+    println!();
     std::process::exit(130);
   }) {
     Ok(()) => (),
@@ -19,7 +21,7 @@ fn main() {
   };
 
   let matches = App::new("Init")
-    .version("0.1")
+    .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Initialize new project")
     .subcommand(App::new("init")
