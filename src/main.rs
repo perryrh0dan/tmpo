@@ -50,7 +50,7 @@ fn main() {
         }
       }
       ("list", Some(_list_matches)) => {
-        match core::list(&config) {
+        match cli::list(&config) {
           Ok(fc) => fc,
           Err(error) => println!("Error occured: {}", error)
         };

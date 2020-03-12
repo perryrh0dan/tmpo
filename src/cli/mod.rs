@@ -1,7 +1,6 @@
-use std::io;
 use std::io::{Error};
-use std::io::*;
 
+mod input;
 use crate::core;
 use crate::config::Config; 
 
@@ -22,51 +21,35 @@ pub fn init(config: &Config, args: &ArgMatches) -> std::result::Result<(), Error
   
   // Get name
   if name.is_none() {
-    opts.name = get_value("name", true, None)?.unwrap();
+    opts.name = input::get_value("name", true, None)?.unwrap();
   } else {
     opts.name = name.unwrap().to_string();
   }
 
   // Get template
   if template.is_none() {
-    opts.template = get_value("template", true, None)?.unwrap();
+    opts.template = input::get_value("template", true, None)?.unwrap();
   } else {
     opts.template = template.unwrap().to_string();
   }
 
   // Get dir
   if dir.is_none() {
-    opts.dir = get_value("dir", true, None)?.unwrap();
+    opts.dir = input::get_value("dir", true, None)?.unwrap();
   } else {
     opts.dir = dir.unwrap().to_string();
   }
 
   // Get repository
-  opts.repository = get_value("repository", false, None)?;
+  opts.repository = input::get_value("repository", false, None)?;
 
   core::init(config, opts)?;
 
   Ok(())
 }
 
-fn get_value(name: &str, required: bool, default: Option<&str>) -> std::result::Result<Option<String>, Error> {
-  if required {
-    print!("Enter {}: ", name);
-  } else {
-    print!{"Enter {}?: ", name};
-  }
-  // directly print message
-  io::stdout().flush()?;
+pub fn list(config: &Config) -> std::result::Result<(), Error> {
+  core::list(config)?;
 
-  let mut value = String::new();
-  while(true) {
-    io::stdin().read_line(&mut value).expect("error: unable to read user input");
-    if value == "" && !required {
-      return Ok(None);
-    } else if value != "" {
-      break;
-    }
-  }
-
-  Ok(Some(value))
+  Ok(())
 }

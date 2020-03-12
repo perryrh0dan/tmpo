@@ -16,7 +16,7 @@ pub struct TemplateMeta {
 #[derive(Clone, Debug)]
 pub struct CopyOpts {
   pub template: String,
-  pub target: String,
+  pub dir: String,
   pub name: String,
   pub repository: Option<String>,
 }
@@ -106,7 +106,7 @@ fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
       continue;
     }
 
-    let target_path = opts.target.to_string() + "/" + source_name;
+    let dir_path = opts.dir.to_string() + "/" + source_name;
 
     // Open file
     let mut src = File::open(Path::new(&source_path))?;
@@ -121,7 +121,7 @@ fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
     data = fill_template(&data, &opts)?;
 
     // create file
-    let mut dst = File::create(target_path)?;
+    let mut dst = File::create(dir_path)?;
     dst.write(data.as_bytes())?;
   }
 

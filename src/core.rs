@@ -2,7 +2,8 @@ use std::fs;
 use std::io::{Error};
 use std::path::{Path};
 
-use crate::config::Config; 
+use crate::config::Config;
+use crate::git; 
 use crate::template;
 use crate::renderer;
 
@@ -15,21 +16,28 @@ pub struct InitOpts {
 
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
   //Create directory  
-  let target = opts.dir + "/" + &opts.name;
-  let r = fs::create_dir(Path::new(&target));
+  let dir = opts.dir + "/" + &opts.name;
+  let r = fs::create_dir(Path::new(&dir));
   match r {
     Ok(fc) => fc,
     Err(error) => return Err(error),
   };
 
   let copy_opts = template::CopyOpts {
-    template: opts.template.to_string(),
-    target: target.to_string(),
-    name: opts.name.to_string(),
-    repository: opts.repository,
+    template: String::from(&opts.template),
+    dir: String::from(&dir),
+    name: String::from(&opts.name),
+    repository: opts.repository.clone(),
   };
 
   template::copy(config, copy_opts)?;
+
+  if !opts.repository.is_none() {
+    match git::init(&dir, &opts.repository.unwrap()) {
+      Ok(()) => (),
+      Err(_e) => renderer::error_init_repository(),
+    }
+  }
 
   renderer::success_create();
 

@@ -12,7 +12,17 @@ pub fn success_create() {
 }
 
 pub fn check_template_updates() {
-  let text = format!("{}", "Check for template updates".green());
+  let text = format!("{}", "Check for template updates");
+  println!("{}", text);
+}
+
+pub fn no_template_updates() {
+  let text = format!("{}", "No updates found".green());
+  println!("{}", text);
+}
+
+pub fn error_init_repository() {
+  let text = format!("{}", "Error initializing git".red());
   println!("{}", text);
 }
 

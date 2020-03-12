@@ -1,5 +1,3 @@
-use std::io;
-use std::io::{Write};
 use std::str;
 
 use crate::renderer;
@@ -11,10 +9,9 @@ use custom_error::custom_error;
 custom_error!{pub GitError
     InitError      = "Unable to initialize git",
     AddRemoteError = "Unable to add remote",
-    UpdateError    = "Unable to update repository",
 }
 
-pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
+pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
     // Initialize git repository
     let repo = match git2::Repository::init(dir) {
         Ok(repo) => repo,
@@ -26,12 +23,6 @@ pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
         Ok(()) => (),
         Err(_e) => return Err(GitError::AddRemoteError)
     }
-
-    // Update templates
-    match update(dir) {
-        Ok(()) => (),
-        Err(_e) => return Err(GitError::UpdateError),
-    };
 
     Ok(())
 }
@@ -157,6 +148,8 @@ fn do_merge<'a>(
         let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
         normal_merge(&repo, &head_commit, &fetch_commit)?;
         renderer::success_update_templates()
+    } else {
+        renderer::no_template_updates()
     }
     Ok(())
 }

@@ -57,14 +57,18 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
     }
 
     // Initialize git repository
-    match git::init(&config.templates_repo, &config.templates_dir) {
+    match git::init(&config.templates_dir, &config.templates_repo) {
         Ok(()) => (),
         Err(error) => match error {
             git::GitError::InitError => println!("Init Error"),
-            git::GitError::AddRemoteError => println!("Add Remote Error"),
-            git::GitError::UpdateError => renderer::error_update_templates()
+            git::GitError::AddRemoteError => println!("Add Remote Error")
         }
     };
+
+    match git::update(&config.templates_dir) {
+        Ok(()) => (),
+        Err(error) => renderer::error_update_templates(),
+    }
 
     Ok(())
 }
