@@ -5,6 +5,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::git;
+use crate::renderer;
 
 extern crate dirs;
 extern crate serde;
@@ -61,7 +62,7 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
         Err(error) => match error {
             git::GitError::InitError => println!("Init Error"),
             git::GitError::AddRemoteError => println!("Add Remote Error"),
-            git::GitError::UpdateError => println!("Update Error")
+            git::GitError::UpdateError => renderer::error_update_templates()
         }
     };
 

@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::{Error};
-use std::path::Path;
+use std::path::{Path};
 
 use crate::config::Config; 
 use crate::template;
@@ -10,6 +10,7 @@ pub struct InitOpts {
   pub name: String,
   pub template: String,
   pub dir: String,
+  pub repository: Option<String>,
 }
 
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
@@ -23,10 +24,14 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
 
   let copy_opts = template::CopyOpts {
     template: opts.template.to_string(),
+    target: target.to_string(),
     name: opts.name.to_string(),
-    target: target,
+    repository: opts.repository,
   };
+
   template::copy(config, copy_opts)?;
+
+  renderer::success_create();
 
   Ok(())
 }

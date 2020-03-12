@@ -16,8 +16,9 @@ pub struct TemplateMeta {
 #[derive(Clone, Debug)]
 pub struct CopyOpts {
   pub template: String,
-  pub name: String,
   pub target: String,
+  pub name: String,
+  pub repository: Option<String>,
 }
 
 pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
@@ -35,7 +36,6 @@ pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
     let mut opts = opts.clone();
     opts.template = template;
 
-    // copy_template(config, &opts)?;
     copy(&config, opts)?;
   }
 
@@ -65,6 +65,11 @@ pub fn get_all_templates(config: &Config) -> Result<Vec<String>, Error> {
     let entry = &entry.unwrap();
     let name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
 
+    if name == "meta.json" {
+      continue;
+    };
+
+    // check meta exclude
     let mut exclude = false;
     for item in items.iter() {
       if item == &name {
@@ -113,7 +118,7 @@ fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
     // close file
     drop(src);
     
-    data = fill_template(&data, &opts.name)?;
+    data = fill_template(&data, &opts)?;
 
     // create file
     let mut dst = File::create(target_path)?;
@@ -123,9 +128,13 @@ fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
   Ok(())
 }
 
-fn fill_template(data: &str, name: &str) -> Result<String, Error> {
+fn fill_template(tempalte: &str, opts: &CopyOpts) -> Result<String, Error> {
   // replace placeholder with actual value
-  let data = data.replace("{{name}}", name);
+  let mut data = tempalte.replace("{{name}}", &opts.name);
+
+  if !opts.repository.is_none() {
+    data = data.replace("{{repository}}", opts.repository.as_ref().unwrap());
+  }
 
   Ok(data)
 }

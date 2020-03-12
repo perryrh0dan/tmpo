@@ -2,6 +2,8 @@ use std::io;
 use std::io::{Write};
 use std::str;
 
+use crate::renderer;
+
 extern crate git2;
 extern crate custom_error;
 use custom_error::custom_error;
@@ -16,19 +18,19 @@ pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
     // Initialize git repository
     let repo = match git2::Repository::init(dir) {
         Ok(repo) => repo,
-        Err(e) => return Err(GitError::InitError),
+        Err(_e) => return Err(GitError::InitError),
     };
 
     // Set remote
     match repo.remote_set_url("origin", repository) {
         Ok(()) => (),
-        Err(e) => return Err(GitError::AddRemoteError)
+        Err(_e) => return Err(GitError::AddRemoteError)
     }
 
     // Update templates
     match update(dir) {
         Ok(()) => (),
-        Err(e) => return Err(GitError::UpdateError),
+        Err(_e) => return Err(GitError::UpdateError),
     };
 
     Ok(())
@@ -52,58 +54,12 @@ fn do_fetch<'a>(
     refs: &[&str],
     remote: &'a mut git2::Remote,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
-    let mut cb = git2::RemoteCallbacks::new();
-
-    // Print out our transfer progress.
-    cb.transfer_progress(|stats| {
-        if stats.received_objects() == stats.total_objects() {
-            print!(
-                "Resolving deltas {}/{}\r",
-                stats.indexed_deltas(),
-                stats.total_deltas()
-            );
-        } else if stats.total_objects() > 0 {
-            print!(
-                "Received {}/{} objects ({}) in {} bytes\r",
-                stats.received_objects(),
-                stats.total_objects(),
-                stats.indexed_objects(),
-                stats.received_bytes()
-            );
-        }
-        io::stdout().flush().unwrap();
-        true
-    });
-
     let mut fo = git2::FetchOptions::new();
-    fo.remote_callbacks(cb);
     // Always fetch all tags.
     // Perform a download and also update tips
     fo.download_tags(git2::AutotagOption::All);
-    println!("Fetching {} for repo", remote.name().unwrap());
+    renderer::check_template_updates();
     remote.fetch(refs, Some(&mut fo), None)?;
-
-    // If there are local objects (we got a thin pack), then tell the user
-    // how many objects we saved from having to cross the network.
-    let stats = remote.stats();
-    if stats.local_objects() > 0 {
-        println!(
-            "\rReceived {}/{} objects in {} bytes (used {} local \
-             objects)",
-            stats.indexed_objects(),
-            stats.total_objects(),
-            stats.received_bytes(),
-            stats.local_objects()
-        );
-    } else {
-        println!(
-            "\rReceived {}/{} objects in {} bytes",
-            stats.indexed_objects(),
-            stats.total_objects(),
-            stats.received_bytes()
-        );
-    }
-
     let fetch_head = repo.find_reference("FETCH_HEAD")?;
     Ok(repo.reference_to_annotated_commit(&fetch_head)?)
 }
@@ -172,12 +128,12 @@ fn do_merge<'a>(
 
     // 2. Do the appopriate merge
     if analysis.0.is_fast_forward() {
-        println!("Doing a fast forward");
         // do a fast forward
         let refname = format!("refs/heads/{}", remote_branch);
         match repo.find_reference(&refname) {
             Ok(mut r) => {
                 fast_forward(repo, &mut r, &fetch_commit)?;
+                renderer::success_update_templates()
             }
             Err(_) => {
                 // The branch doesn't exist so just set the reference to the
@@ -200,8 +156,7 @@ fn do_merge<'a>(
         // do a normal merge
         let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
         normal_merge(&repo, &head_commit, &fetch_commit)?;
-    } else {
-        println!("Nothing to do...");
+        renderer::success_update_templates()
     }
     Ok(())
 }
