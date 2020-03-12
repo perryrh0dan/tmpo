@@ -8,6 +8,7 @@ use clap::{Arg, App};
 pub mod git;
 pub mod config;
 pub mod template;
+pub mod renderer;
 mod core;
 
 fn main() {

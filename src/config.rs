@@ -13,7 +13,7 @@ extern crate serde_json;
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
     pub templates_dir: String,
-    pub template_repo: String,
+    pub templates_repo: String,
 }
 
 pub fn init() -> Result<Config, Error> {
@@ -56,7 +56,7 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
     }
 
     // Initialize git repository
-    match git::init(&config.template_repo, &config.templates_dir) {
+    match git::init(&config.templates_repo, &config.templates_dir) {
         Ok(()) => (),
         Err(error) => match error {
             git::GitError::InitError => println!("Init Error"),
@@ -93,7 +93,7 @@ fn load_config(dir: &str) -> Result<Config, Error> {
 fn get_default_config() -> Config {
     let config = Config { 
         templates_dir: String::from("/home/thomas/dev/init/templates/default"),
-        template_repo: String::from("https://github.com/perryrh0dan/templates")
+        templates_repo: String::from("https://github.com/perryrh0dan/templates")
     };
 
     return config;

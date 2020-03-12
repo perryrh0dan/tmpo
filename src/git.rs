@@ -6,7 +6,6 @@ extern crate git2;
 extern crate custom_error;
 use custom_error::custom_error;
 
-// Note the use of braces rather than parentheses.
 custom_error!{pub GitError
     InitError      = "Unable to initialize git",
     AddRemoteError = "Unable to add remote",
@@ -14,16 +13,19 @@ custom_error!{pub GitError
 }
 
 pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
+    // Initialize git repository
     let repo = match git2::Repository::init(dir) {
         Ok(repo) => repo,
         Err(e) => return Err(GitError::InitError),
     };
 
+    // Set remote
     match repo.remote_set_url("origin", repository) {
         Ok(()) => (),
         Err(e) => return Err(GitError::AddRemoteError)
     }
 
+    // Update templates
     match update(dir) {
         Ok(()) => (),
         Err(e) => return Err(GitError::UpdateError),
@@ -35,7 +37,7 @@ pub fn init(repository: &str, dir: &str) -> Result<(), GitError> {
 pub fn update(dir: &str) -> Result<(), git2::Error> {
     let repo = match git2::Repository::open(dir) {
         Ok(repo) => repo,
-        Err(e) => panic!("failed to init: {}", e),
+        Err(e) => return Err(e),
     };
 
     let remote_name = "origin";

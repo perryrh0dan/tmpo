@@ -8,8 +8,9 @@ use crate::config::Config;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TemplateMeta {
-  pub name: String,
-  pub extends: Vec<String>,
+  pub name: Option<String>,
+  pub extend: Option<Vec<String>>,
+  pub exclude: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug)]
@@ -24,8 +25,13 @@ pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
   let template_path = get_template_path(config, &opts.template)?;
 
   let meta = load_meta(&template_path)?;
+  let templates = match meta.extend {
+    None => Vec::new(),
+    Some(x) => x,
+  };
 
-  for template in meta.extends {
+
+  for template in templates {
     let mut opts = opts.clone();
     opts.template = template;
 
@@ -38,7 +44,49 @@ pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
   Ok(())
 }
 
-pub fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
+pub fn get_all_templates(config: &Config) -> Result<Vec<String>, Error> {
+  let mut templates = Vec::new();
+  
+  // check if folder exists
+  match fs::read_dir(&config.templates_dir) {
+    Ok(fc) => fc,
+    Err(error) => return Err(error),
+  };
+
+  // Load meta of the templates directory
+  let meta = load_meta(&config.templates_dir)?;
+  let items = match meta.exclude {
+    None => Vec::<String>::new(),
+    Some(x) => x
+  };
+
+  // Loop at all entries in templates directory
+  for entry in fs::read_dir(&config.templates_dir).unwrap() {
+    let entry = &entry.unwrap();
+    let name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
+
+    let mut exclude = false;
+    for item in items.iter() {
+      if item == &name {
+        exclude = true;
+      }
+
+      if exclude {
+        break;
+      }
+    };
+
+    if exclude {
+      continue;
+    }
+
+    templates.push(name.to_string());
+  }
+
+  return Ok(templates);
+}
+
+fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
   // check if template exists
   let template_path = get_template_path(config, &opts.template)?;
 
@@ -65,7 +113,7 @@ pub fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
     // close file
     drop(src);
     
-    data = replace_placeholders(&data, &opts.name)?;
+    data = fill_template(&data, &opts.name)?;
 
     // create file
     let mut dst = File::create(target_path)?;
@@ -75,7 +123,7 @@ pub fn copy_template(config: &Config, opts: &CopyOpts) -> Result<(), Error> {
   Ok(())
 }
 
-fn replace_placeholders(data: &str, name: &str) -> Result<String, Error> {
+fn fill_template(data: &str, name: &str) -> Result<String, Error> {
   // replace placeholder with actual value
   let data = data.replace("{{name}}", name);
 
@@ -93,7 +141,7 @@ fn load_meta(template_path: &str) -> Result<TemplateMeta, Error> {
   let dir = String::from(template_path) + "/meta.json";
   // check if file exists
   if !Path::new(&dir).exists() {
-    let meta = TemplateMeta{ name: "".to_string(), extends: Vec::new() };
+    let meta = TemplateMeta{ name: None, extend: None, exclude: None };
     return Ok(meta);
   }
 
@@ -103,6 +151,6 @@ fn load_meta(template_path: &str) -> Result<TemplateMeta, Error> {
 
   // Write to data string
   src.read_to_string(&mut data)?;
-  let meta: TemplateMeta = serde_json::from_str(&data).unwrap();
+  let meta: TemplateMeta = serde_json::from_str(&data)?;
   Ok(meta)
 }

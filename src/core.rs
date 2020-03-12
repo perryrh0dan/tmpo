@@ -4,6 +4,7 @@ use std::path::Path;
 
 use crate::config::Config; 
 use crate::template;
+use crate::renderer;
 
 pub struct InitOpts {
   pub name: String,
@@ -31,22 +32,9 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), Error> {
 }
 
 pub fn list(config: &Config) -> Result<(), Error> {
-  let mut templates = Vec::new();
+  let templates = template::get_all_templates(config)?;
 
-  // check if folder exists
-  match fs::read_dir(&config.templates_dir) {
-    Ok(fc) => fc,
-    Err(error) => return Err(error),
-  };
-
-  for entry in fs::read_dir(&config.templates_dir).unwrap() {
-    let template = &entry.unwrap();
-    templates.push(template.path().file_name().unwrap().to_string_lossy().into_owned())
-  }
-
-  for template in templates {
-    println!("{}", template)
-  }
+  renderer::list_templates(&templates);
 
   Ok(())
 }
