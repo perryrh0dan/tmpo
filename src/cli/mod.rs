@@ -9,17 +9,19 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let mut opts = core::InitOpts {
     name: String::from(""),
     template: String::from(""),
-    dir: String::from(""),
+    directory: String::from(""),
     repository: None,
+    replace: false,
   };
   
   let name = args.value_of("name");
   let template = args.value_of("template");
-  let dir = args.value_of("dir");
+  let directory = args.value_of("directory");
+  let replace = args.value_of("replace");
   
   // Get name
   if name.is_none() {
-    opts.name = match input::get_value("name", true, None) {
+    opts.name = match input::get_value("project name", true, None) {
       Ok(name) => name.unwrap(),
       Err(_error) => return,
     };
@@ -29,7 +31,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Get template
   if template.is_none() {
-    opts.template = match input::get_value("template", true, None) {
+    opts.template = match input::get_value("template to use", true, None) {
       Ok(template) => template.unwrap(),
       Err(_error) => return,
     };
@@ -37,18 +39,18 @@ pub fn init(config: &Config, args: &ArgMatches) {
     opts.template = template.unwrap().to_string();
   }
 
-  // Get dir
-  if dir.is_none() {
-    opts.dir = match input::get_value("dir", true, None) {
-      Ok(dir) => dir.unwrap(),
+  // Get directory
+  if directory.is_none() {
+    opts.directory = match input::get_value("target directory", true, None) {
+      Ok(directory) => directory.unwrap(),
       Err(_error) => return,
     };
   } else {
-    opts.dir = dir.unwrap().to_string();
+    opts.directory = directory.unwrap().to_string();
   }
 
   // Get repository
-  opts.repository = match input::get_value("repository", false, None) {
+  opts.repository = match input::get_value("repository url", false, None) {
     Ok(repository) => repository,
     Err(_error) => return,
   };

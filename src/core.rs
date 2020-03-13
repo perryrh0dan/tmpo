@@ -9,8 +9,9 @@ use crate::renderer;
 pub struct InitOpts {
   pub name: String,
   pub template: String,
-  pub dir: String,
+  pub directory: String,
   pub repository: Option<String>,
+  pub replace: bool,
 }
 
 extern crate custom_error;
@@ -26,20 +27,24 @@ custom_error!{pub CoreError
 /// Initialize a new Project
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
   //Create directory the project directory 
-  let dir = opts.dir + "/" + &opts.name;
+  let dir = opts.directory + "/" + &opts.name;
   match fs::create_dir(Path::new(&dir)) {
-    Ok(fc) => fc,
-    Err(_error) => {
-      renderer::errors::create_directory(&dir);
-      return Err(CoreError::CreateProjectDir);
+    Ok(()) => (),
+    Err(error) => match error.kind() {
+      std::io::ErrorKind::AlreadyExists => (),
+      _ => {
+        renderer::errors::create_directory(&dir);
+        return Err(CoreError::CreateProjectDir);
+      }
     },
   };
 
-  let copy_opts = template::CopyOpts {
+  let copy_opts = template::Options {
     template: String::from(&opts.template),
     dir: String::from(&dir),
     name: String::from(&opts.name),
     repository: opts.repository.clone(),
+    replace: opts.replace,
   };
 
   match template::copy(config, copy_opts){
@@ -72,7 +77,12 @@ pub fn list(config: &Config) -> Result<(), CoreError> {
     Err(_error) => return Err(CoreError::LoadTemplates),
   };
 
-  renderer::list_templates(&templates);
+  let mut names = Vec::new();
+  for template in templates {
+    names.push(template.name);
+  }
+
+  renderer::list_templates(&names);
 
   Ok(())
 }

@@ -6,7 +6,8 @@
           "type": "cppvsdbg",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/init.exe",
-          "args": ["init", "2fa", "typescript", "."],
+        //   "args": ["init", "2fa", "typescript", "."],
+          "args": ["list"],
           "stopAtEntry": false,
           "cwd": "${workspaceRoot}",
           "environment": [],
@@ -17,7 +18,8 @@
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/init",
-          "args": ["init", "2fa", "typescript", "."],
+        //   "args": ["init", "2fa", "typescript", "."],
+          "args": ["list"],
           "cwd": "${workspaceRoot}",
       }
   ]

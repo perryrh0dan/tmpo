@@ -2,28 +2,28 @@ use std::fs;
 use std::fs::File;
 use std::io::{Read, Write, Error, ErrorKind};
 use std::path::Path;
-use serde::{Serialize, Deserialize};
+
+mod meta;
 
 use crate::config::Config; 
 use crate::renderer;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TemplateMeta {
-  pub name: Option<String>,
-  pub extend: Option<Vec<String>>,
-  pub exclude: Option<Vec<String>>,
-}
-
 #[derive(Clone, Debug)]
-pub struct CopyOpts {
+pub struct Options {
   pub template: String,
   pub dir: String,
   pub name: String,
   pub repository: Option<String>,
+  pub replace: bool,
 }
 
-pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
-  // check if template exists
+pub struct Template {
+  pub name: String,
+  pub path: String,
+}
+
+pub fn copy(config: &Config, opts: Options) -> Result<(), Error> {
+  // check if template exists and get absolute path
   let template_path = match get_template_path(config, &opts.template) {
     Ok(path) => path,
     Err(error) => {
@@ -36,13 +36,16 @@ pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
     }
   };
 
-  let meta = load_meta(&template_path)?;
+  // load meta informations 
+  let meta = meta::load_meta(&template_path)?;
+
+  // get list of all super tempaltes 
   let templates = match &meta.extend {
     None => Vec::new(),
     Some(x) => x.clone(),
   };
 
-
+  // copy all super tempaltes into the directory
   for template in templates {
     let mut opts = opts.clone();
     opts.template = template;
@@ -50,13 +53,14 @@ pub fn copy(config: &Config, opts: CopyOpts) -> Result<(), Error> {
     copy(&config, opts)?;
   }
 
+  // copy the template into the directory
   copy_template(config, &opts, &meta)?;
 
   Ok(())
 }
 
-pub fn get_all_templates(config: &Config) -> Result<Vec<String>, Error> {
-  let mut templates = Vec::new();
+pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
+  let mut templates = Vec::<Template>::new();
   
   // check if folder exists
   match fs::read_dir(&config.templates_dir) {
@@ -65,24 +69,48 @@ pub fn get_all_templates(config: &Config) -> Result<Vec<String>, Error> {
   };
 
   // Load meta of the templates directory
-  let meta = load_meta(&config.templates_dir)?;
+  let meta = meta::load_meta(&config.templates_dir)?;
 
   // Loop at all entries in templates directory
   for entry in fs::read_dir(&config.templates_dir).unwrap() {
     let entry = &entry.unwrap();
-    let name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
-
-    if meta_exclude(&name, &meta){
+    // check if entry is file, if yes skip entry
+    if !entry.path().is_dir() {
       continue;
     }
 
-    templates.push(name.to_string());
+    let entry_path = entry.path().to_string_lossy().into_owned();
+    let entry_meta = meta::load_meta(&entry_path)?;
+
+    // If type is None or unqual template skip entry
+    if entry_meta.kind.is_none() || entry_meta.kind != Some(String::from("template")) {
+      continue;
+    }
+
+    let name;
+    if entry_meta.name.is_none() {
+      // if no name is provided use dir name
+      name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
+    } else {
+      name = entry_meta.name.unwrap();
+    }
+
+    if meta::exclude_file(&name, &meta){
+      continue;
+    }
+
+    let template = Template {
+      name: name,
+      path: entry_path,
+    };
+
+    templates.push(template);
   }
 
   return Ok(templates);
 }
 
-fn copy_template(config: &Config, opts: &CopyOpts, meta: &TemplateMeta) -> Result<(), Error> {
+fn copy_template(config: &Config, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
   // check if template exists
   let template_path = get_template_path(config, &opts.template)?;
 
@@ -91,7 +119,7 @@ fn copy_template(config: &Config, opts: &CopyOpts, meta: &TemplateMeta) -> Resul
   Ok(())
 }
 
-fn copy_folder(src: &str, target: &str, opts: &CopyOpts, meta: &TemplateMeta) -> Result<(), Error> {
+fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
   // Loop at selected template directory
   for entry in fs::read_dir(src)? {
     let entry = &entry.unwrap();
@@ -107,7 +135,7 @@ fn copy_folder(src: &str, target: &str, opts: &CopyOpts, meta: &TemplateMeta) ->
 
       copy_folder(&source_path, &dir, opts, meta)?
     } else {
-      if meta_exclude(&source_name, meta) {
+      if meta::exclude_file(&source_name, meta) {
         continue;
       }
 
@@ -132,27 +160,7 @@ fn copy_folder(src: &str, target: &str, opts: &CopyOpts, meta: &TemplateMeta) ->
   Ok(())
 }
 
-fn meta_exclude(name: &str, meta: &TemplateMeta) -> bool {
-  if name == "meta.json" {
-    return true;
-  };
-  
-  let items = match &meta.exclude {
-    None => return false,
-    Some(x) => x
-  };
-
-  // check meta exclude
-  for item in items.iter() {
-    if item == &name {
-      return true
-    }
-  };
-
-  return false
-}
-
-fn fill_template(tempalte: &str, opts: &CopyOpts) -> Result<String, Error> {
+fn fill_template(tempalte: &str, opts: &Options) -> Result<String, Error> {
   // replace placeholder with actual value
   let mut data = tempalte.replace("{{name}}", &opts.name);
 
@@ -164,26 +172,16 @@ fn fill_template(tempalte: &str, opts: &CopyOpts) -> Result<String, Error> {
 }
 
 fn get_template_path(config: &Config, template: &str) -> Result<String, Error> {
-  let template_path = config.templates_dir.clone() + "/" + template;
+  let templates = get_all_templates(config)?;
+
+  let mut template_path = String::new();
+  for temp in templates {
+    if temp.name == template {
+      template_path = temp.path;
+      break;
+    }
+  }
 
   fs::read_dir(&template_path)?;  
   return Ok(template_path);
-}
-
-fn load_meta(template_path: &str) -> Result<TemplateMeta, Error> {
-  let dir = String::from(template_path) + "/meta.json";
-  // check if file exists
-  if !Path::new(&dir).exists() {
-    let meta = TemplateMeta{ name: None, extend: None, exclude: None };
-    return Ok(meta);
-  }
-
-  // Open file
-  let mut src = File::open(Path::new(&dir))?;
-  let mut data = String::new();
-
-  // Write to data string
-  src.read_to_string(&mut data)?;
-  let meta: TemplateMeta = serde_json::from_str(&data)?;
-  Ok(meta)
 }

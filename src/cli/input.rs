@@ -7,9 +7,9 @@ pub fn get_value(name: &str, required: bool, default: Option<&str>) -> std::resu
   
   // check if required, add question mark for optional parameters
   if required {
-    message = format!("Enter {}: ", name);
+    message = format!("Enter the {}: ", name);
   } else {
-    message = format!{"Enter {}?: ", name};
+    message = format!{"Enter the {}?: ", name};
   }
 
   // check if default values is provided
