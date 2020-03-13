@@ -8,7 +8,7 @@
 
 ## Description
 
-Charon enables you to effectively create new projects based on predefined templates. By utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled 
+Charon enables you to effectively create new projects based on predefined templates. By utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled and updated on all clients.
 
 ## Contents
 
@@ -17,8 +17,12 @@ Charon enables you to effectively create new projects based on predefined templa
 - [Install](#install)
 - [Usage](#usage)
 - [Development](#development)
+- [Team](#team)
+- [License](#license)
 
 ## Install
+
+Download the latest release from charon. 
 
 ## Usage
 
@@ -27,3 +31,11 @@ charon init example --template typescript --directory . --repository https://git
 ```
 
 ## Development
+
+## Team
+
+- Thomas Pöhlmann ((@perryrh0dan))[https://github.com/perryrh0dan]
+
+## License
+
+(MIT)[https://github.com/perryrh0dan/charon/blob/master/license.md]
