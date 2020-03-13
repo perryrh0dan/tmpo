@@ -1,14 +1,14 @@
 <h1 align="center">
-    Init
+    Charon
 </h1>
 
 <h4 align="center">
-    Cli to initialize projects
+    Cli to create new workspaces based on templates
 </h4>
 
 ## Description
 
-tbd
+Charon enables you to effectively create new projects based on predefined templates. By utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled 
 
 ## Contents
 
@@ -23,7 +23,7 @@ tbd
 ## Usage
 
 ``` bash
-init example . 
+charon init example --template typescript --directory . --repository https://github.com/perryrh0dan/example 
 ```
 
 ## Development
