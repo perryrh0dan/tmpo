@@ -54,7 +54,31 @@ charon init example --template typescript --directory . --repository https://git
 
 ### Templates
 
-Templates
+Templates can be configured with a `meta.json` in the root of the template. 
+
+#### Format
+
+``` json
+{
+    "name": "",
+    "extend": [""],
+    "exclude": [""],
+}
+```
+
+#### Extend
+
+Templates can extends other templates. Add the name of the templates you want to extend in the extend array in the `meta.json`. The extended templates are `copied` on by on in the `same direction` they are `added` in the `meta.json.
+
+#### Exclude
+
+List of filenames to exclude from the template.
+
+#### Placeholders
+
+Placeholders can be used in each file of your template. During the initlialization the placeholders are replaced by the actual values. At the moment following placeholders are supported:
+- {{name}}
+- {{repository}} 
 
 ## Configuration
 
