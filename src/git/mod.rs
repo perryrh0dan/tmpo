@@ -1,3 +1,5 @@
+use std::path::Path;
+use std::path::PathBuf;
 use std::str;
 
 use crate::renderer;
@@ -9,6 +11,15 @@ use custom_error::custom_error;
 custom_error!{pub GitError
     InitError      = "Unable to initialize git",
     AddRemoteError = "Unable to add remote",
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct RepoOptions {
+    pub url: String,
+    pub auth: String,
+    pub token: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
 }
 
 pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
@@ -27,7 +38,7 @@ pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-pub fn update(dir: &str) -> Result<(), git2::Error> {
+pub fn update(dir: &str, opts: &RepoOptions) -> Result<(), git2::Error> {
     let repo = match git2::Repository::open(dir) {
         Ok(repo) => repo,
         Err(e) => return Err(e),
@@ -36,7 +47,7 @@ pub fn update(dir: &str) -> Result<(), git2::Error> {
     let remote_name = "origin";
     let remote_branch = "master";
     let mut remote = repo.find_remote(remote_name)?;
-    let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote)?;
+    let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
     do_merge(&repo, &remote_branch, fetch_commit)
 }
 
@@ -44,13 +55,42 @@ fn do_fetch<'a>(
     repo: &'a git2::Repository,
     refs: &[&str],
     remote: &'a mut git2::Remote,
+    opts: &RepoOptions,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
+    // token needs to be declared here to live longer than the fetchOptions
+    let token;
     let mut fo = git2::FetchOptions::new();
+    let mut callbacks = git2::RemoteCallbacks::new();
+
+    if opts.auth == "ssh" {
+    // callbacks.credentials(|_url, username_from_url, _allowed_types| {
+    //     git2::Cred::ssh_key(
+    //     username_from_url.unwrap(),
+    //     None,
+    //     std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+    //     None,
+    //     )
+    // });
+    } else if opts.auth == "token" {
+        if opts.token.is_none() {
+            renderer::errors::missing_token();
+            return Err(git2::Error::from_str("missing auth token"))
+        }
+        token = opts.token.clone().unwrap();
+        callbacks.credentials(|_url, _username_from_url, _allowed_types| {
+            git2::Cred::userpass_plaintext(&token, "")
+        });
+    }
+
     // Always fetch all tags.
     // Perform a download and also update tips
     fo.download_tags(git2::AutotagOption::All);
+    fo.remote_callbacks(callbacks);
     renderer::check_template_updates();
-    remote.fetch(refs, Some(&mut fo), None)?;
+    match remote.fetch(refs, Some(&mut fo), None) {
+        Ok(()) => (),
+        Err(error) => println!("{}", error.message()),
+    };
     let fetch_head = repo.find_reference("FETCH_HEAD")?;
     Ok(repo.reference_to_annotated_commit(&fetch_head)?)
 }

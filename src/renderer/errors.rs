@@ -28,7 +28,12 @@ pub fn template_dir_permission_denied(dir: &str) {
 pub fn init_repository() {
     let text = format!("{}", "Error initializing git".red());
     println!("{}", text);
-  }
+}
+
+pub fn missing_token() {
+    let text = format!("Error fetching templates: authentication token is missing").red();
+    println!("{}", text);
+}
 
 pub fn unknown() {
     let text = format!("Unknown error occured").red();
