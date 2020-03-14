@@ -8,7 +8,7 @@
 
 ## Description
 
-Charon enables you to effectively create new workspaces based on predefined templates, by utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled and updated on all clients.
+Charon enables you to effectively create new workspaces based on predefined templates. To share templates across your team charon is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients. 
 
 Visit the [contributing guidelines](https://github.com/perryrh0dan/charon/blob/master/contributing.md#translating-documentation) to learn more on how help developing charon.
 
@@ -42,7 +42,8 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 
 ## Install
 
-Download the latest release from charon. 
+1. Download the latest release for your platform.
+2. Copy the binary to your /bin folder point the path variable to it.
 
 ## Usage
 
