@@ -18,15 +18,15 @@ extern crate custom_error;
 use custom_error::custom_error;
 
 custom_error!{pub CoreError
-    CreateProjectDir = "Unable to create project directory",
+    CreateDir        = "Unable to create workspace directory",
     CopyTemplate     = "Unable to copy template",
     InitializeRepo   = "Unable to initialize git",
     LoadTemplates    = "Unable to load templates",
 }
 
-/// Initialize a new Project
+/// Initialize a new Workspace
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
-  //Create directory the project directory 
+  //Create directory the workspace directory 
   let dir = opts.directory + "/" + &opts.name;
   match fs::create_dir(Path::new(&dir)) {
     Ok(()) => (),
@@ -34,7 +34,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
         renderer::errors::create_directory(&dir);
-        return Err(CoreError::CreateProjectDir);
+        return Err(CoreError::CreateDir);
       }
     },
   };
@@ -65,7 +65,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
     }
   }
 
-  renderer::success_create();
+  renderer::success_create(&opts.name);
 
   Ok(())
 }

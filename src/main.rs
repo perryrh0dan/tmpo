@@ -25,7 +25,7 @@ fn main() {
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .subcommand(App::new("init")
-      .about("Initialize new project")
+      .about("Initialize new workspace")
       .arg(Arg::with_name("name")
         .help("The name of the new workspace and initial project.")
         .required(true)

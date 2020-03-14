@@ -8,12 +8,25 @@
 
 ## Description
 
-Charon enables you to effectively create new projects based on predefined templates, by utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled and updated on all clients.
+Charon enables you to effectively create new workspaces based on predefined templates, by utilizing a simple and minimal usage syntax. Templates can be shared and managed accross teams through git. Templates are automaticly pulled and updated on all clients.
+
+Visit the [contributing guidelines](https://github.com/perryrh0dan/charon/blob/master/contributing.md#translating-documentation) to learn more on how help developing charon.
+
+Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
+
+## Highlights
+- Setup complex workspaces in seconds
+- Templates support inheritence and placeholders
+- Lightweight & fast
+- Share templates across your team or community with git
+- Configurable through `~/.charon.json`
 
 ## Contents
 
 - [Description](#description)
+- [Highlights](#highlights)
 - [Contents](#contents)
+- [Demo](#demo)
 - [Install](#install)
 - [Usage](#usage)
 - [Configuration](#configuration)
@@ -21,15 +34,27 @@ Charon enables you to effectively create new projects based on predefined templa
 - [Team](#team)
 - [License](#license)
 
+## Demo
+
+<div align="center">
+  <img alt="demo" width="70%" src="./media/demo.gif">
+</div>
+
 ## Install
 
 Download the latest release from charon. 
 
 ## Usage
 
+### Cli
+
 ``` bash
 charon init example --template typescript --directory . --repository https://github.com/perryrh0dan/example 
 ```
+
+### Templates
+
+Templates
 
 ## Configuration
 
