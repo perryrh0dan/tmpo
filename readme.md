@@ -43,7 +43,7 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 ## Install
 
 1. Download the latest release for your platform.
-2. Copy the binary to your /bin folder point the path variable to it.
+2. Copy the binary to your `/bin` folder or point the path variable to it.
 
 ## Usage
 
@@ -56,7 +56,7 @@ charon init example --template typescript --directory . --repository https://git
 ### Templates
 
 Templates are automatically pull from the `templates_repo` and stored in the `templates_dir`.
-Templates can be configured with a `meta.json` in the root of the template. 
+Templates can be configured with a `meta.json` in the template root. The official template repo can be found [here](https://github.com/perryrh0dan/templates).
 
 #### Format
 
