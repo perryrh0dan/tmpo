@@ -7,6 +7,7 @@ mod meta;
 
 use crate::config::Config; 
 use crate::renderer;
+use crate::utils;
 
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -99,8 +100,9 @@ pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
       continue;
     }
 
+    // make all names lowercase
     let template = Template {
-      name: name,
+      name: utils::lowercase(&name),
       path: entry_path,
     };
 
@@ -174,14 +176,25 @@ fn fill_template(tempalte: &str, opts: &Options) -> Result<String, Error> {
 fn get_template_path(config: &Config, template: &str) -> Result<String, Error> {
   let templates = get_all_templates(config)?;
 
-  let mut template_path = String::new();
+  // all templates are lowercase
+  let template = utils::lowercase(template);
+
+  let mut template_path: Option<String> = None;
   for temp in templates {
     if temp.name == template {
-      template_path = temp.path;
+      template_path = Some(temp.path);
       break;
     }
   }
 
+  if template_path.is_none() {
+    renderer::errors::template_not_found(&template);
+    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Template not found"))
+  }
+
+  let template_path = template_path.unwrap();
+  
+  // check if path exists
   fs::read_dir(&template_path)?;  
   return Ok(template_path);
 }

@@ -3,6 +3,7 @@ pub mod config;
 pub mod template;
 pub mod renderer;
 pub mod core;
+pub mod utils;
 mod cli;
 
 #[macro_use]

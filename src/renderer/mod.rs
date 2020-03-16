@@ -1,11 +1,13 @@
 use colored::Colorize;
 
+use crate::utils;
+
 pub mod warnings;
 pub mod errors;
 
 pub fn list_templates(templates: &Vec<String>) {
   for template in templates {
-    println!("{}", template);
+    println!("{}", &utils::capitalize(template));
   };
 } 
 

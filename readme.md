@@ -84,7 +84,7 @@ Placeholders can be used in each file of your template. During the initlializati
 
 ## Configuration
 
-To configure taskline navigate to the ~/.charon.json file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
+To configure charon navigate to the ~/.charon.json file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
 
 The following illustrates all the available options with their respective default values.
 
@@ -92,6 +92,7 @@ The following illustrates all the available options with their respective defaul
 {
   "templates_dir": "$HOME/.charon/templates",
   "templates_repo": {
+    "enabled": true,
     "url": "https://github.com/perryrh0dan/templates",
     "auth": "none",
     "token": null,
