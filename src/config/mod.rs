@@ -17,7 +17,7 @@ pub struct Config {
     pub templates_repo: git::RepoOptions,
 }
 
-pub fn init() -> Result<Config, Error> {
+pub fn init(verbose: bool) -> Result<Config, Error> {
     let dir = match dirs::home_dir() {
         Some(path) => PathBuf::from(path),
         None => PathBuf::from(""),
@@ -30,7 +30,7 @@ pub fn init() -> Result<Config, Error> {
     ensure_config_file(&dir)?;
     let config = load_config(&dir)?;
 
-    ensure_template_dir(&config)?;
+    ensure_template_dir(&config, verbose)?;
     Ok(config)
 }
 
@@ -58,7 +58,7 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn ensure_template_dir(config: &Config) -> Result<(), Error> {
+fn ensure_template_dir(config: &Config, verbose: bool) -> Result<(), Error> {
     // Create if dir not exists
     let r = fs::create_dir_all(Path::new(&config.templates_dir));
     match r {
@@ -66,18 +66,20 @@ fn ensure_template_dir(config: &Config) -> Result<(), Error> {
         Err(error) => return Err(error),
     }
 
-    // Initialize git repository
-    match git::init(&config.templates_dir, &config.templates_repo.url) {
-        Ok(()) => (),
-        Err(error) => match error {
-            git::GitError::InitError => println!("Init Error"),
-            git::GitError::AddRemoteError => println!("Add Remote Error")
+    // Initialize git repository if enabled
+    if config.templates_repo.enabled {
+        match git::init(&config.templates_dir, &config.templates_repo.url) {
+            Ok(()) => (),
+            Err(error) => match error {
+                git::GitError::InitError => println!("Init Error"),
+                git::GitError::AddRemoteError => println!("Add Remote Error")
+            }
+        };
+    
+        match git::update(&config.templates_dir, &config.templates_repo, verbose) {
+            Ok(()) => (),
+            Err(_e) => renderer::errors::update_templates(),
         }
-    };
-
-    match git::update(&config.templates_dir, &config.templates_repo) {
-        Ok(()) => (),
-        Err(_e) => renderer::errors::update_templates(),
     }
 
     Ok(())
@@ -101,6 +103,7 @@ fn get_default_config(dir: &str) -> Config {
     let config = Config { 
         templates_dir: template_dir,
         templates_repo: git::RepoOptions {
+            enabled: true,
             url: String::from("https://github.com/perryrh0dan/templates"),
             auth: String::from("Token"),
             token: None,

@@ -5,10 +5,13 @@ pub mod renderer;
 pub mod core;
 mod cli;
 
+#[macro_use]
+extern crate log;
 extern crate clap;
 use clap::{Arg, App, crate_version};
-
 extern crate ctrlc;
+extern crate env_logger;
+
 
 fn main() {
   // catch ctrl + c
@@ -20,10 +23,18 @@ fn main() {
     Err(_e) => (),
   };
 
+  // initialize logger
+  env_logger::init();
+
   let matches = App::new("Init")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
+      .arg(Arg::with_name("verbose")
+      .short('v')
+      .long("verbose")
+      .help("When true, more verbose output is displayed")
+      .required(false))
     .subcommand(App::new("init")
       .about("Initialize new workspace")
       .arg(Arg::with_name("name")
@@ -56,7 +67,13 @@ fn main() {
       .about("List all available templates"))
     .get_matches();
 
-    let config = config::init().unwrap();
+    let verbose;
+    match matches.occurrences_of("verbose") {
+      0 => verbose = false,
+      1 | _ => verbose = true,
+    }
+
+    let config = config::init(verbose).unwrap();
 
     match matches.subcommand() {
       ("init", Some(init_matches)) => {
@@ -65,7 +82,7 @@ fn main() {
       ("list", Some(_list_matches)) => {
         cli::list(&config);
       }
-      ("", None) => println!("No subcommand was used"), // If no subcommand was usd it'll match the tuple ("", None)
+      ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
       _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
     }
 }

@@ -1,5 +1,6 @@
 use colored::Colorize;
 
+pub mod warnings;
 pub mod errors;
 
 pub fn list_templates(templates: &Vec<String>) {

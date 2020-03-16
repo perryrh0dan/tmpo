@@ -15,6 +15,7 @@ custom_error!{pub GitError
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct RepoOptions {
+    pub enabled: bool,
     pub url: String,
     pub auth: String,
     pub token: Option<String>,
@@ -38,7 +39,7 @@ pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-pub fn update(dir: &str, opts: &RepoOptions) -> Result<(), git2::Error> {
+pub fn update(dir: &str, opts: &RepoOptions, verbose: bool) -> Result<(), git2::Error> {
     let repo = match git2::Repository::open(dir) {
         Ok(repo) => repo,
         Err(e) => return Err(e),
@@ -47,8 +48,8 @@ pub fn update(dir: &str, opts: &RepoOptions) -> Result<(), git2::Error> {
     let remote_name = "origin";
     let remote_branch = "master";
     let mut remote = repo.find_remote(remote_name)?;
-    let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
-    do_merge(&repo, &remote_branch, fetch_commit)
+    let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts, verbose)?;
+    do_merge(&repo, &remote_branch, fetch_commit, verbose)
 }
 
 fn do_fetch<'a>(
@@ -56,6 +57,7 @@ fn do_fetch<'a>(
     refs: &[&str],
     remote: &'a mut git2::Remote,
     opts: &RepoOptions,
+    verbose: bool,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
     // token needs to be declared here to live longer than the fetchOptions
     let token;
@@ -63,6 +65,7 @@ fn do_fetch<'a>(
     let mut callbacks = git2::RemoteCallbacks::new();
 
     if opts.auth == "ssh" {
+        debug!("[git]: authentication using ssh");
     // callbacks.credentials(|_url, username_from_url, _allowed_types| {
     //     git2::Cred::ssh_key(
     //     username_from_url.unwrap(),
@@ -72,6 +75,7 @@ fn do_fetch<'a>(
     //     )
     // });
     } else if opts.auth == "token" {
+        debug!("[git]: authentication using token");
         if opts.token.is_none() {
             renderer::errors::missing_token();
             return Err(git2::Error::from_str("missing auth token"))
@@ -80,13 +84,19 @@ fn do_fetch<'a>(
         callbacks.credentials(|_url, _username_from_url, _allowed_types| {
             git2::Cred::userpass_plaintext(&token, "")
         });
+    } else {
+        debug!("[git]: no authentication");
     }
 
     // Always fetch all tags.
     // Perform a download and also update tips
     fo.download_tags(git2::AutotagOption::All);
     fo.remote_callbacks(callbacks);
-    renderer::check_template_updates();
+
+    if verbose {
+        renderer::check_template_updates();
+    }
+
     match remote.fetch(refs, Some(&mut fo), None) {
         Ok(()) => (),
         Err(error) => println!("{}", error.message()),
@@ -153,6 +163,7 @@ fn do_merge<'a>(
     repo: &'a git2::Repository,
     remote_branch: &str,
     fetch_commit: git2::AnnotatedCommit<'a>,
+    verbose: bool,
 ) -> Result<(), git2::Error> {
     // 1. do a merge analysis
     let analysis = repo.merge_analysis(&[&fetch_commit])?;
@@ -181,16 +192,23 @@ fn do_merge<'a>(
                     .allow_conflicts(true)
                     .conflict_style_merge(true)
                     .force()))?;
-                renderer::success_update_templates()
+                if verbose {
+                    renderer::success_update_templates()
+                }
             }
         };
     } else if analysis.0.is_normal() {
         // do a normal merge
         let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
         normal_merge(&repo, &head_commit, &fetch_commit)?;
-        renderer::success_update_templates()
+        
+        if verbose {
+            renderer::success_update_templates()
+        }
     } else {
-        renderer::no_template_updates()
+        if verbose {
+            renderer::no_template_updates()
+        }
     }
     Ok(())
 }
