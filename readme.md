@@ -55,6 +55,7 @@ charon init example --template typescript --directory . --repository https://git
 
 ### Templates
 
+Templates are automatically pull from the `templates_repo` and stored in the `templates_dir`.
 Templates can be configured with a `meta.json` in the root of the template. 
 
 #### Format
@@ -69,7 +70,7 @@ Templates can be configured with a `meta.json` in the root of the template.
 
 #### Extend
 
-Templates can extends other templates. Add the name of the templates you want to extend in the extend array in the `meta.json`. The extended templates are `copied` on by on in the `same direction` they are `added` in the `meta.json.
+Templates can extend other templates. Add the name of the templates you want to extend in the extend array in the `meta.json`. The extended templates are `copied` on by on in the `same direction` they are `added` in the `meta.json.
 
 #### Exclude
 
