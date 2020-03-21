@@ -133,7 +133,13 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
     // check if entry if directory
     if entry.path().is_dir() {
       let dir = target.to_string() + "/" + source_name;
-      fs::create_dir(Path::new(&dir))?;
+      match fs::create_dir(Path::new(&dir)) {
+        Ok(()) => (),
+        Err(error) => match error.kind() {
+          ErrorKind::AlreadyExists => (),
+          _ => return Err(error),
+        }
+      };
 
       copy_folder(&source_path, &dir, opts, meta)?
     } else {

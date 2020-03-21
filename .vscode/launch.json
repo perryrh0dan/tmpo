@@ -6,8 +6,8 @@
           "type": "cppvsdbg",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon.exe",
-        //   "args": ["init", "2fa", "typescript", "."],
-          "args": ["list"],
+          "args": ["init", "2fa", "typescript", "."],
+          // "args": ["list"],
           "stopAtEntry": false,
           "cwd": "${workspaceRoot}",
           "environment": [],
@@ -18,8 +18,8 @@
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon",
-        //   "args": ["init", "2fa", "typescript", "."],
-          "args": ["list"],
+          "args": ["init", "2fa", "-t", "golang"],
+          // "args": ["list"],
           "cwd": "${workspaceRoot}",
       }
   ]
