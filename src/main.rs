@@ -66,6 +66,8 @@ fn main() {
         .required(false)))
     .subcommand(App::new("list")
       .about("List all available templates"))
+    .subcommand(App::new("update")
+      .about("Update to the latest release")) 
     .get_matches();
 
     let verbose;
@@ -82,6 +84,9 @@ fn main() {
       }
       ("list", Some(_list_matches)) => {
         cli::list(&config);
+      }
+      ("update", Some(_update_matches)) => {
+        println!("Update command not available yet");
       }
       ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
       _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
