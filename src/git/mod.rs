@@ -105,13 +105,18 @@ fn do_fetch<'a>(
     Ok(repo.reference_to_annotated_commit(&fetch_head)?)
 }
 
-fn fast_forward(repo: &git2::Repository, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<(), git2::Error> {
+fn fast_forward(repo: &git2::Repository, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit, verbose: bool) -> Result<(), git2::Error> {
     let name = match lb.name() {
         Some(s) => s.to_string(),
         None => String::from_utf8_lossy(lb.name_bytes()).to_string(),
     };
+
     let msg = format!("Fast-Forward: Setting {} to id: {}", name, rc.id());
-    println!("{}", msg);
+
+    if verbose {
+        println!("{}", msg);
+    }
+
     lb.set_target(rc.id(), &msg)?;
     repo.set_head(&name)?;
     repo.checkout_head(Some(git2::build::CheckoutBuilder::default()
@@ -174,7 +179,7 @@ fn do_merge<'a>(
         let refname = format!("refs/heads/{}", remote_branch);
         match repo.find_reference(&refname) {
             Ok(mut r) => {
-                fast_forward(repo, &mut r, &fetch_commit)?;
+                fast_forward(repo, &mut r, &fetch_commit, verbose)?;
                 renderer::success_update_templates()
             }
             Err(_) => {
