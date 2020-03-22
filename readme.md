@@ -151,8 +151,8 @@ Coming soon
 
 ## Team
 
-- Thomas Pöhlmann (@perryrh0dan)[https://github.com/perryrh0dan]
+- Thomas Pöhlmann [@perryrh0dan](https://github.com/perryrh0dan)
 
 ## License
 
-(MIT)[https://github.com/perryrh0dan/charon/blob/master/license.md]
+[MIT](https://github.com/perryrh0dan/charon/blob/master/license.md)
