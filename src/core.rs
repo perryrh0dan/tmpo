@@ -1,10 +1,10 @@
 use std::fs;
-use std::path::{Path};
+use std::path::Path;
 
 use crate::config::Config;
-use crate::git; 
-use crate::template;
+use crate::git;
 use crate::renderer;
+use crate::template;
 
 pub struct InitOpts {
   pub name: String,
@@ -17,7 +17,7 @@ pub struct InitOpts {
 extern crate custom_error;
 use custom_error::custom_error;
 
-custom_error!{pub CoreError
+custom_error! {pub CoreError
     CreateDir        = "Unable to create workspace directory",
     CopyTemplate     = "Unable to copy template",
     InitializeRepo   = "Unable to initialize git",
@@ -26,7 +26,7 @@ custom_error!{pub CoreError
 
 /// Initialize a new Workspace
 pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
-  //Create directory the workspace directory 
+  //Create the workspace directory
   let dir = opts.directory + "/" + &opts.name;
   match fs::create_dir(Path::new(&dir)) {
     Ok(()) => (),
@@ -39,15 +39,30 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
     },
   };
 
-  let copy_opts = template::Options {
+  let mut email: Option<String> = None;
+  match git::get_email() {
+    Ok(value) => email = Some(value),
+    Err(_error) => (),
+  };
+
+  let mut username: Option<String> = None;
+  match git::get_username() {
+    Ok(value) => username = Some(value),
+    Err(_error) => (),
+  };
+
+  let options = template::Options {
     template: String::from(&opts.template),
     dir: String::from(&dir),
     name: String::from(&opts.name),
     repository: opts.repository.clone(),
+    username: username,
+    email: email,
     replace: opts.replace,
   };
 
-  match template::copy(config, copy_opts){
+  // copy the template
+  match template::copy(config, options) {
     Ok(()) => (),
     Err(_error) => {
       renderer::errors::copy_template();
@@ -55,13 +70,14 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
     }
   };
 
+  // Initialize git if repository is given
   if !opts.repository.is_none() {
     match git::init(&dir, &opts.repository.unwrap()) {
       Ok(()) => (),
       Err(_error) => {
         renderer::errors::init_repository();
         return Err(CoreError::InitializeRepo);
-      },
+      }
     }
   }
 

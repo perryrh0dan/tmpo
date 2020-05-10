@@ -1,15 +1,19 @@
 use std::io;
-use std::io::{Error};
+use std::io::Error;
 use std::io::*;
 
-pub fn get_value(name: &str, required: bool, default: Option<&str>) -> std::result::Result<Option<String>, Error> {
+pub fn get_value(
+  name: &str,
+  required: bool,
+  default: Option<&str>,
+) -> std::result::Result<Option<String>, Error> {
   let mut message;
-  
+
   // check if required, add question mark for optional parameters
   if required {
     message = format!("Enter the {}: ", name);
   } else {
-    message = format!{"Enter the {}?: ", name};
+    message = format! {"Enter the {}?: ", name};
   }
 
   // check if default values is provided
@@ -25,7 +29,9 @@ pub fn get_value(name: &str, required: bool, default: Option<&str>) -> std::resu
 
   let mut value = String::new();
   loop {
-    io::stdin().read_line(&mut value).expect("error: unable to read user input");
+    io::stdin()
+      .read_line(&mut value)
+      .expect("error: unable to read user input");
     // remove whitespaces and new line
     value = value.trim().to_string();
     if value == "" && !required {
