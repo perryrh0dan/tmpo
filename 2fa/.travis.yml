@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - 12
+  - 10
+  - 8
+install:
+  - npm install
+  - npm install -g codecov
+jobs:
+  include:
+    - stage: test
+      script: bash ./scripts/test.sh
+    - stage: deploy
+      if: branch = master
+      script: bash ./scripts/deploy.sh

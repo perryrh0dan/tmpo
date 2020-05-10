@@ -2,14 +2,14 @@ use colored::Colorize;
 
 use crate::utils;
 
-pub mod warnings;
 pub mod errors;
+pub mod warnings;
 
 pub fn list_templates(templates: &Vec<String>) {
   for template in templates {
     println!("{}", &utils::capitalize(template));
-  };
-} 
+  }
+}
 
 pub fn success_create(name: &str) {
   let text = format!("Created workspace: {}", name).green();

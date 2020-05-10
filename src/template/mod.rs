@@ -1,11 +1,11 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write, Error, ErrorKind};
+use std::io::{Error, ErrorKind, Read, Write};
 use std::path::Path;
 
 mod meta;
 
-use crate::config::Config; 
+use crate::config::Config;
 use crate::renderer;
 use crate::utils;
 
@@ -15,6 +15,8 @@ pub struct Options {
   pub dir: String,
   pub name: String,
   pub repository: Option<String>,
+  pub username: Option<String>,
+  pub email: Option<String>,
   pub replace: bool,
 }
 
@@ -30,23 +32,25 @@ pub fn copy(config: &Config, opts: Options) -> Result<(), Error> {
     Err(error) => {
       match error.kind() {
         ErrorKind::NotFound => renderer::errors::template_dir_not_found(&config.templates_dir),
-        ErrorKind::PermissionDenied => renderer::errors::template_dir_permission_denied(&config.templates_dir),
+        ErrorKind::PermissionDenied => {
+          renderer::errors::template_dir_permission_denied(&config.templates_dir)
+        }
         _ => renderer::errors::unknown(),
       }
       return Err(error);
     }
   };
 
-  // load meta informations 
+  // load meta informations
   let meta = meta::load_meta(&template_path)?;
 
-  // get list of all super tempaltes 
+  // get list of all super templates
   let templates = match &meta.extend {
     None => Vec::new(),
     Some(x) => x.clone(),
   };
 
-  // copy all super tempaltes into the directory
+  // copy all super templates into the directory
   for template in templates {
     let mut opts = opts.clone();
     opts.template = template;
@@ -62,7 +66,7 @@ pub fn copy(config: &Config, opts: Options) -> Result<(), Error> {
 
 pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
   let mut templates = Vec::<Template>::new();
-  
+
   // check if folder exists
   match fs::read_dir(&config.templates_dir) {
     Ok(fc) => fc,
@@ -91,12 +95,17 @@ pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
     let name;
     if entry_meta.name.is_none() {
       // if no name is provided use dir name
-      name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
+      name = entry
+        .path()
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
     } else {
       name = entry_meta.name.unwrap();
     }
 
-    if meta::exclude_file(&name, &meta){
+    if meta::exclude_file(&name, &meta) {
       continue;
     }
 
@@ -127,7 +136,12 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
     let entry = &entry.unwrap();
 
     let source_path = &entry.path().to_string_lossy().into_owned();
-    let source_name = &entry.path().file_name().unwrap().to_string_lossy().into_owned();
+    let source_name = &entry
+      .path()
+      .file_name()
+      .unwrap()
+      .to_string_lossy()
+      .into_owned();
     let dir_path = target.to_string() + "/" + source_name;
 
     // check if entry if directory
@@ -138,7 +152,7 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
         Err(error) => match error.kind() {
           ErrorKind::AlreadyExists => (),
           _ => return Err(error),
-        }
+        },
       };
 
       copy_folder(&source_path, &dir, opts, meta)?
@@ -156,7 +170,7 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
 
       // close file
       drop(src);
-      
+
       data = fill_template(&data, &opts)?;
 
       // create file
@@ -168,12 +182,20 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
   Ok(())
 }
 
-fn fill_template(tempalte: &str, opts: &Options) -> Result<String, Error> {
+fn fill_template(template: &str, opts: &Options) -> Result<String, Error> {
   // replace placeholder with actual value
-  let mut data = tempalte.replace("{{name}}", &opts.name);
+  let mut data = template.replace("{{name}}", &opts.name);
 
   if !opts.repository.is_none() {
     data = data.replace("{{repository}}", opts.repository.as_ref().unwrap());
+  }
+
+  if !opts.username.is_none() {
+    data = data.replace("{{username}}", opts.username.as_ref().unwrap());
+  }
+
+  if !opts.email.is_none() {
+    data = data.replace("{{email}}", opts.email.as_ref().unwrap());
   }
 
   Ok(data)
@@ -195,12 +217,15 @@ fn get_template_path(config: &Config, template: &str) -> Result<String, Error> {
 
   if template_path.is_none() {
     renderer::errors::template_not_found(&template);
-    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Template not found"))
+    return Err(std::io::Error::new(
+      std::io::ErrorKind::NotFound,
+      "Template not found",
+    ));
   }
 
   let template_path = template_path.unwrap();
-  
+
   // check if path exists
-  fs::read_dir(&template_path)?;  
+  fs::read_dir(&template_path)?;
   return Ok(template_path);
 }

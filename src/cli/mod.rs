@@ -1,9 +1,9 @@
 mod input;
+use crate::config::Config;
 use crate::core;
-use crate::config::Config; 
 
 extern crate clap;
-use clap::{ArgMatches};
+use clap::ArgMatches;
 
 pub fn init(config: &Config, args: &ArgMatches) {
   let mut opts = core::InitOpts {
@@ -13,12 +13,12 @@ pub fn init(config: &Config, args: &ArgMatches) {
     repository: None,
     replace: false,
   };
-  
+
   let name = args.value_of("name");
   let template = args.value_of("template");
   let directory = args.value_of("directory");
   let replace = args.value_of("replace");
-  
+
   // Get name
   if name.is_none() {
     opts.name = match input::get_value("project name", true, None) {
@@ -55,7 +55,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Err(_error) => return,
   };
 
-  match core::init(config, opts){
+  match core::init(config, opts) {
     Ok(()) => (),
     Err(_error) => return,
   };
