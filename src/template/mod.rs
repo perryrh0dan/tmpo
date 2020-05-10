@@ -58,8 +58,10 @@ pub fn copy(config: &Config, opts: Options) -> Result<(), Error> {
     copy(&config, opts)?;
   }
 
-  // copy the template into the directory
-  copy_template(config, &opts, &meta)?;
+  // check if template exists
+  let template_path = get_template_path(config, &opts.template)?;
+
+  copy_folder(&template_path, &opts.dir, &opts, &meta)?;
 
   Ok(())
 }
@@ -121,15 +123,6 @@ pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
   return Ok(templates);
 }
 
-fn copy_template(config: &Config, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
-  // check if template exists
-  let template_path = get_template_path(config, &opts.template)?;
-
-  copy_folder(&template_path, &opts.dir, opts, meta)?;
-
-  Ok(())
-}
-
 fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
   // Loop at selected template directory
   for entry in fs::read_dir(src)? {
@@ -142,9 +135,12 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
       .unwrap()
       .to_string_lossy()
       .into_owned();
-    let dir_path = target.to_string() + "/" + source_name;
+    let mut path = target.to_string() + "/" + source_name;
 
-    // check if entry if directory
+    // replace placeholders in path
+    path = replace_placeholders(&path, &opts)?;
+
+    // check if entry is directory
     if entry.path().is_dir() {
       let dir = target.to_string() + "/" + source_name;
       match fs::create_dir(Path::new(&dir)) {
@@ -171,10 +167,11 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
       // close file
       drop(src);
 
-      data = fill_template(&data, &opts)?;
+      // replace placeholders in data
+      data = replace_placeholders(&data, &opts)?;
 
       // create file
-      let mut dst = File::create(dir_path)?;
+      let mut dst = File::create(path)?;
       dst.write(data.as_bytes())?;
     }
   }
@@ -182,9 +179,9 @@ fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Re
   Ok(())
 }
 
-fn fill_template(template: &str, opts: &Options) -> Result<String, Error> {
+fn replace_placeholders(data: &str, opts: &Options) -> Result<String, Error> {
   // replace placeholder with actual value
-  let mut data = template.replace("{{name}}", &opts.name);
+  let mut data = data.replace("{{name}}", &opts.name);
 
   if !opts.repository.is_none() {
     data = data.replace("{{repository}}", opts.repository.as_ref().unwrap());
