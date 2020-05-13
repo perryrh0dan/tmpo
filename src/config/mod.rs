@@ -105,7 +105,7 @@ fn get_default_config(dir: &str) -> Config {
     templates_repo: git::RepoOptions {
       enabled: true,
       url: String::from("https://github.com/perryrh0dan/templates"),
-      auth: String::from("Token"),
+      auth: String::from("none"),
       token: None,
       username: None,
       password: None,
