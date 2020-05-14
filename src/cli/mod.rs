@@ -5,7 +5,7 @@ use crate::core;
 extern crate clap;
 use clap::ArgMatches;
 
-pub fn init(config: &Config, args: &ArgMatches) {
+pub fn init(config: &Config, args: &ArgMatches, verbose: bool) {
   let mut opts = core::InitOpts {
     name: String::from(""),
     template: String::from(""),
@@ -55,15 +55,35 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Err(_error) => return,
   };
 
-  match core::init(config, opts) {
+  match core::init(config, verbose, opts) {
     Ok(()) => (),
     Err(_error) => return,
   };
 }
 
-pub fn list(config: &Config) {
-  match core::list(config) {
+pub fn list(config: &Config, verbose: bool) {
+  match core::list(config, verbose) {
     Ok(()) => (),
     Err(_error) => return,
   };
+}
+
+pub fn view(config: &Config, args: &ArgMatches, verbose: bool) {
+  let template_opt = args.value_of("template");
+
+  // Get template
+  let template: String;
+  if template_opt.is_none() {
+    template = match input::get_value("template to show", true, None) {
+      Ok(template) => template.unwrap(),
+      Err(_error) => return,
+    };
+  } else {
+    template = template_opt.unwrap().to_string();
+  }
+
+  match core::view(config, verbose, &template) {
+    Ok(()) => (),
+    Err(_error) => return,
+  }
 }

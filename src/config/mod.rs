@@ -5,7 +5,6 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::git;
-use crate::renderer;
 
 extern crate dirs;
 extern crate serde;
@@ -17,7 +16,7 @@ pub struct Config {
   pub templates_repo: git::RepoOptions,
 }
 
-pub fn init(verbose: bool) -> Result<Config, Error> {
+pub fn init(_verbose: bool) -> Result<Config, Error> {
   let dir = match dirs::home_dir() {
     Some(path) => PathBuf::from(path),
     None => PathBuf::from(""),
@@ -29,8 +28,6 @@ pub fn init(verbose: bool) -> Result<Config, Error> {
   ensure_root_dir(&dir)?;
   ensure_config_file(&dir)?;
   let config = load_config(&dir)?;
-
-  ensure_template_dir(&config, verbose)?;
   Ok(config)
 }
 
@@ -54,33 +51,6 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
   let new_data = serde_json::to_string(&default_config).unwrap();
   let mut dst = File::create(conf_path)?;
   dst.write(new_data.as_bytes())?;
-
-  Ok(())
-}
-
-fn ensure_template_dir(config: &Config, verbose: bool) -> Result<(), Error> {
-  // Create if dir not exists
-  let r = fs::create_dir_all(Path::new(&config.templates_dir));
-  match r {
-    Ok(fc) => fc,
-    Err(error) => return Err(error),
-  }
-
-  // Initialize git repository if enabled
-  if config.templates_repo.enabled {
-    match git::init(&config.templates_dir, &config.templates_repo.url) {
-      Ok(()) => (),
-      Err(error) => match error {
-        git::GitError::InitError => println!("Init Error"),
-        git::GitError::AddRemoteError => println!("Add Remote Error"),
-      },
-    };
-
-    match git::update(&config.templates_dir, &config.templates_repo, verbose) {
-      Ok(()) => (),
-      Err(_e) => renderer::errors::update_templates(),
-    }
-  }
 
   Ok(())
 }

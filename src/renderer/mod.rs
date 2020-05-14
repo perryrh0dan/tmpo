@@ -1,5 +1,6 @@
 use colored::Colorize;
 
+use crate::repository::template;
 use crate::utils;
 
 pub mod errors;
@@ -29,4 +30,16 @@ pub fn no_template_updates() {
 pub fn success_update_templates() {
   let text = format!("Successful updated templates").green();
   println!("{}", text);
+}
+
+pub fn display_template(template: &template::Template) {
+  println!("name: {}", template.name);
+
+  if !template.description.is_none() {
+    println!("description: {}", template.description.as_ref().unwrap());
+  }
+}
+
+pub fn initiate_workspace(name: &String) {
+  println!("Initiate workspace: {}", name);
 }
