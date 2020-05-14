@@ -95,11 +95,11 @@ fn load_templates(directory: &String) -> Result<Vec<template::Template>, Error> 
       continue;
     }
 
-    let entry_path = entry.path().to_string_lossy().into_owned();
-    let entry_meta = template::meta::load_meta(&entry_path)?;
+    let path = entry.path().to_string_lossy().into_owned();
+    let meta = template::meta::load_meta(&path)?;
 
     // If type is None or unqual template skip entry
-    if entry_meta.kind.is_none() || entry_meta.kind != Some(String::from("template")) {
+    if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
       continue;
     }
 

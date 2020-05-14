@@ -64,7 +64,7 @@ impl Template {
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &String, opts: Options) -> Result<(), Error>  {
+  pub fn copy(&self, repository: &Repository, target: &String, opts: Options) -> Result<(), Error> {
     // get list of all super templates
     let super_templates = match &self.extend {
       None => Vec::new(),

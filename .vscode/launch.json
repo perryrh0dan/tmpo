@@ -18,7 +18,7 @@
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon",
-          "args": ["init", "2fa", "-t", "golang"],
+          "args": ["init", "2fa", "-t", "typescript"],
           // "args": ["list"],
           "cwd": "${workspaceRoot}",
       }

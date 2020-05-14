@@ -5,17 +5,10 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Scripts {
-  pub preinit: Option<String>,
-  pub postinit: Option<String>
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Meta {
+pub struct Meta  {
   pub kind: Option<String>,
   pub name: Option<String>,
   pub description: Option<String>,
-  pub scripts: Option<Scripts>,
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
 }
@@ -28,7 +21,6 @@ pub fn load_meta(dir: &str) -> Result<Meta, Error> {
       kind: None,
       name: None,
       description: None,
-      scripts: None,
       extend: None,
       exclude: None,
     };
