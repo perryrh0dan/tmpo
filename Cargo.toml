@@ -1,6 +1,6 @@
 [package]
 name = "charon"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
 
@@ -17,3 +17,4 @@ git2 = "0.12"
 custom_error = "1.7.1"
 colored = "1.9.3"
 ctrlc = "3.1.4"
+self_update = "0.14"

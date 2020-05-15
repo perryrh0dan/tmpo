@@ -112,7 +112,7 @@ fn main() {
       cli::list(&config, verbose);
     }
     ("update", Some(_update_matches)) => {
-      println!("Update command not available yet");
+      cli::update(&config, verbose);
     }
     ("view", Some(view_matches)) => {
       cli::view(&config, view_matches, verbose);
