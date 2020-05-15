@@ -3,7 +3,7 @@ pub mod config;
 pub mod core;
 pub mod git;
 pub mod renderer;
-pub mod template;
+pub mod repository;
 pub mod utils;
 
 #[macro_use]
@@ -40,10 +40,11 @@ fn main() {
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")
+        .visible_alias("i")
         .arg(
           Arg::with_name("name")
             .help("The name of the new workspace and initial project.")
-            .required(true)
+            .required(false)
             .index(1),
         )
         .arg(
@@ -77,27 +78,44 @@ fn main() {
             .required(false),
         ),
     )
-    .subcommand(App::new("list").about("List all available templates"))
+    .subcommand(
+      App::new("list")
+        .about("List all available templates")
+        .visible_alias("ls"),
+    )
     .subcommand(App::new("update").about("Update to the latest release"))
+    .subcommand(
+      App::new("view")
+        .about("View template details")
+        .visible_alias("v")
+        .arg(
+          Arg::with_name("template")
+            .help("The name of the template to use for generation")
+            .required(false)
+            .index(1),
+        ),
+    )
     .get_matches();
 
-  let verbose;
-  match matches.occurrences_of("verbose") {
-    0 => verbose = false,
-    1 | _ => verbose = true,
-  }
+  let verbose = match matches.occurrences_of("verbose") {
+    0 => false,
+    1 | _ => true,
+  };
 
   let config = config::init(verbose).unwrap();
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
-      cli::init(&config, init_matches);
+      cli::init(&config, init_matches, verbose);
     }
     ("list", Some(_list_matches)) => {
-      cli::list(&config);
+      cli::list(&config, verbose);
     }
     ("update", Some(_update_matches)) => {
       println!("Update command not available yet");
+    }
+    ("view", Some(view_matches)) => {
+      cli::view(&config, view_matches, verbose);
     }
     ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
     _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()

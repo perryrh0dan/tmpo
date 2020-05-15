@@ -11,3 +11,12 @@ pub fn lowercase(text: &str) -> String {
   }
   return v.into_iter().collect();
 }
+
+pub fn vec_to_string(vec: &Vec<String>) -> String {
+  let mut result = String::new();
+  for text in vec {
+    result = result + text;
+  }
+
+  return result;
+}

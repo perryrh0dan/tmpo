@@ -153,10 +153,19 @@ Coming soon
 
 ### Build
 
+#### Binary
+
 ``` bash
 cargo build
 cargo build --release
 ```
+
+#### Flatpak
+
+``` bash
+cargo
+```
+
 
 ## Team
 

@@ -4,7 +4,10 @@ use std::path::Path;
 use crate::config::Config;
 use crate::git;
 use crate::renderer;
-use crate::template;
+use crate::repository;
+
+extern crate custom_error;
+use custom_error::custom_error;
 
 pub struct InitOpts {
   pub name: String,
@@ -14,18 +17,24 @@ pub struct InitOpts {
   pub replace: bool,
 }
 
-extern crate custom_error;
-use custom_error::custom_error;
-
 custom_error! {pub CoreError
-    CreateDir        = "Unable to create workspace directory",
-    CopyTemplate     = "Unable to copy template",
-    InitializeRepo   = "Unable to initialize git",
-    LoadTemplates    = "Unable to load templates",
+    CreateDirFailur      = "Unable to create workspace directory",
+    CopyTemplateFailure  = "Unable to copy template",
+    LoadRepository = "Unable to create repository",
+    LoadTemplates        = "Unable to load templates",
+    TemplateNotFound     = "Unable to find template",
+    GitError             = "unable to initialize git repository"
 }
 
 /// Initialize a new Workspace
-pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
+pub fn init(config: &Config, verbose: bool, opts: InitOpts) -> Result<(), CoreError> {
+  renderer::initiate_workspace(&opts.name);
+
+  let repository = match repository::Repository::new(config, verbose) {
+    Ok(repository) => repository,
+    Err(_error) => return Err(CoreError::LoadRepository)
+  };
+
   //Create the workspace directory
   let dir = opts.directory + "/" + &opts.name;
   match fs::create_dir(Path::new(&dir)) {
@@ -34,7 +43,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
         renderer::errors::create_directory(&dir);
-        return Err(CoreError::CreateDir);
+        return Err(CoreError::CreateDirFailur);
       }
     },
   };
@@ -51,9 +60,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
     Err(_error) => (),
   };
 
-  let options = template::Options {
-    template: String::from(&opts.template),
-    dir: String::from(&dir),
+  let options = repository::template::Options {
     name: String::from(&opts.name),
     repository: opts.repository.clone(),
     username: username,
@@ -62,11 +69,19 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
   };
 
   // copy the template
-  match template::copy(config, options) {
+  let template = match repository.get_template_by_name(&opts.template) {
+    Ok(template) => template,
+    Err(_error) => {
+      renderer::errors::template_not_found(&opts.template);
+      return Err(CoreError::TemplateNotFound)
+    }
+  };
+
+  match template.copy(&repository, &dir, options) {
     Ok(()) => (),
     Err(_error) => {
       renderer::errors::copy_template();
-      return Err(CoreError::CopyTemplate);
+      return Err(CoreError::CopyTemplateFailure);
     }
   };
 
@@ -76,7 +91,7 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
       Ok(()) => (),
       Err(_error) => {
         renderer::errors::init_repository();
-        return Err(CoreError::InitializeRepo);
+        return Err(CoreError::GitError);
       }
     }
   }
@@ -87,18 +102,32 @@ pub fn init(config: &Config, opts: InitOpts) -> Result<(), CoreError> {
 }
 
 /// List all available templates
-pub fn list(config: &Config) -> Result<(), CoreError> {
-  let templates = match template::get_all_templates(config) {
-    Ok(templates) => templates,
-    Err(_error) => return Err(CoreError::LoadTemplates),
+pub fn list(config: &Config, verbose: bool) -> Result<(), CoreError> {
+  let repository = match repository::Repository::new(config, verbose) {
+    Ok(repository) => repository,
+    Err(_error) => return Err(CoreError::LoadRepository)
   };
 
   let mut names = Vec::new();
-  for template in templates {
+  for template in repository.templates {
     names.push(template.name);
   }
 
   renderer::list_templates(&names);
 
   Ok(())
+}
+
+/// View details of a template
+pub fn view(config: &Config, verbose: bool, name: &String) -> Result<(), CoreError> {
+  let repository = match repository::Repository::new(config, verbose) {
+    Ok(repository) => repository,
+    Err(_error) => return Err(CoreError::LoadRepository)
+  };
+
+  let template = repository.get_template_by_name(name).unwrap();
+
+  renderer::display_template(template);
+
+  return Ok(())
 }

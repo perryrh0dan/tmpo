@@ -5,9 +5,10 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Meta {
+pub struct Meta  {
   pub kind: Option<String>,
   pub name: Option<String>,
+  pub description: Option<String>,
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
 }
@@ -19,6 +20,7 @@ pub fn load_meta(dir: &str) -> Result<Meta, Error> {
     let meta = Meta {
       kind: None,
       name: None,
+      description: None,
       extend: None,
       exclude: None,
     };
@@ -33,24 +35,4 @@ pub fn load_meta(dir: &str) -> Result<Meta, Error> {
   src.read_to_string(&mut data)?;
   let meta: Meta = serde_json::from_str(&data)?;
   Ok(meta)
-}
-
-pub fn exclude_file(name: &str, meta: &Meta) -> bool {
-  if name == "meta.json" {
-    return true;
-  };
-
-  let items = match &meta.exclude {
-    None => return false,
-    Some(x) => x,
-  };
-
-  // check meta exclude
-  for item in items.iter() {
-    if item == &name {
-      return true;
-    }
-  }
-
-  return false;
 }
