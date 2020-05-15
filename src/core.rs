@@ -1,3 +1,4 @@
+use self_update::cargo_crate_version;
 use std::fs;
 use std::path::Path;
 
@@ -32,7 +33,7 @@ pub fn init(config: &Config, verbose: bool, opts: InitOpts) -> Result<(), CoreEr
 
   let repository = match repository::Repository::new(config, verbose) {
     Ok(repository) => repository,
-    Err(_error) => return Err(CoreError::LoadRepository)
+    Err(_error) => return Err(CoreError::LoadRepository),
   };
 
   //Create the workspace directory
@@ -73,7 +74,7 @@ pub fn init(config: &Config, verbose: bool, opts: InitOpts) -> Result<(), CoreEr
     Ok(template) => template,
     Err(_error) => {
       renderer::errors::template_not_found(&opts.template);
-      return Err(CoreError::TemplateNotFound)
+      return Err(CoreError::TemplateNotFound);
     }
   };
 
@@ -105,7 +106,7 @@ pub fn init(config: &Config, verbose: bool, opts: InitOpts) -> Result<(), CoreEr
 pub fn list(config: &Config, verbose: bool) -> Result<(), CoreError> {
   let repository = match repository::Repository::new(config, verbose) {
     Ok(repository) => repository,
-    Err(_error) => return Err(CoreError::LoadRepository)
+    Err(_error) => return Err(CoreError::LoadRepository),
   };
 
   let mut names = Vec::new();
@@ -118,16 +119,29 @@ pub fn list(config: &Config, verbose: bool) -> Result<(), CoreError> {
   Ok(())
 }
 
+pub fn update(config: &Config, verbose: bool) -> Result<(), Box<::std::error::Error>> {
+  let status = self_update::backends::github::Update::configure()
+    .repo_owner("perryrh0dan")
+    .repo_name("charon")
+    .bin_name("charon")
+    .show_download_progress(true)
+    .current_version(cargo_crate_version!())
+    .build()?
+    .update()?;
+  println!("Update status: `{}`!", status.version());
+  Ok(())
+}
+
 /// View details of a template
 pub fn view(config: &Config, verbose: bool, name: &String) -> Result<(), CoreError> {
   let repository = match repository::Repository::new(config, verbose) {
     Ok(repository) => repository,
-    Err(_error) => return Err(CoreError::LoadRepository)
+    Err(_error) => return Err(CoreError::LoadRepository),
   };
 
   let template = repository.get_template_by_name(name).unwrap();
 
   renderer::display_template(template);
 
-  return Ok(())
+  return Ok(());
 }

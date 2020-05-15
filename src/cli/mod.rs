@@ -68,6 +68,13 @@ pub fn list(config: &Config, verbose: bool) {
   };
 }
 
+pub fn update(config: &Config, verbose: bool) {
+  match core::update(config, verbose) {
+    Ok(()) => (),
+    Err(_error) => println!("{}", _error),
+  };
+}
+
 pub fn view(config: &Config, args: &ArgMatches, verbose: bool) {
   let template_opt = args.value_of("template");
 
