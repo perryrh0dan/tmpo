@@ -34,9 +34,15 @@ pub fn success_update_templates() {
 
 pub fn display_template(template: &template::Template) {
   println!("name: {}", template.name);
+  println!("path: {}", template.path);
 
   if !template.description.is_none() {
     println!("description: {}", template.description.as_ref().unwrap());
+  }
+
+  if !template.extend.is_none() {
+    let text = utils::vec_to_string(template.extend.as_ref().unwrap());
+    println!("extends: {}", text);
   }
 }
 

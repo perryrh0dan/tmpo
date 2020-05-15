@@ -40,6 +40,7 @@ fn main() {
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")
+        .visible_alias("i")
         .arg(
           Arg::with_name("name")
             .help("The name of the new workspace and initial project.")
@@ -77,15 +78,22 @@ fn main() {
             .required(false),
         ),
     )
-    .subcommand(App::new("list").about("List all available templates"))
+    .subcommand(
+      App::new("list")
+        .about("List all available templates")
+        .visible_alias("ls"),
+    )
     .subcommand(App::new("update").about("Update to the latest release"))
     .subcommand(
-      App::new("view").about("View template details").arg(
-        Arg::with_name("template")
-          .help("The name of the template to use for generation")
-          .required(false)
-          .index(1),
-      ),
+      App::new("view")
+        .about("View template details")
+        .visible_alias("v")
+        .arg(
+          Arg::with_name("template")
+            .help("The name of the template to use for generation")
+            .required(false)
+            .index(1),
+        ),
     )
     .get_matches();
 
