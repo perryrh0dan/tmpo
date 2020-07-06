@@ -8,7 +8,7 @@ use crate::git;
 
 extern crate dirs;
 extern crate serde;
-extern crate serde_json;
+extern crate serde_yaml;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
@@ -42,13 +42,13 @@ fn ensure_root_dir(dir: &str) -> Result<(), Error> {
 }
 
 fn ensure_config_file(dir: &str) -> Result<(), Error> {
-  let conf_path = String::from(dir) + "/config.json";
+  let conf_path = String::from(dir) + "/config.yaml";
   if Path::new(&conf_path).exists() {
     return Ok(());
   }
 
   let default_config = get_default_config(dir);
-  let new_data = serde_json::to_string(&default_config).unwrap();
+  let new_data = serde_yaml::to_string(&default_config).unwrap();
   let mut dst = File::create(conf_path)?;
   dst.write(new_data.as_bytes())?;
 
@@ -63,7 +63,7 @@ fn load_config(dir: &str) -> Result<Config, Error> {
 
   // Write to data string
   src.read_to_string(&mut data)?;
-  let config: Config = serde_json::from_str(&data).unwrap();
+  let config: Config = serde_yaml::from_str(&data).unwrap();
   return Ok(config);
 }
 
