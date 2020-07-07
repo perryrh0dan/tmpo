@@ -155,9 +155,11 @@ Coming soon
 
 #### Binary
 
+Charon is using [cross](https://github.com/rust-embedded/cross) to build cross platform.
+
 ``` bash
-cargo build
-cargo build --release
+cross build --target x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu
 ```
 
 #### Flatpak
