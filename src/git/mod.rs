@@ -12,7 +12,7 @@ custom_error! {pub GitError
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct RepoOptions {
+pub struct GitOptions {
   pub enabled: bool,
   pub url: String,
   pub auth: String,
@@ -37,7 +37,7 @@ pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
   Ok(())
 }
 
-pub fn update(dir: &str, opts: &RepoOptions) -> Result<(), git2::Error> {
+pub fn update(dir: &str, opts: &GitOptions) -> Result<(), git2::Error> {
   let repo = match git2::Repository::open(dir) {
     Ok(repo) => repo,
     Err(e) => return Err(e),
@@ -92,7 +92,7 @@ fn do_fetch<'a>(
   repo: &'a git2::Repository,
   refs: &[&str],
   remote: &'a mut git2::Remote,
-  opts: &RepoOptions,
+  opts: &GitOptions,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
   // token needs to be declared here to live longer than the fetchOptions
   let token;

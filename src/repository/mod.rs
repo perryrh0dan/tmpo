@@ -2,7 +2,7 @@ use std::fs;
 use std::io::Error;
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::renderer;
 
@@ -13,20 +13,25 @@ pub mod template;
 
 pub struct Repository {
   pub directory: String,
-  pub config: git::RepoOptions,
+  pub config: RepositoryOptions,
   pub templates: Vec<template::Template>,
 }
 
 custom_error! {pub RepositoryError
   InitializationError = "Unable to initialize repository",
+  NotFound = "Repository not found",
   TemplateNotFound = "Unable to find template",
   LoadingErrors = "Unable to load templates",
 }
 
 impl Repository {
-  pub fn new(config: &Config, url: &str) -> Result<Repository, RepositoryError> {
-    let cfg = config.get_repository_config(url).unwrap();
-    let repository_name = base64::encode_config(&cfg.url, base64::URL_SAFE);
+  pub fn new(config: &Config, name: &str) -> Result<Repository, RepositoryError> {
+    let cfg = match config.get_repository_config(name) {
+      Option::Some(cfg) => cfg,
+      Option::None => return Err(RepositoryError::NotFound),
+    };
+
+    let repository_name = base64::encode_config(&cfg.name, base64::URL_SAFE);
     let repository_dir = String::from(&config.templates_dir) + "/" + &repository_name;
 
     let mut repository = Repository {
@@ -69,7 +74,7 @@ impl Repository {
   }
 
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
-    let repository_name = base64::encode_config(&self.config.url, base64::URL_SAFE);
+    let repository_name = base64::encode_config(&self.config.name, base64::URL_SAFE);
     let repository_dir = String::from(&config.templates_dir) + "/" + &repository_name;
     let r = fs::create_dir_all(Path::new(&repository_dir));
     match r {
@@ -78,15 +83,15 @@ impl Repository {
     }
 
     // Initialize git repository if enabled
-    if self.config.enabled {
-      match git::init(&repository_dir, &self.config.url) {
+    if self.config.git_options.enabled {
+      match git::init(&repository_dir, &self.config.git_options.url) {
         Ok(()) => (),
         Err(error) => match error {
           git::GitError::InitError => println!("Init Error"),
           git::GitError::AddRemoteError => println!("Add Remote Error"),
         },
       };
-      match git::update(&repository_dir, &self.config) {
+      match git::update(&repository_dir, &self.config.git_options) {
         Ok(()) => (),
         Err(_e) => renderer::errors::update_templates(),
       }
@@ -135,7 +140,7 @@ pub fn get_repositories(config: &Config) -> Vec<String> {
   let mut repositories = Vec::<String>::new();
 
   for entry in &config.templates_repositories {
-    repositories.push(String::from(&entry.url));
+    repositories.push(String::from(&entry.name));
   }
 
   return repositories;

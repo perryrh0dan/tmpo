@@ -13,7 +13,14 @@ extern crate serde_yaml;
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
   pub templates_dir: String,
-  pub templates_repositories: Vec<git::RepoOptions>,
+  pub templates_repositories: Vec<RepositoryOptions>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct RepositoryOptions {
+  pub name: String,
+  pub description: String,
+  pub git_options: git::GitOptions,
 }
 
 pub fn init(_verbose: bool) -> Result<Config, Error> {
@@ -83,38 +90,36 @@ fn load_config(dir: &str) -> Result<Config, Error> {
 
 fn get_default_config(dir: &str) -> Config {
   let template_dir = format!("{}{}", dir, "/templates");
-  let mut repo_options = Vec::<git::RepoOptions>::new();
+  let mut repo_options = Vec::<RepositoryOptions>::new();
 
-  repo_options.push(
-    git::RepoOptions {
-      enabled: true,
-      url: String::from("https://github.com/perryrh0dan/templates"),
-      auth: String::from("none"),
-      token: None,
-      username: None,
-      password: None,
-    },
-  );
+  let git_options = git::GitOptions {
+    enabled: true,
+    url: String::from("https://github.com/perryrh0dan/templates"),
+    auth: String::from("none"),
+    token: None,
+    username: None,
+    password: None,
+  };
+
+  repo_options.push(RepositoryOptions {
+    name: String::from("Default"),
+    git_options: git_options,
+  });
 
   let config = Config {
     templates_dir: template_dir,
-    templates_repositories: repo_options
+    templates_repositories: repo_options,
   };
 
   return config;
 }
 
 impl Config {
-  pub fn get_repository_config(&self, url: &str) -> Option<git::RepoOptions> {
-    // let result = base64::decode_config(url, base64::URL_SAFE).unwrap();
-    // let url = String::from_utf8_lossy(&result);
-
-    let config = self.templates_repositories.iter().find(| &x | {
-      x.url == url
-    });
+  pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
+    let config = self.templates_repositories.iter().find(|&x| x.name == name);
 
     if config.is_some() {
-      return Some(config.unwrap().clone())
+      return Some(config.unwrap().clone());
     } else {
       return None;
     }

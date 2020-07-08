@@ -47,6 +47,14 @@ fn main() {
             .index(1),
         )
         .arg(
+          Arg::with_name("repository")
+            .short('r')
+            .long("repository")
+            .takes_value(true)
+            .help("The repository to use")
+            .required(false),
+        )
+        .arg(
           Arg::with_name("template")
             .short('t')
             .long("template")
@@ -60,14 +68,6 @@ fn main() {
             .long("directory")
             .takes_value(true)
             .help("The directory name to create the workspace in.")
-            .required(false),
-        )
-        .arg(
-          Arg::with_name("repository")
-            .short('r')
-            .long("repository")
-            .takes_value(true)
-            .help("The remote url to initialize the git repository")
             .required(false),
         )
         .arg(
@@ -87,6 +87,14 @@ fn main() {
       App::new("view")
         .about("View template details")
         .visible_alias("v")
+        .arg(
+          Arg::with_name("repository")
+            .short('r')
+            .long("repository")
+            .takes_value(true)
+            .help("The repository to use")
+            .required(false),
+        )
         .arg(
           Arg::with_name("template")
             .help("The name of the template to use for generation")

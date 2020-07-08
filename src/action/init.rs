@@ -11,11 +11,10 @@ use dialoguer::{theme::ColorfulTheme, Input, Select};
 
 pub fn init(config: &Config, args: &ArgMatches) {
   let workspace_name = args.value_of("name");
+  let repository_name = args.value_of("repository");
   let template_name = args.value_of("template");
   let workspace_directory = args.value_of("directory");
-  let workspace_repository = args.value_of("repository");
 
-  ////
   renderer::initiate_workspace();
 
   //// Get workspace name form user input
@@ -32,23 +31,31 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   //// Get repository name from user input
-  let repositories = repository::get_repositories(config);
-  let selection = match dialoguer::Select::with_theme(&ColorfulTheme::default())
-    .with_prompt("Select a repository")
-    .default(0)
-    .items(&repositories[..])
-    .interact()
-  {
-    Ok(selection) => selection,
-    Err(_error) => return,
+  let repository_name = if repository_name.is_none() {
+    let repositories = repository::get_repositories(config);
+    let selection = match dialoguer::Select::with_theme(&ColorfulTheme::default())
+      .with_prompt("Select a repository")
+      .default(0)
+      .items(&repositories[..])
+      .interact()
+    {
+      Ok(selection) => selection,
+      Err(_error) => return,
+    };
+    String::from(&repositories[selection])
+  } else {
+    String::from(repository_name.unwrap())
   };
-
-  let repository_name = String::from(&repositories[selection]);
 
   // Load repository
   let repository = match repository::Repository::new(config, &repository_name) {
     Ok(repository) => repository,
-    Err(_error) => return,
+    Err(error) => match error {
+      repository::RepositoryError::NotFound => {
+        return renderer::errors::repository_not_found(&repository_name)
+      }
+      _ => return,
+    },
   };
 
   //// Get template name from user input
@@ -82,20 +89,16 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   //// Get workspace git repository url from user input
-  let workspace_repository = if workspace_repository.is_none() {
-    match Input::<String>::new()
-      .with_prompt("repository url")
-      .allow_empty(true)
-      .interact()
-    {
-      Ok(repository) => repository,
-      Err(_error) => return,
-    }
-  } else {
-    workspace_repository.unwrap().to_string()
+  let workspace_repository = match Input::<String>::new()
+    .with_prompt("repository url")
+    .allow_empty(true)
+    .interact()
+  {
+    Ok(repository) => repository,
+    Err(_error) => return,
   };
 
-  // Create the workspace directory
+  //// Create the workspace directory
   let dir = workspace_directory + "/" + &workspace_name;
   match fs::create_dir(Path::new(&dir)) {
     Ok(()) => (),
@@ -120,7 +123,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Err(_error) => (),
   };
 
-  // Get the template
+  //// Get the template
   let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
     Err(_error) => {
@@ -137,7 +140,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     replace: false,
   };
 
-  // Copy the template
+  //// Copy the template
   match template.copy(&repository, &dir, options) {
     Ok(()) => (),
     Err(_error) => {

@@ -5,6 +5,16 @@ pub fn update_templates() {
   println!("{}", text);
 }
 
+pub fn repository_not_found(repository: &str) {
+  let text = format!("Repository: {} not found", repository).red();
+  println!("{}", text);
+}
+
+pub fn template_not_found(template: &str) {
+  let text = format!("Template: {} not found", template).red();
+  println!("{}", text);
+}
+
 pub fn create_directory(dir: &str) {
   let text = format!("{} {}", "Cant create directory:", dir).red();
   println!("{}", text);
@@ -37,10 +47,5 @@ pub fn missing_token() {
 
 pub fn unknown() {
   let text = format!("Unknown error occured").red();
-  println!("{}", text);
-}
-
-pub fn template_not_found(template: &str) {
-  let text = format!("Template: {} not found", template).red();
   println!("{}", text);
 }
