@@ -13,7 +13,7 @@ extern crate serde_yaml;
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
   pub templates_dir: String,
-  pub templates_repo: git::RepoOptions,
+  pub templates_repositories: Vec<git::RepoOptions>,
 }
 
 pub fn init(_verbose: bool) -> Result<Config, Error> {
@@ -56,7 +56,7 @@ fn ensure_config_file(dir: &str) -> Result<(), Error> {
 }
 
 fn load_config(dir: &str) -> Result<Config, Error> {
-  let dir = String::from(dir) + "/config.json";
+  let dir = String::from(dir) + "/config.yaml";
   // Open file
   let mut src = File::open(Path::new(&dir))?;
   let mut data = String::new();
@@ -69,10 +69,10 @@ fn load_config(dir: &str) -> Result<Config, Error> {
 
 fn get_default_config(dir: &str) -> Config {
   let template_dir = format!("{}{}", dir, "/templates");
+  let mut repo_options = Vec::<git::RepoOptions>::new();
 
-  let config = Config {
-    templates_dir: template_dir,
-    templates_repo: git::RepoOptions {
+  repo_options.push(
+    git::RepoOptions {
       enabled: true,
       url: String::from("https://github.com/perryrh0dan/templates"),
       auth: String::from("none"),
@@ -80,7 +80,29 @@ fn get_default_config(dir: &str) -> Config {
       username: None,
       password: None,
     },
+  );
+
+  let config = Config {
+    templates_dir: template_dir,
+    templates_repositories: repo_options
   };
 
   return config;
+}
+
+impl Config {
+  pub fn get_repository_config(&self, url: &str) -> Option<git::RepoOptions> {
+    // let result = base64::decode_config(url, base64::URL_SAFE).unwrap();
+    // let url = String::from_utf8_lossy(&result);
+
+    let config = self.templates_repositories.iter().find(| &x | {
+      x.url == url
+    });
+
+    if config.is_some() {
+      return Some(config.unwrap().clone())
+    } else {
+      return None;
+    }
+  }
 }

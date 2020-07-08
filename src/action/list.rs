@@ -3,8 +3,8 @@ use crate::repository;
 use crate::renderer;
 
 
-pub fn list(config: &Config, verbose: bool) {
-  let repository = match repository::Repository::new(config, verbose) {
+pub fn list(config: &Config) {
+  let repository = match repository::Repository::new(config, "") {
     Ok(repository) => repository,
     Err(_error) => return,
   };

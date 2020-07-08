@@ -46,6 +46,7 @@ pub fn display_template(template: &template::Template) {
   }
 }
 
-pub fn initiate_workspace(name: &String) {
-  println!("Initiate workspace: {}", name);
+pub fn initiate_workspace() {
+  let text = format!("Initiate workspace").green();
+  println!("{}", text);
 }

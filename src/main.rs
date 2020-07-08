@@ -1,5 +1,4 @@
 mod action;
-pub mod cli;
 pub mod config;
 pub mod git;
 pub mod renderer;
@@ -106,16 +105,16 @@ fn main() {
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
-      action::init::init(&config, init_matches, verbose);
+      action::init::init(&config, init_matches);
     }
     ("list", Some(_list_matches)) => {
-      action::list::list(&config, verbose);
+      action::list::list(&config);
     }
     ("update", Some(_update_matches)) => {
       action::update::update();
     }
     ("view", Some(view_matches)) => {
-      action::view::view(&config, view_matches, verbose);
+      action::view::view(&config, view_matches);
     }
     ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
     _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
