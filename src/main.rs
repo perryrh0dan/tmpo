@@ -1,6 +1,6 @@
-mod cli;
+mod action;
+pub mod cli;
 pub mod config;
-pub mod core;
 pub mod git;
 pub mod renderer;
 pub mod repository;
@@ -106,16 +106,16 @@ fn main() {
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
-      cli::init(&config, init_matches, verbose);
+      action::init::init(&config, init_matches, verbose);
     }
     ("list", Some(_list_matches)) => {
-      cli::list(&config, verbose);
+      action::list::list(&config, verbose);
     }
     ("update", Some(_update_matches)) => {
-      cli::update(&config, verbose);
+      action::update::update();
     }
     ("view", Some(view_matches)) => {
-      cli::view(&config, view_matches, verbose);
+      action::view::view(&config, view_matches, verbose);
     }
     ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
     _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()

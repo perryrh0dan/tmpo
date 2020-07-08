@@ -6,18 +6,13 @@ language: rust
 services: docker
 sudo: required
 
-# TODO Rust builds on stable by default, this can be
-# overridden on a case by case basis down below.
-
 env:
   global:
-    # TODO Update this to match the name of your project.
     - CRATE_NAME=charon
 
 matrix:
-  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
-  # don't need
   include:
+
     # Linux
     - env: TARGET=aarch64-unknown-linux-gnu
     - env: TARGET=arm-unknown-linux-gnueabi

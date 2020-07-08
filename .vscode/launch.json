@@ -6,7 +6,7 @@
           "type": "cppvsdbg",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon.exe",
-          "args": ["init", "2fa", "typescript", "."],
+          "args": ["init", "2fa", "default", "."],
           // "args": ["list"],
           "stopAtEntry": false,
           "cwd": "${workspaceRoot}",
@@ -18,7 +18,7 @@
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon",
-          "args": ["init", "2fa", "-t", "typescript"],
+          "args": ["init", "2fa", "-t", "loopback4"],
           // "args": ["list"],
           "cwd": "${workspaceRoot}",
       }

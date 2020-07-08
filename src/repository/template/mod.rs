@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Write};
 use std::path::Path;
 
+use std::process::Command;
+
 pub mod meta;
 
 use crate::repository::Repository;
@@ -21,6 +23,7 @@ pub struct Template {
   pub name: String,
   pub path: String,
   pub description: Option<String>,
+  pub scripts: Option<meta::Scripts>,
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
 }
@@ -59,6 +62,7 @@ impl Template {
       name: utils::lowercase(&name),
       path: path,
       description: meta.description,
+      scripts: meta.scripts,
       extend: meta.extend,
       exclude: meta.exclude,
     });
@@ -75,6 +79,18 @@ impl Template {
       let template = repository.get_template_by_name(&name).unwrap();
       let opts = opts.clone();
       template.copy(repository, target, opts)?;
+    }
+
+    if self.scripts.is_some() && self.scripts.as_ref().unwrap().before_install.is_some() {
+      let script = self
+        .scripts
+        .as_ref()
+        .unwrap()
+        .before_install
+        .as_ref()
+        .unwrap();
+
+      run_script(script, target);
     }
 
     self.copy_folder(&self.path, &target, &opts)?;
@@ -137,6 +153,32 @@ impl Template {
 
     Ok(())
   }
+}
+
+fn run_script(script: &str, target: &String) {
+  // Run before script if exists
+  let output = if cfg!(target_os = "windows") {
+    Command::new("cmd")
+      .current_dir(&Path::new(target))
+      .arg(script)
+      .output()
+      .ok()
+      .expect("failed to execute process")
+  } else {
+    Command::new("sh")
+      .current_dir(&Path::new(target))
+      .arg("-c")
+      .arg(script)
+      .output()
+      .ok()
+      .expect("failed to execute process")
+  };
+
+  let result = output.stdout;
+  println!("{}", String::from_utf8_lossy(&result));
+
+  let error = output.stderr;
+  println!("{}", String::from_utf8_lossy(&error));
 }
 
 fn is_excluded(name: &str, exclude: &Option<Vec<String>>) -> bool {
