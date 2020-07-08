@@ -8,7 +8,7 @@
 
 <div align="center">
    <a href="https://travis-ci.com/perryrh0dan/charon">
-      <img alt="Build Status" src="https://travis-ci.org/perryrh0dan/core.svg?branch=master" />
+      <img alt="Build Status" src="https://travis-ci.com/perryrh0dan/charon.svg?branch=master" />
    </a>
    <a href="https://codecov.io/gh/perryrh0dan/charon">
       <img src="https://codecov.io/gh/perryrh0dan/charon/branch/master/graph/badge.svg" />
