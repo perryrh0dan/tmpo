@@ -6,6 +6,21 @@
     Command line interface to create new workspaces based on templates
 </h4>
 
+<div align="center">
+   <a href="https://travis-ci.com/perryrh0dan/charon">
+      <img alt="Build Status" src="https://travis-ci.org/perryrh0dan/core.svg?branch=master" />
+   </a>
+   <a href="https://codecov.io/gh/perryrh0dan/charon">
+      <img src="https://codecov.io/gh/perryrh0dan/charon/branch/master/graph/badge.svg" />
+   </a>
+   <a href="https://codeclimate.com/github/perryrh0dan/charon/maintainability">
+      <img src="https://api.codeclimate.com/v1/badges/83561b59422e2492f9db/maintainability" />
+   </a>
+   <a href="https://gitter.im/perryrh0dan/charon/community">
+      <img alt="Gitter" src="https://badges.gitter.im/taskline/community.svg" />
+   </a>
+</div>
+
 ## Description
 
 Charon enables you to effectively create new workspaces based on predefined templates. To share templates across your team charon is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients. 
