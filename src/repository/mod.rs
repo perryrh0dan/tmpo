@@ -25,13 +25,6 @@ custom_error! {pub RepositoryError
 
 impl Repository {
   pub fn new(config: &Config, url: &str) -> Result<Repository, RepositoryError> {
-    // Create template dir if not exists
-    let r = fs::create_dir_all(Path::new(&config.templates_dir));
-    match r {
-      Ok(fc) => fc,
-      Err(_error) => return Err(RepositoryError::InitializationError),
-    }
-
     let cfg = config.get_repository_config(url).unwrap();
     let repository_name = base64::encode_config(&cfg.url, base64::URL_SAFE);
     let repository_dir = String::from(&config.templates_dir) + "/" + &repository_name;
@@ -141,17 +134,8 @@ impl Repository {
 pub fn get_repositories(config: &Config) -> Vec<String> {
   let mut repositories = Vec::<String>::new();
 
-  for entry in fs::read_dir(&config.templates_dir).unwrap() {
-    let entry = &entry.unwrap();
-
-    if !entry.path().is_dir() {
-      continue;
-    }
-
-    let name_encoded = entry.file_name().into_string().unwrap_or_default();
-    let name_decoded = String::from_utf8_lossy(&base64::decode(name_encoded).unwrap()).to_owned().to_string();
-
-    repositories.push(name_decoded);
+  for entry in &config.templates_repositories {
+    repositories.push(String::from(&entry.url));
   }
 
   return repositories;

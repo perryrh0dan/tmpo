@@ -33,12 +33,16 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   //// Get repository name from user input
   let repositories = repository::get_repositories(config);
-  let selection = dialoguer::Select::with_theme(&ColorfulTheme::default())
-    .with_prompt("Pick the repository")
+  let selection = match dialoguer::Select::with_theme(&ColorfulTheme::default())
+    .with_prompt("Select a repository")
     .default(0)
     .items(&repositories[..])
     .interact()
-    .unwrap();
+  {
+    Ok(selection) => selection,
+    Err(_error) => return,
+  };
+
   let repository_name = String::from(&repositories[selection]);
 
   // Load repository
@@ -50,12 +54,15 @@ pub fn init(config: &Config, args: &ArgMatches) {
   //// Get template name from user input
   let template_name = if template_name.is_none() {
     let templates = repository.get_templates();
-    let selection = Select::with_theme(&ColorfulTheme::default())
+    let selection = match Select::with_theme(&ColorfulTheme::default())
       .with_prompt("Pick a template")
       .default(0)
       .items(&templates[..])
       .interact()
-      .unwrap();
+    {
+      Ok(selection) => selection,
+      Err(_error) => return,
+    };
     String::from(&templates[selection])
   } else {
     String::from(template_name.unwrap())

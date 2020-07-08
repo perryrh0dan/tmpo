@@ -27,11 +27,25 @@ pub fn init(_verbose: bool) -> Result<Config, Error> {
 
   ensure_root_dir(&dir)?;
   ensure_config_file(&dir)?;
+
   let config = load_config(&dir)?;
+
+  ensure_template_dir(&config.templates_dir)?;
+
   Ok(config)
 }
 
 fn ensure_root_dir(dir: &str) -> Result<(), Error> {
+  let r = fs::create_dir_all(Path::new(dir));
+  match r {
+    Ok(fc) => fc,
+    Err(error) => return Err(error),
+  };
+
+  Ok(())
+}
+
+fn ensure_template_dir(dir: &str) -> Result<(), Error> {
   let r = fs::create_dir_all(Path::new(dir));
   match r {
     Ok(fc) => fc,
