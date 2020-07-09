@@ -52,19 +52,11 @@ before_deploy:
   - sh scripts/before_deploy.sh
 
 deploy:
-  # TODO update `api_key.secure`
-  # - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
-  # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
-  # - Paste the output down here
   api_key:
-    secure: A9v3PIzQQ4U08OHFmDPQzNXbNHEb7YHyLXCvMF+dXFuNSvhUNlmQYykxqUf3dvikhJL2/bsZ14umm7ni7fQh0tGwJ4+lPpNzYAcweGgNXnWvjTpY6ovuRbr3gs4/srkyxp/GBDmSW5L8wFN3hKCB+Lm0YnIPB9IA2afP8a30+8VTXT9nv7pNqGny4ilN41ycr4DZi3sQoXdbruy7ClN7gsWW/GUiudBccHVIjmTapOFKLwZHODaUl/1/RDWQzh+i+17e1ivXuJPktDSrqmHPTZ15OjklnHKd6t179ry6VkGRg4R/R/YukVIqGzeaXGWAwdAQ5gE8cjGZghJLVi2jkDBJ85z8MvT+zLZLyliiuhLc/X8y7mkE1n0FKFtXXzFVt0l7V1LaEKbIbiV6XX3jsir4qgkqWjPHBZqO5mkGNFS16Dmt30/ZtEPAzXiINFXbWuWrpQ/LZ4NSto8IMrRTcoyDbAga/KYxJiNIeVuCe1E9dbytDM7K0GLtxJTul/WnnSeI6r//EFyC4bxYjyHhCXaag4q14KM+ak4rB0QgxsYzyGuh2MqyCoVj8YJLjLdKnL/SV7W7LPD40xlxvI6VCYTVi2ILHwL6vCxpukXYteX0c5IAIWkISDKu6nNBEgmCHXXPSqYSrgE5g7/QoCQHI8++nR8iKe0s7TWxZRydby8=
+    secure: K57jRY1+Ez6dobS9vbjA53I1jrMvXC5DfxLhSlz40YVlrKNMQ67f4eLdbLc3NZllbmDzTAVyPbNfzsmA77ERP9C7W65IdOz/Bz0T0PZ9yk6ekNsfT8DCfUY75FCPJ7zq2gr7EjV/F2bIJlDLhAZTsrte5OhJ4U8NdEKxNcJeiTwX6o5OqSQZ3aCooNwIFroyeoMoZDkS60f7z3kbfmTqQArRWTbB5cYRGeyWlGTv7L/yWXucGZ2Xs8+LfoVSYIAjj5EHvYieqL2QtqMJvF7fQU24NpTSitIzoUQIpWmwamWn2TNAW9uquBZo7wYy1RgMN9+LRsbwxDn+wWVm763IWlIIHQm3qb2Kg2aKU/tGpIBxx8NL6nLhC+Bx3MtPHHAqhmM29N+bp9qbIUzAkXrzX/PoiI9xxtr348tlT7e7nuv//ZSly28Vw9O444J3FyFXxVAdptJVWja/a/GE+0gsXAYiKGNy063w2y6D989LJ3h/LtAnK+CcaX5rczkMM+swpvEwtuBqRrK1vPDHeDeBsrqUHZm1oPQVjg5shywdDr5VUIQe9ykOJAEd/kBeOiLZCsON0cMh8F4MuYWnrk/S0Mg4oYlRKwlGdZo4ObEVkWhsPjcqCaIkXkLRM0vczrbCqJXswGm40e0if2rzDwHGbULrpY6AlQqeR3rseHJJ2f8=
   file_glob: true
   file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
   on:
-    # TODO Here you can pick which targets will generate binary releases
-    # In this example, there are some targets that are tested using the stable
-    # and nightly channels. This condition makes sure there is only one release
-    # for such targets and that's generated using the stable channel
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases
