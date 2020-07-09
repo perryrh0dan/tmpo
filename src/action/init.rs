@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::ErrorKind;
-use std::path::Path;
+use std::path::{PathBuf};
 
 use crate::cli::{input, select};
 use crate::config::Config;
@@ -39,7 +39,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
           renderer::errors::no_repositories();
           return;
         },
-        _ => return,
+        _ => std::process::exit(130),
       },
     }
   } else {
@@ -89,13 +89,15 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   //// Create the workspace directory
-  let dir = workspace_directory + "/" + &workspace_name;
-  match fs::create_dir(Path::new(&dir)) {
+  let mut dir = PathBuf::from(workspace_directory);
+  dir.push(&workspace_name);
+
+  match fs::create_dir(&dir) {
     Ok(()) => (),
     Err(error) => match error.kind() {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
-        renderer::errors::create_directory(&dir);
+        renderer::errors::create_directory(&dir.to_string_lossy());
         return;
       }
     },

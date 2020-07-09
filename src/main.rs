@@ -18,6 +18,7 @@ fn main() {
   // catch ctrl + c
   match ctrlc::set_handler(move || {
     println!();
+
     std::process::exit(130);
   }) {
     Ok(()) => (),

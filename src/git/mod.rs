@@ -1,4 +1,5 @@
 use std::str;
+use std::path::Path;
 
 use crate::renderer;
 
@@ -21,7 +22,7 @@ pub struct GitOptions {
   pub password: Option<String>,
 }
 
-pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
+pub fn init(dir: &Path, repository: &str) -> Result<(), GitError> {
   // Initialize git repository
   let repo = match git2::Repository::init(dir) {
     Ok(repo) => repo,
@@ -37,7 +38,7 @@ pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
   Ok(())
 }
 
-pub fn update(dir: &str, opts: &GitOptions) -> Result<(), git2::Error> {
+pub fn update(dir: &Path, opts: &GitOptions) -> Result<(), git2::Error> {
   let repo = match git2::Repository::open(dir) {
     Ok(repo) => repo,
     Err(e) => return Err(e),

@@ -20,7 +20,7 @@ pub fn view(config: &Config, args: &ArgMatches) {
         ErrorKind::InvalidData => {
           renderer::errors::no_repositories();
           return;
-        }
+        },
         _ => return,
       },
     }

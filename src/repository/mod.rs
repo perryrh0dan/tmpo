@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::{Error};
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
@@ -30,11 +30,10 @@ impl Repository {
       Option::None => return Err(RepositoryError::NotFound),
     };
 
-    let repository_name = base64::encode_config(&cfg.name, base64::URL_SAFE);
-    let repository_dir = String::from(&config.templates_dir) + "/" + &repository_name;
+    let directory = String::from(&config.templates_dir) + "/" + &name;
 
     let mut repository = Repository {
-      directory: repository_dir,
+      directory: directory,
       config: cfg,
       templates: Vec::<template::Template>::new(),
     };
@@ -60,8 +59,6 @@ impl Repository {
   }
 
   pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
-    let name = base64::encode_config(name, base64::URL_SAFE);
-
     let mut repository_dir = PathBuf::from(&config.templates_dir);
     repository_dir.push(&name);
 
@@ -97,9 +94,9 @@ impl Repository {
   }
 
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
-    let repository_name = base64::encode_config(&self.config.name, base64::URL_SAFE);
-    let repository_dir = String::from(&config.templates_dir) + "/" + &repository_name;
-    let r = fs::create_dir_all(Path::new(&repository_dir));
+    let mut directory = PathBuf::from(&config.templates_dir);
+    directory.push(&self.config.name);
+    let r = fs::create_dir_all(&directory);
     match r {
       Ok(fc) => fc,
       Err(error) => return Err(error),
@@ -107,14 +104,14 @@ impl Repository {
 
     // Initialize git repository if enabled
     if self.config.git_options.enabled {
-      match git::init(&repository_dir, &self.config.git_options.url.clone().unwrap()) {
+      match git::init(&directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
         Err(error) => match error {
           git::GitError::InitError => println!("Init Error"),
           git::GitError::AddRemoteError => println!("Add Remote Error"),
         },
       };
-      match git::update(&repository_dir, &self.config.git_options) {
+      match git::update(&directory, &self.config.git_options) {
         Ok(()) => (),
         Err(_e) => renderer::errors::update_templates(),
       }
