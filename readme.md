@@ -65,7 +65,7 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 ### Cli
 
 ``` bash
-charon init example --template typescript --directory . --repository https://github.com/perryrh0dan/example 
+charon init example --repository default --template typescript --directory .
 ```
 
 ### Templates
@@ -80,6 +80,9 @@ Templates can be configured with a `meta.json` in the template root. The officia
     "name": "",
     "extend": [""],
     "exclude": [""],
+    "scripts": {
+      "before_install": ""
+    }
 }
 ```
 
@@ -101,22 +104,22 @@ Placeholders can be used in each file of your template. During the initlializati
 
 ## Configuration
 
-To configure charon navigate to the ~/.charon.json file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
+To configure charon navigate to the ~/.charon/config.yaml file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
 
 The following illustrates all the available options with their respective default values.
 
-``` json
-{
-  "templates_dir": "$HOME/.charon/templates",
-  "templates_repo": {
-    "enabled": true,
-    "url": "https://github.com/perryrh0dan/templates",
-    "auth": "none",
-    "token": null,
-    "username": null,
-    "password": null
-  }
-}
+``` yaml
+  templates_dir: /home/thomas/.charon/templates
+  templates_repositories:
+    - name: default
+      description: this is the default template repository from tpoe
+      git_options:
+        enabled: true
+        url: "https://github.com/perryrh0dan/templates"
+        auth: none
+        token: 
+        username: ~
+        password: ~
 ```
 
 ### In Detail
@@ -179,9 +182,7 @@ cross build --release --target x86_64-pc-windows-gnu
 
 #### Flatpak
 
-``` bash
-cargo
-```
+tbd
 
 
 ## Team
