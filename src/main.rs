@@ -1,15 +1,16 @@
 mod action;
-pub mod cli;
-pub mod config;
-pub mod git;
-pub mod renderer;
-pub mod repository;
-pub mod utils;
+mod cli;
+mod config;
+mod git;
+mod renderer;
+mod repository;
+mod template;
+mod utils;
 
 #[macro_use]
 extern crate log;
 extern crate clap;
-use clap::{crate_version, App, Arg};
+use clap::{crate_version, App, AppSettings, Arg};
 extern crate ctrlc;
 extern crate env_logger;
 
@@ -17,6 +18,7 @@ fn main() {
   // catch ctrl + c
   match ctrlc::set_handler(move || {
     println!();
+
     std::process::exit(130);
   }) {
     Ok(()) => (),
@@ -30,6 +32,7 @@ fn main() {
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
+    .setting(AppSettings::ArgRequiredElseHelp)
     .arg(
       Arg::with_name("verbose")
         .short('v')
@@ -48,6 +51,14 @@ fn main() {
             .index(1),
         )
         .arg(
+          Arg::with_name("repository")
+            .short('r')
+            .long("repository")
+            .takes_value(true)
+            .help("The repository to use")
+            .required(false),
+        )
+        .arg(
           Arg::with_name("template")
             .short('t')
             .long("template")
@@ -61,14 +72,6 @@ fn main() {
             .long("directory")
             .takes_value(true)
             .help("The directory name to create the workspace in.")
-            .required(false),
-        )
-        .arg(
-          Arg::with_name("repository")
-            .short('r')
-            .long("repository")
-            .takes_value(true)
-            .help("The remote url to initialize the git repository")
             .required(false),
         )
         .arg(
@@ -89,11 +92,26 @@ fn main() {
         .about("View template details")
         .visible_alias("v")
         .arg(
+          Arg::with_name("repository")
+            .short('r')
+            .long("repository")
+            .takes_value(true)
+            .help("The repository to use")
+            .required(false),
+        )
+        .arg(
           Arg::with_name("template")
             .help("The name of the template to use for generation")
             .required(false)
             .index(1),
         ),
+    )
+    .subcommand(
+      App::new("repository")
+        .about("Maintain repositories")
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .subcommand(App::new("add").about("Add new repository"))
+        .subcommand(App::new("remove").about("Remove a repository")),
     )
     .get_matches();
 
@@ -102,22 +120,28 @@ fn main() {
     1 | _ => true,
   };
 
-  let config = config::init(verbose).unwrap();
+  let mut config = config::init().unwrap();
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
-      action::init::init(&config, init_matches, verbose);
+      action::init::init(&config, init_matches);
     }
-    ("list", Some(_list_matches)) => {
-      action::list::list(&config, verbose);
+    ("list", Some(list_matches)) => {
+      action::list::list(&config, list_matches);
     }
     ("update", Some(_update_matches)) => {
       action::update::update();
     }
     ("view", Some(view_matches)) => {
-      action::view::view(&config, view_matches, verbose);
+      action::view::view(&config, view_matches);
     }
-    ("", None) => renderer::warnings::no_subcommand(), // If no subcommand was usd it'll match the tuple ("", None)
+    ("repository", Some(repository_matches)) => {
+      match repository_matches.subcommand() {
+        ("add", Some(repo_add_matches)) => action::repository::add(&mut config, repo_add_matches),
+        ("remove", Some(repo_delete_matches)) => action::repository::remove(&mut config, repo_delete_matches),
+        _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
+      }
+    }
     _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
   }
 }

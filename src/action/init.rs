@@ -1,87 +1,103 @@
 use std::fs;
-use std::path::Path;
+use std::io::ErrorKind;
+use std::path::{PathBuf};
 
-use crate::cli;
+use crate::cli::{input, select};
 use crate::config::Config;
 use crate::git;
 use crate::renderer;
-use crate::repository;
+use crate::repository::{Repository, RepositoryError};
+use crate::template;
 
-extern crate clap;
 use clap::ArgMatches;
 
-pub struct Options {
-  pub name: String,
-  pub template: String,
-  pub directory: String,
-  pub repository: Option<String>,
-  pub replace: bool,
-}
+pub fn init(config: &Config, args: &ArgMatches) {
+  let workspace_name = args.value_of("name");
+  let repository_name = args.value_of("repository");
+  let template_name = args.value_of("template");
+  let workspace_directory = args.value_of("directory");
 
-pub fn init(config: &Config, args: &ArgMatches, verbose: bool) {
-  let mut opts = Options {
-    name: String::from(""),
-    template: String::from(""),
-    directory: String::from(""),
-    repository: None,
-    replace: false,
+  renderer::initiate_workspace();
+
+  //// Get workspace name form user input
+  let workspace_name = if workspace_name.is_none() {
+    match input("Please enter the project name", false) {
+      Some(value) => value,
+      None => return,
+    }
+  } else {
+    workspace_name.unwrap().to_string()
   };
 
-  let name = args.value_of("name");
-  let template = args.value_of("template");
-  let directory = args.value_of("directory");
-
-  // Get name
-  if name.is_none() {
-    opts.name = match cli::get_value("project name", true, None) {
-      Ok(name) => name.unwrap(),
-      Err(_error) => return,
-    };
+  //// Get repository name from user input
+  let repository_name = if repository_name.is_none() {
+    let repositories = Repository::get_repositories(config);
+    match select("repository", &repositories) {
+      Ok(value) => value,
+      Err(error) => match error.kind() {
+        ErrorKind::InvalidData => {
+          renderer::errors::no_repositories();
+          return;
+        },
+        _ => std::process::exit(130),
+      },
+    }
   } else {
-    opts.name = name.unwrap().to_string();
-  }
+    String::from(repository_name.unwrap())
+  };
 
-  // Get template
-  if template.is_none() {
-    opts.template = match cli::get_value("template to use", true, None) {
-      Ok(template) => template.unwrap(),
-      Err(_error) => return,
-    };
-  } else {
-    opts.template = template.unwrap().to_string();
-  }
-
-  // Get directory
-  if directory.is_none() {
-    opts.directory = match cli::get_value("target directory", true, None) {
-      Ok(directory) => directory.unwrap(),
-      Err(_error) => return,
-    };
-  } else {
-    opts.directory = directory.unwrap().to_string();
-  }
-
-  // Get repository
-  opts.repository = match cli::get_value("repository url", false, None) {
+  // Load repository
+  let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
-    Err(_error) => return,
+    Err(error) => match error {
+      RepositoryError::NotFound => return renderer::errors::repository_not_found(&repository_name),
+      _ => return,
+    },
   };
 
-  renderer::initiate_workspace(&opts.name);
-
-  let repository = match repository::Repository::new(config, verbose) {
-    Ok(repository) => repository,
-    Err(_error) => return,
+  //// Get template name from user input
+  let template_name = if template_name.is_none() {
+    let templates = repository.get_templates();
+    match select("template", &templates) {
+      Ok(value) => value,
+      Err(error) => match error.kind() {
+        ErrorKind::InvalidData => {
+          renderer::errors::no_templates();
+          return;
+        },
+        _ => return,
+      },
+    }
+  } else {
+    String::from(template_name.unwrap())
   };
 
-  //Create the workspace directory
-  let dir = opts.directory + "/" + &opts.name;
-  match fs::create_dir(Path::new(&dir)) {
+  //// Get workspace directory from user input
+  let workspace_directory = if workspace_directory.is_none() {
+    match input("Please enter the target diectory", false) {
+      Some(value) => value,
+      None => return,
+    }
+  } else {
+    workspace_directory.unwrap().to_string()
+  };
+
+  //// Get workspace git repository url from user input
+  let workspace_repository = match input("Please enter a git remote url", true) {
+    Some(value) => value,
+    None => return,
+  };
+
+  //// Create the workspace directory
+  let mut dir = PathBuf::from(workspace_directory);
+  dir.push(&workspace_name);
+
+  match fs::create_dir(&dir) {
     Ok(()) => (),
     Err(error) => match error.kind() {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
-        renderer::errors::create_directory(&dir);
+        renderer::errors::create_directory(&dir.to_string_lossy());
         return;
       }
     },
@@ -99,23 +115,24 @@ pub fn init(config: &Config, args: &ArgMatches, verbose: bool) {
     Err(_error) => (),
   };
 
-  let options = repository::template::Options {
-    name: String::from(&opts.name),
-    repository: opts.repository.clone(),
-    username: username,
-    email: email,
-    replace: opts.replace,
-  };
-
-  // copy the template
-  let template = match repository.get_template_by_name(&opts.template) {
+  //// Get the template
+  let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
     Err(_error) => {
-      renderer::errors::template_not_found(&opts.template);
+      renderer::errors::template_not_found(&template_name);
       return;
     }
   };
 
+  let options = template::Options {
+    name: String::from(&workspace_name),
+    repository: Some(String::from(&workspace_repository)),
+    username: username,
+    email: email,
+    replace: false,
+  };
+
+  //// Copy the template
   match template.copy(&repository, &dir, options) {
     Ok(()) => (),
     Err(_error) => {
@@ -125,8 +142,8 @@ pub fn init(config: &Config, args: &ArgMatches, verbose: bool) {
   };
 
   // Initialize git if repository is given
-  if !opts.repository.is_none() {
-    match git::init(&dir, &opts.repository.unwrap()) {
+  if workspace_repository != "" {
+    match git::init(&dir, &workspace_repository) {
       Ok(()) => (),
       Err(_error) => {
         renderer::errors::init_repository();
@@ -135,5 +152,5 @@ pub fn init(config: &Config, args: &ArgMatches, verbose: bool) {
     }
   }
 
-  renderer::success_create(&opts.name);
+  renderer::success_create(&workspace_name);
 }

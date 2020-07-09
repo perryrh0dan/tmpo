@@ -1,7 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use std::process::Command;
 
@@ -68,7 +68,7 @@ impl Template {
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &String, opts: Options) -> Result<(), Error> {
+  pub fn copy(&self, repository: &Repository, target: &Path, opts: Options) -> Result<(), Error> {
     // get list of all super templates
     let super_templates = match &self.extend {
       None => Vec::new(),
@@ -98,7 +98,7 @@ impl Template {
     Ok(())
   }
 
-  fn copy_folder(&self, src: &str, target: &str, opts: &Options) -> Result<(), Error> {
+  fn copy_folder(&self, src: &str, target: &Path, opts: &Options) -> Result<(), Error> {
     // Loop at selected template directory
     for entry in fs::read_dir(src)? {
       let entry = &entry.unwrap();
@@ -110,15 +110,16 @@ impl Template {
         .unwrap()
         .to_string_lossy()
         .into_owned();
-      let mut path = target.to_string() + "/" + source_name;
+
+      let mut path = target.to_path_buf();
+      path.push(source_name);
 
       // replace placeholders in path
-      path = replace_placeholders(&path, &opts)?;
+      path = PathBuf::from(replace_placeholders(&path.to_string_lossy(), &opts)?);
 
       // check if entry is directory
       if entry.path().is_dir() {
-        let dir = target.to_string() + "/" + source_name;
-        match fs::create_dir(Path::new(&dir)) {
+        match fs::create_dir(&path) {
           Ok(()) => (),
           Err(error) => match error.kind() {
             ErrorKind::AlreadyExists => (),
@@ -126,7 +127,7 @@ impl Template {
           },
         };
 
-        self.copy_folder(&source_path, &dir, opts)?
+        self.copy_folder(&source_path, &path, opts)?
       } else {
         if is_excluded(&source_name, &self.exclude) {
           continue;
@@ -155,18 +156,18 @@ impl Template {
   }
 }
 
-fn run_script(script: &str, target: &String) {
+fn run_script(script: &String, target: &Path) {
   // Run before script if exists
   let output = if cfg!(target_os = "windows") {
     Command::new("cmd")
-      .current_dir(&Path::new(target))
+      .current_dir(target)
       .arg(script)
       .output()
       .ok()
       .expect("failed to execute process")
   } else {
     Command::new("sh")
-      .current_dir(&Path::new(target))
+      .current_dir(target)
       .arg("-c")
       .arg(script)
       .output()

@@ -174,7 +174,7 @@ Charon is using [cross](https://github.com/rust-embedded/cross) to build cross p
 
 ``` bash
 cross build --target x86_64-pc-windows-gnu
-cargo build --release --target x86_64-pc-windows-gnu
+cross build --release --target x86_64-pc-windows-gnu
 ```
 
 #### Flatpak

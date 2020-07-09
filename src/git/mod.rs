@@ -1,4 +1,5 @@
 use std::str;
+use std::path::Path;
 
 use crate::renderer;
 
@@ -11,17 +12,17 @@ custom_error! {pub GitError
     AddRemoteError = "Unable to add remote",
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct RepoOptions {
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct GitOptions {
   pub enabled: bool,
-  pub url: String,
-  pub auth: String,
+  pub url: Option<String>,
+  pub auth: Option<String>,
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
 }
 
-pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
+pub fn init(dir: &Path, repository: &str) -> Result<(), GitError> {
   // Initialize git repository
   let repo = match git2::Repository::init(dir) {
     Ok(repo) => repo,
@@ -37,7 +38,7 @@ pub fn init(dir: &str, repository: &str) -> Result<(), GitError> {
   Ok(())
 }
 
-pub fn update(dir: &str, opts: &RepoOptions, verbose: bool) -> Result<(), git2::Error> {
+pub fn update(dir: &Path, opts: &GitOptions) -> Result<(), git2::Error> {
   let repo = match git2::Repository::open(dir) {
     Ok(repo) => repo,
     Err(e) => return Err(e),
@@ -46,8 +47,8 @@ pub fn update(dir: &str, opts: &RepoOptions, verbose: bool) -> Result<(), git2::
   let remote_name = "origin";
   let remote_branch = "master";
   let mut remote = repo.find_remote(remote_name)?;
-  let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts, verbose)?;
-  do_merge(&repo, &remote_branch, fetch_commit, verbose)
+  let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
+  do_merge(&repo, &remote_branch, fetch_commit)
 }
 
 pub fn get_email() -> Result<String, git2::Error> {
@@ -92,15 +93,15 @@ fn do_fetch<'a>(
   repo: &'a git2::Repository,
   refs: &[&str],
   remote: &'a mut git2::Remote,
-  opts: &RepoOptions,
-  verbose: bool,
+  opts: &GitOptions,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
   // token needs to be declared here to live longer than the fetchOptions
   let token;
   let mut fo = git2::FetchOptions::new();
   let mut callbacks = git2::RemoteCallbacks::new();
+  let auth = opts.auth.clone().unwrap();
 
-  if opts.auth == "ssh" {
+  if auth == "ssh" {
     debug!("[git]: authentication using ssh");
   // callbacks.credentials(|_url, username_from_url, _allowed_types| {
   //     git2::Cred::ssh_key(
@@ -110,7 +111,7 @@ fn do_fetch<'a>(
   //     None,
   //     )
   // });
-  } else if opts.auth == "token" {
+  } else if auth == "token" {
     debug!("[git]: authentication using token");
     if opts.token.is_none() {
       renderer::errors::missing_token();
@@ -129,10 +130,6 @@ fn do_fetch<'a>(
   fo.download_tags(git2::AutotagOption::All);
   fo.remote_callbacks(callbacks);
 
-  if verbose {
-    renderer::check_template_updates();
-  }
-
   match remote.fetch(refs, Some(&mut fo), None) {
     Ok(()) => (),
     Err(error) => println!("{}", error.message()),
@@ -145,7 +142,6 @@ fn fast_forward(
   repo: &git2::Repository,
   lb: &mut git2::Reference,
   rc: &git2::AnnotatedCommit,
-  verbose: bool,
 ) -> Result<(), git2::Error> {
   let name = match lb.name() {
     Some(s) => s.to_string(),
@@ -153,10 +149,6 @@ fn fast_forward(
   };
 
   let msg = format!("Fast-Forward: Setting {} to id: {}", name, rc.id());
-
-  if verbose {
-    println!("{}", msg);
-  }
 
   lb.set_target(rc.id(), &msg)?;
   repo.set_head(&name)?;
@@ -211,7 +203,6 @@ fn do_merge<'a>(
   repo: &'a git2::Repository,
   remote_branch: &str,
   fetch_commit: git2::AnnotatedCommit<'a>,
-  verbose: bool,
 ) -> Result<(), git2::Error> {
   // 1. do a merge analysis
   let analysis = repo.merge_analysis(&[&fetch_commit])?;
@@ -222,7 +213,7 @@ fn do_merge<'a>(
     let refname = format!("refs/heads/{}", remote_branch);
     match repo.find_reference(&refname) {
       Ok(mut r) => {
-        fast_forward(repo, &mut r, &fetch_commit, verbose)?;
+        fast_forward(repo, &mut r, &fetch_commit)?;
         renderer::success_update_templates()
       }
       Err(_) => {
@@ -242,23 +233,12 @@ fn do_merge<'a>(
             .conflict_style_merge(true)
             .force(),
         ))?;
-        if verbose {
-          renderer::success_update_templates()
-        }
       }
     };
   } else if analysis.0.is_normal() {
     // do a normal merge
     let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
     normal_merge(&repo, &head_commit, &fetch_commit)?;
-
-    if verbose {
-      renderer::success_update_templates()
-    }
-  } else {
-    if verbose {
-      renderer::no_template_updates()
-    }
   }
   Ok(())
 }

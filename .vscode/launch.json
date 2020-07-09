@@ -6,20 +6,19 @@
           "type": "cppvsdbg",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon.exe",
-          "args": ["init", "2fa", "default", "."],
+          "args": ["init", "https://github.com/perryrh0dan/templates/2fa", "default", "."],
           // "args": ["list"],
-          "stopAtEntry": false,
           "cwd": "${workspaceRoot}",
-          "environment": [],
-          "externalConsole": true
+          "console": "externalTerminal"
       },
       {
           "name": "(OSX) Launch",
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon",
-          "args": ["init", "2fa", "-t", "loopback4"],
-          // "args": ["list"],
+          // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
+          // "args": ["repository", "remove"],
+          "args": ["init"],
           "cwd": "${workspaceRoot}",
       }
   ]

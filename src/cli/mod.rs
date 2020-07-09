@@ -1,45 +1,40 @@
-use std::io;
-use std::io::Error;
-use std::io::*;
+use std::io::{Error, ErrorKind};
 
-pub fn get_value(
-  name: &str,
-  required: bool,
-  default: Option<&str>,
-) -> std::result::Result<Option<String>, Error> {
-  let mut message;
+use dialoguer::{theme::ColorfulTheme, Input, Select};
 
-  // check if required, add question mark for optional parameters
-  if required {
-    message = format!("Enter the {}: ", name);
-  } else {
-    message = format! {"Enter the {}?: ", name};
+pub fn input(text: &str, allow_empty: bool ) -> Option<String> {
+  match Input::<String>::with_theme(&ColorfulTheme::default())
+    .with_prompt(text)
+    .allow_empty(allow_empty)
+    .interact()
+  {
+    Ok(value) => Some(value),
+    Err(_error) => return None,
   }
+}
 
-  // check if default values is provided
-  if !default.is_none() {
-    message = format!("message ({})", default.unwrap());
-  }
+pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
+  if options.len() == 0 {
+    return Err(Error::from(ErrorKind::InvalidData))
+  };
 
-  // finally print message
-  print!("{}", message);
-
-  // directly print message
-  io::stdout().flush()?;
-
-  let mut value = String::new();
-  loop {
-    io::stdin()
-      .read_line(&mut value)
-      .expect("error: unable to read user input");
-    // remove whitespaces and new line
-    value = value.trim().to_string();
-    if value == "" && !required {
-      return Ok(None);
-    } else if value != "" {
-      break;
+  let selection = match Select::with_theme(&ColorfulTheme::default())
+    .with_prompt(String::from("Select a ") + name)
+    .default(0)
+    .items(options)
+    .interact()
+  {
+    Ok(selection) => selection,
+    Err(error) => match error.kind() {
+      ErrorKind::Interrupted => {
+        //TODO find better solution
+        // ctrl + c is getting catch in other thread but this is asynchon and could be to slow
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+        1
+      },
+      _ => return Err(error)
     }
-  }
-
-  Ok(Some(value))
+  };
+  let result = String::from(&options[selection]);
+  return Ok(result);
 }
