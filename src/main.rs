@@ -11,20 +11,9 @@ mod utils;
 extern crate log;
 extern crate clap;
 use clap::{crate_version, App, AppSettings, Arg};
-extern crate ctrlc;
 extern crate env_logger;
 
 fn main() {
-  // catch ctrl + c
-  match ctrlc::set_handler(move || {
-    println!();
-
-    std::process::exit(130);
-  }) {
-    Ok(()) => (),
-    Err(_e) => (),
-  };
-
   // initialize logger
   env_logger::init();
 

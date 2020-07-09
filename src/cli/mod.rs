@@ -25,15 +25,7 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
     .interact()
   {
     Ok(selection) => selection,
-    Err(error) => match error.kind() {
-      ErrorKind::Interrupted => {
-        //TODO find better solution
-        // ctrl + c is getting catch in other thread but this is asynchon and could be to slow
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-        1
-      },
-      _ => return Err(error)
-    }
+    Err(error) => return Err(error),
   };
   let result = String::from(&options[selection]);
   return Ok(result);
