@@ -1,25 +1,34 @@
+use std::io::ErrorKind;
+
+use crate::cli::select;
 use crate::config::Config;
 use crate::renderer;
-use crate::repository;
+use crate::repository::Repository;
 
-use dialoguer::{theme::ColorfulTheme, Select};
+use clap::ArgMatches;
 
-pub fn list(config: &Config) {
+pub fn list(config: &Config, args: &ArgMatches) {
+  let repository_name = args.value_of("repository");
+
   //// Get repository name from user input
-  let repositories = repository::get_repositories(config);
-  let selection = match Select::with_theme(&ColorfulTheme::default())
-    .with_prompt("Pick a repository")
-    .default(0)
-    .items(&repositories[..])
-    .interact()
-  {
-    Ok(selection) => selection,
-    Err(_error) => return,
+  let repository_name = if repository_name.is_none() {
+    let repositories = Repository::get_repositories(config);
+    match select("repository", &repositories) {
+      Ok(value) => value,
+      Err(error) => match error.kind() {
+        ErrorKind::InvalidData => {
+          renderer::errors::no_repositories();
+          return;
+        },
+        _ => return,
+      },
+    }
+  } else {
+    String::from(repository_name.unwrap())
   };
-  let repository_name = String::from(&repositories[selection]);
 
   // Load repository
-  let repository = match repository::Repository::new(config, &repository_name) {
+  let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(_error) => return,
   };

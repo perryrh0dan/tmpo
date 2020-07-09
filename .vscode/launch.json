@@ -16,8 +16,8 @@
           "type": "lldb",
           "request": "launch",
           "program": "${workspaceRoot}/target/debug/charon",
-          "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
-          // "args": ["init"],
+          // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
+          "args": ["repository", "remove"],
           "cwd": "${workspaceRoot}",
       }
   ]

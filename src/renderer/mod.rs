@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-use crate::repository::template;
+use crate::template;
 use crate::utils;
 
 pub mod errors;

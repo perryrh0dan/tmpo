@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 clap = { git = "https://github.com/clap-rs/clap/" }
 serde = { version = "1.0.104", features = ["derive"] }
+openssl = { version = "0.10.30", features = ["vendored"] }
 serde_json = "1.0.48"
 serde_yaml = "0.8.13"
 dirs = "2.0.2"

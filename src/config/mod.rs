@@ -23,27 +23,36 @@ pub struct RepositoryOptions {
   pub git_options: git::GitOptions,
 }
 
-pub fn init(_verbose: bool) -> Result<Config, Error> {
-  let dir = match dirs::home_dir() {
-    Some(path) => PathBuf::from(path),
-    None => PathBuf::from(""),
-  };
+impl Config {
+  pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
+    let config = self.templates_repositories.iter().find(|&x| x.name == name);
 
-  let mut dir = dir.into_os_string().into_string().unwrap();
-  dir = dir + "/.charon";
+    if config.is_some() {
+      return Some(config.unwrap().clone());
+    } else {
+      return None;
+    }
+  }
 
-  ensure_root_dir(&dir)?;
-  ensure_config_file(&dir)?;
+  pub fn save(&self) -> Result<(), Error>{
+    save_config(self)
+  }
+}
 
-  let config = load_config(&dir)?;
+pub fn init() -> Result<Config, Error> {
+  ensure_root_dir()?;
+  ensure_config_file()?;
+
+  let config = load_config()?;
 
   ensure_template_dir(&config.templates_dir)?;
 
   Ok(config)
 }
 
-fn ensure_root_dir(dir: &str) -> Result<(), Error> {
-  let r = fs::create_dir_all(Path::new(dir));
+fn ensure_root_dir() -> Result<(), Error> {
+  let dir = directory();
+  let r = fs::create_dir_all(Path::new(&dir));
   match r {
     Ok(fc) => fc,
     Err(error) => return Err(error),
@@ -62,24 +71,32 @@ fn ensure_template_dir(dir: &str) -> Result<(), Error> {
   Ok(())
 }
 
-fn ensure_config_file(dir: &str) -> Result<(), Error> {
-  let conf_path = String::from(dir) + "/config.yaml";
+fn ensure_config_file() -> Result<(), Error> {
+  let conf_path = config_location();
   if Path::new(&conf_path).exists() {
     return Ok(());
   }
 
-  let default_config = get_default_config(dir);
-  let new_data = serde_yaml::to_string(&default_config).unwrap();
-  let mut dst = File::create(conf_path)?;
+  let default_config = get_default_config();
+  save_config(&default_config)?;
+
+  Ok(())
+}
+
+fn save_config(config: &Config) -> Result<(), Error> {
+  let path = config_location();
+
+  let new_data = serde_yaml::to_string(config).unwrap();
+  let mut dst = File::create(path)?;
   dst.write(new_data.as_bytes())?;
 
   Ok(())
 }
 
-fn load_config(dir: &str) -> Result<Config, Error> {
-  let dir = String::from(dir) + "/config.yaml";
+fn load_config() -> Result<Config, Error> {
+  let path = config_location();
   // Open file
-  let mut src = File::open(Path::new(&dir))?;
+  let mut src = File::open(path)?;
   let mut data = String::new();
 
   // Write to data string
@@ -88,14 +105,15 @@ fn load_config(dir: &str) -> Result<Config, Error> {
   return Ok(config);
 }
 
-fn get_default_config(dir: &str) -> Config {
-  let template_dir = format!("{}{}", dir, "/templates");
+fn get_default_config() -> Config {
+  let dir = directory();
+  let template_dir = format!("{}{}", dir.to_string_lossy(), "/templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
 
   let git_options = git::GitOptions {
     enabled: true,
-    url: String::from("https://github.com/perryrh0dan/templates"),
-    auth: String::from("none"),
+    url: Some(String::from("https://github.com/perryrh0dan/templates")),
+    auth: Some(String::from("none")),
     token: None,
     username: None,
     password: None,
@@ -103,6 +121,7 @@ fn get_default_config(dir: &str) -> Config {
 
   repo_options.push(RepositoryOptions {
     name: String::from("Default"),
+    description: String::from("Default template repository from tpoe"),
     git_options: git_options,
   });
 
@@ -114,14 +133,20 @@ fn get_default_config(dir: &str) -> Config {
   return config;
 }
 
-impl Config {
-  pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
-    let config = self.templates_repositories.iter().find(|&x| x.name == name);
+fn config_location() -> PathBuf {
+  let mut dir = match dirs::home_dir() {
+    Some(path) => PathBuf::from(path),
+    None => PathBuf::from(""),
+  };
 
-    if config.is_some() {
-      return Some(config.unwrap().clone());
-    } else {
-      return None;
-    }
-  }
+  dir.push(&PathBuf::from(".charon/config.yaml"));
+
+  return dir;
+}
+
+fn directory() -> PathBuf {
+  let mut path = config_location();
+  path.pop();
+
+  return path;
 }

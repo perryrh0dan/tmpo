@@ -1,15 +1,14 @@
 use std::fs;
-use std::io::Error;
-use std::path::Path;
+use std::io::{Error};
+use std::path::{Path, PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::renderer;
+use crate::template;
 
 extern crate custom_error;
 use custom_error::custom_error;
-
-pub mod template;
 
 pub struct Repository {
   pub directory: String,
@@ -50,6 +49,30 @@ impl Repository {
     return Ok(repository);
   }
 
+  pub fn get_repositories(config: &Config) -> Vec<String> {
+    let mut repositories = Vec::<String>::new();
+
+    for entry in &config.templates_repositories {
+      repositories.push(String::from(&entry.name));
+    }
+
+    return repositories;
+  }
+
+  pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
+    let name = base64::encode_config(name, base64::URL_SAFE);
+
+    let mut repository_dir = PathBuf::from(&config.templates_dir);
+    repository_dir.push(&name);
+
+    match fs::remove_dir_all(repository_dir) {
+      Ok(()) => (),
+      Err(error) => return Err(error)
+    }
+
+    return Ok(());
+  }
+
   pub fn get_templates(&self) -> Vec<String> {
     let mut templates = Vec::<String>::new();
 
@@ -84,7 +107,7 @@ impl Repository {
 
     // Initialize git repository if enabled
     if self.config.git_options.enabled {
-      match git::init(&repository_dir, &self.config.git_options.url) {
+      match git::init(&repository_dir, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
         Err(error) => match error {
           git::GitError::InitError => println!("Init Error"),
@@ -134,14 +157,4 @@ impl Repository {
     }
     self.templates = templates;
   }
-}
-
-pub fn get_repositories(config: &Config) -> Vec<String> {
-  let mut repositories = Vec::<String>::new();
-
-  for entry in &config.templates_repositories {
-    repositories.push(String::from(&entry.name));
-  }
-
-  return repositories;
 }

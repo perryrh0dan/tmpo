@@ -14,8 +14,8 @@ custom_error! {pub GitError
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct GitOptions {
   pub enabled: bool,
-  pub url: String,
-  pub auth: String,
+  pub url: Option<String>,
+  pub auth: Option<String>,
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
@@ -98,8 +98,9 @@ fn do_fetch<'a>(
   let token;
   let mut fo = git2::FetchOptions::new();
   let mut callbacks = git2::RemoteCallbacks::new();
+  let auth = opts.auth.clone().unwrap();
 
-  if opts.auth == "ssh" {
+  if auth == "ssh" {
     debug!("[git]: authentication using ssh");
   // callbacks.credentials(|_url, username_from_url, _allowed_types| {
   //     git2::Cred::ssh_key(
@@ -109,7 +110,7 @@ fn do_fetch<'a>(
   //     None,
   //     )
   // });
-  } else if opts.auth == "token" {
+  } else if auth == "token" {
     debug!("[git]: authentication using token");
     if opts.token.is_none() {
       renderer::errors::missing_token();
@@ -200,7 +201,7 @@ fn normal_merge(
 fn do_merge<'a>(
   repo: &'a git2::Repository,
   remote_branch: &str,
-  fetch_commit: git2::AnnotatedCommit<'a>
+  fetch_commit: git2::AnnotatedCommit<'a>,
 ) -> Result<(), git2::Error> {
   // 1. do a merge analysis
   let analysis = repo.merge_analysis(&[&fetch_commit])?;
