@@ -34,8 +34,6 @@ matrix:
       rust: nightly
 
 before_install:
-  - sudo apt install pkg-config
-  - sudo apt install libssl-dev
   - set -e
   - rustup self update
 

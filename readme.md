@@ -25,7 +25,7 @@
 
 Charon enables you to effectively create new workspaces based on predefined templates. To share templates across your team charon is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients. 
 
-Visit the [contributing guidelines](https://github.com/perryrh0dan/charon/blob/master/contributing.md#translating-documentation) to learn more on how help developing charon.
+Visit the [contributing guidelines](https://github.com/perryrh0dan/charon/blob/master/contributing.md) to learn more on how help developing charon.
 
 Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
 
@@ -34,7 +34,7 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 - Templates support inheritence and placeholders
 - Lightweight & fast
 - Share templates across your team or community with git
-- Configurable through `~/.charon.json`
+- Configurable through `~/.charon/config.yaml`
 
 ## Contents
 
@@ -65,13 +65,16 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 ### Cli
 
 ``` bash
-charon init example --template typescript --directory . --repository https://github.com/perryrh0dan/example 
+charon init example --repository default --template typescript --directory .
 ```
+
+### Repositories
+
+A repository is a folder that contains up to n different templates. A repository can be connected with a remote git repository. Templates are then automaticly synced. Repositories are located in the 'template_dir'. 
 
 ### Templates
 
-Templates are automatically pull from the `templates_repo` and stored in the `templates_dir`.
-Templates can be configured with a `meta.json` in the template root. The official template repo can be found [here](https://github.com/perryrh0dan/templates).
+Templates can be configured with a `meta.json` in the template root. The official template repository can be found [here](https://github.com/perryrh0dan/templates).
 
 #### Format
 
@@ -80,6 +83,9 @@ Templates can be configured with a `meta.json` in the template root. The officia
     "name": "",
     "extend": [""],
     "exclude": [""],
+    "scripts": {
+      "before_install": ""
+    }
 }
 ```
 
@@ -101,22 +107,22 @@ Placeholders can be used in each file of your template. During the initlializati
 
 ## Configuration
 
-To configure charon navigate to the ~/.charon.json file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
+To configure charon navigate to the ~/.charon/config.yaml file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
 
 The following illustrates all the available options with their respective default values.
 
-``` json
-{
-  "templates_dir": "$HOME/.charon/templates",
-  "templates_repo": {
-    "enabled": true,
-    "url": "https://github.com/perryrh0dan/templates",
-    "auth": "none",
-    "token": null,
-    "username": null,
-    "password": null
-  }
-}
+``` yaml
+  templates_dir: /home/thomas/.charon/templates
+  templates_repositories:
+    - name: default
+      description: this is the default template repository from tpoe
+      git_options:
+        enabled: true
+        url: "https://github.com/perryrh0dan/templates"
+        auth: none
+        token: 
+        username: ~
+        password: ~
 ```
 
 ### In Detail
@@ -179,9 +185,7 @@ cross build --release --target x86_64-pc-windows-gnu
 
 #### Flatpak
 
-``` bash
-cargo
-```
+tbd
 
 
 ## Team
