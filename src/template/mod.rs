@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
 
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub mod meta;
 
@@ -81,6 +81,7 @@ impl Template {
       template.copy(repository, target, opts)?;
     }
 
+    // run before install script
     if self.scripts.is_some() && self.scripts.as_ref().unwrap().before_install.is_some() {
       let script = self
         .scripts
@@ -94,6 +95,19 @@ impl Template {
     }
 
     self.copy_folder(&self.path, &target, &opts)?;
+
+    // run after install script
+    if self.scripts.is_some() && self.scripts.as_ref().unwrap().after_install.is_some() {
+      let script = self
+        .scripts
+        .as_ref()
+        .unwrap()
+        .after_install
+        .as_ref()
+        .unwrap();
+
+      run_script(script, target);
+    }
 
     Ok(())
   }
@@ -158,28 +172,26 @@ impl Template {
 
 fn run_script(script: &String, target: &Path) {
   // Run before script if exists
-  let output = if cfg!(target_os = "windows") {
+  let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")
       .current_dir(target)
       .arg(script)
-      .output()
-      .ok()
+      .stdout(Stdio::inherit())
+      .stderr(Stdio::inherit())
+      .spawn()
       .expect("failed to execute process")
   } else {
     Command::new("sh")
       .current_dir(target)
       .arg("-c")
       .arg(script)
-      .output()
-      .ok()
+      .stdout(Stdio::inherit())
+      .stderr(Stdio::inherit())
+      .spawn()
       .expect("failed to execute process")
   };
 
-  let result = output.stdout;
-  println!("{}", String::from_utf8_lossy(&result));
-
-  let error = output.stderr;
-  println!("{}", String::from_utf8_lossy(&error));
+  let status = cmd.wait();
 }
 
 fn is_excluded(name: &str, exclude: &Option<Vec<String>>) -> bool {

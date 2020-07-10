@@ -17,6 +17,7 @@ pub struct Meta {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Scripts {
   pub before_install: Option<String>,
+  pub after_install: Option<String>,
 }
 
 pub fn load_meta(dir: &str) -> Result<Meta, Error> {
