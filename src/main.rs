@@ -22,13 +22,6 @@ fn main() {
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
-    .arg(
-      Arg::with_name("verbose")
-        .short('v')
-        .long("verbose")
-        .help("When true, more verbose output is displayed")
-        .required(false),
-    )
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")
@@ -104,11 +97,6 @@ fn main() {
     )
     .get_matches();
 
-  let verbose = match matches.occurrences_of("verbose") {
-    0 => false,
-    1 | _ => true,
-  };
-
   let mut config = config::init().unwrap();
 
   match matches.subcommand() {
@@ -127,7 +115,9 @@ fn main() {
     ("repository", Some(repository_matches)) => {
       match repository_matches.subcommand() {
         ("add", Some(repo_add_matches)) => action::repository::add(&mut config, repo_add_matches),
-        ("remove", Some(repo_delete_matches)) => action::repository::remove(&mut config, repo_delete_matches),
+        ("remove", Some(repo_delete_matches)) => {
+          action::repository::remove(&mut config, repo_delete_matches)
+        }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
     }

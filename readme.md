@@ -52,7 +52,7 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 ## Demo
 
 <div align="center">
-  <img alt="demo" width="70%" src="./media/demo.gif">
+  <img alt="demo" width="70%" src="./media/demo_v1.0.0.gif">
 </div>
 
 ## Install
