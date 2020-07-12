@@ -3,6 +3,9 @@ use std::path::Path;
 
 use crate::renderer;
 
+#[macro_use]
+use log::debug;
+
 extern crate custom_error;
 extern crate git2;
 use custom_error::custom_error;
@@ -102,7 +105,7 @@ fn do_fetch<'a>(
   let auth = opts.auth.clone().unwrap();
 
   if auth == "ssh" {
-    debug!("[git]: authentication using ssh");
+    log::debug!("[git]: authentication using ssh");
   // callbacks.credentials(|_url, username_from_url, _allowed_types| {
   //     git2::Cred::ssh_key(
   //     username_from_url.unwrap(),

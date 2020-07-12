@@ -7,11 +7,8 @@ mod repository;
 mod template;
 mod utils;
 
-#[macro_use]
-extern crate log;
-extern crate clap;
 use clap::{crate_version, App, AppSettings, Arg};
-extern crate env_logger;
+use env_logger;
 
 fn main() {
   // initialize logger
