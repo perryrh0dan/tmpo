@@ -7,6 +7,10 @@
 </h4>
 
 <div align="center">
+  <img alt="rustacean" width="70%" src="media/rustacean.svg"/>
+</div>
+
+<div align="center">
    <a href="https://travis-ci.com/perryrh0dan/charon">
       <img alt="Build Status" src="https://travis-ci.com/perryrh0dan/charon.svg?branch=master" />
    </a>
