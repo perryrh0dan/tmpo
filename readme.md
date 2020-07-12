@@ -7,6 +7,10 @@
 </h4>
 
 <div align="center">
+  <img alt="rustacean" width="70%" src="media/rustacean.svg"/>
+</div>
+
+<div align="center">
    <a href="https://travis-ci.com/perryrh0dan/charon">
       <img alt="Build Status" src="https://travis-ci.com/perryrh0dan/charon.svg?branch=master" />
    </a>
@@ -84,26 +88,13 @@ Templates can be configured with a `meta.json` in the template root. The officia
     "extend": [""],
     "exclude": [""],
     "scripts": {
-      "before_install": ""
+      "before_install": "",
+      "after_install": ""
     }
 }
 ```
 
-#### Extend
-
-Templates can extend other templates. Add the name of the templates you want to extend in the extend array in the `meta.json`. The extended templates are `copied` on by on in the `same direction` they are `added` in the `meta.json.
-
-#### Exclude
-
-List of filenames to exclude from the template.
-
-#### Placeholders
-
-Placeholders can be used in each file of your template. During the initlialization the placeholders are replaced by the actual values. At the moment following placeholders are supported:
-- {{name}}
-- {{repository}} 
-- {{username}} // fetched from global git config
-- {{email}} // fetched from global git config
+For a detailed description how to create and maintain templates have a look at the default tempaltes [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
 
