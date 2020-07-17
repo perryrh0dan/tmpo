@@ -1,5 +1,5 @@
 [package]
-name = "charon"
+name = "tmpo"
 version = "1.0.1"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"

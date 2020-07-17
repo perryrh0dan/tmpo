@@ -14,7 +14,7 @@ fn main() {
   // initialize logger
   env_logger::init();
 
-  let matches = App::new("charon")
+  let matches = App::new("tmpo")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")

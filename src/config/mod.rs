@@ -139,7 +139,7 @@ fn config_location() -> PathBuf {
     None => PathBuf::from(""),
   };
 
-  dir.push(&PathBuf::from(".charon/config.yaml"));
+  dir.push(&PathBuf::from(".tmpo/config.yaml"));
 
   return dir;
 }
