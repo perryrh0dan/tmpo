@@ -1,6 +1,6 @@
 use std::io::{Error, ErrorKind};
 
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use dialoguer::{theme::ColorfulTheme, Input, Select, Password};
 
 pub fn input(text: &str, allow_empty: bool ) -> Option<String> {
   match Input::<String>::with_theme(&ColorfulTheme::default())
@@ -11,6 +11,12 @@ pub fn input(text: &str, allow_empty: bool ) -> Option<String> {
     Ok(value) => Some(value),
     Err(_error) => return None,
   }
+}
+
+pub fn password(text: &str) -> Result<String, Error> {
+  return Password::with_theme(&ColorfulTheme::default())
+    .with_prompt(text)
+    .interact();
 }
 
 pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
