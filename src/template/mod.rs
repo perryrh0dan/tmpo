@@ -90,8 +90,9 @@ impl Template {
         .before_install
         .as_ref()
         .unwrap();
+      let script = replace_placeholders(script, &opts)?;
 
-      run_script(script, target);
+      run_script(&script, target);
     }
 
     self.copy_folder(&self.path, &target, &opts)?;
@@ -105,8 +106,9 @@ impl Template {
         .after_install
         .as_ref()
         .unwrap();
+      let script = replace_placeholders(script, &opts)?;
 
-      run_script(script, target);
+      run_script(&script, target);
     }
 
     Ok(())

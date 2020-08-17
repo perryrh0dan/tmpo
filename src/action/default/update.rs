@@ -4,8 +4,8 @@ use self_update::cargo_crate_version;
 pub fn update() {
   let update = self_update::backends::github::Update::configure()
     .repo_owner("perryrh0dan")
-    .repo_name("charon")
-    .bin_name("charon")
+    .repo_name("tmpo")
+    .bin_name("tmpo")
     .show_download_progress(true)
     .current_version(cargo_crate_version!())
     .build();

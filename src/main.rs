@@ -14,7 +14,7 @@ fn main() {
   // initialize logger
   env_logger::init();
 
-  let matches = App::new("charon")
+  let matches = App::new("tmpo")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
@@ -98,22 +98,22 @@ fn main() {
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
-      action::init::init(&config, init_matches);
+      action::default::init::init(&config, init_matches);
     }
     ("list", Some(list_matches)) => {
-      action::list::list(&config, list_matches);
+      action::default::list::list(&config, list_matches);
     }
     ("update", Some(_update_matches)) => {
-      action::update::update();
+      action::default::update::update();
     }
     ("view", Some(view_matches)) => {
-      action::view::view(&config, view_matches);
+      action::default::view::view(&config, view_matches);
     }
     ("repository", Some(repository_matches)) => {
       match repository_matches.subcommand() {
-        ("add", Some(repo_add_matches)) => action::repository::add(&mut config, repo_add_matches),
+        ("add", Some(repo_add_matches)) => action::repository::add::add(&mut config, repo_add_matches),
         ("remove", Some(repo_delete_matches)) => {
-          action::repository::remove(&mut config, repo_delete_matches)
+          action::repository::remove::remove(&mut config, repo_delete_matches)
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }

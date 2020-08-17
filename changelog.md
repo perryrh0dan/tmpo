@@ -1,4 +1,4 @@
-# What's new in Charon
+# What's new in Tmpo
 
 ## 0.1.4
 
