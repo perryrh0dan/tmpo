@@ -31,15 +31,16 @@ after_script: set +e
 before_deploy:
 - sh scripts/before_deploy.sh
 deploy:
+  provider: releases
   api_key:
-    secure: m702tdOBH8xCj/i/iQK+ht/fDQZt37XpYp48CFPy+/VYE0tof+1+1zVLJH5nxD36YJOMdZTmyDP8GHXDK5f3Z212PiRAWG9F4DW4zoj83T6TCfmosQCh3gVMFWlCh2788o1VO9g83K3dbZmsWoGb/i1cwLlt5LnWhCpNyr1kgx4cwozrSGG2qcMFDn3jvJSjFgq+7LsjKImeoXdTwth0J3g37Yg9fkoqorqWGf2+kGwib6bGfzqGtKOAsEl/XfmLD+ORUpdxTmgtu+pm4QWQOpJwAyEO/J+b1h/p9pu7ofLqtF5D+G0nWk8N2hOKiRB7vT5il5ha0bTVFbFebvM2vu0DigCgNgwBXkVrf1mnY5VpHEJvZy10yBv3igWUpg4Epd+tJkcN9zVp2a0uXgYqY3XWPXWCeLzjMegzZx6KF3nykQq0nPQI7PASAhimwZs6m0M+gUP4f/3393Hqqf3d6QTW38z8TDT08+IIPSiEgw8/WCMMZGT7+8apjGU+ioW66huj4CNNonwIB9EH/zSRHPzGEZQluD3UutiozzaXp4EYw0c8ospIxytEdC1WYHNxyKiVDGujOOQBQEErA94jDzEJmcXZC84mwIs/stNUJ8WpAbFA/MbfUriTVUDLQKTDIQdQ/VAwEr0gr1ZdvUHUD+U2qpHtAwgGXNxwMk/ABPg=
+    secure: VBTLVORsSBXhvNTjg0TvKxgn7eytOtr5pfX5Cdm700KHMJBqUJvrHiTzkPqeMhhxgfTgicJ6XYTvszjabA+TDNFVosVROgcxUKANOpszAHc1IlTWgmR2B/V8yo+rW6o0UnV3wbDZa4gdG/thkKy+sZ9Me8Zlt3m63Rg7moPo9GW/yoLc4kK2rn0JFLmT2CM64bNMOKzANep8DGHCdz11f4jRIktJcVPbAiRAODSG0qEP9URQkYf96CWsET9q+ZS7g2doQ23SH+yQMcoN3L4IxsjRmu4/xjc6m1mFsxh1jXfaFJLBJModyj2Bgyu8aw1lBsdY0Vg8qbZ/SVpsbNqR2pnZuNZjzyubrf34EAV08xBAReZc/MT0dcU2WZm6jO/qK1T5pMMGOblZGRTJignSPKjYqBq6EjdJinJCTYGKYQYPwMIbpC0l14yS6b+ZSmeyeVnskeQXL8KiTglNVLGuwMdtJbqKd0DHcSv7QsPEZqDIe5xbC+KqivUqXM09LiyVM7CpICtA5QzmdS8JHxJZI9DRlu0PrQJe9fbr6XrY+PEYpNI5ce8UYkUmp1HhxBk3vS8GntCozo3DvPbVkshWbx1jPyE/7rkukNe0ksFKhGcDpa6PNApywvpbW0PVR3bkLWW1/Gl+cGMQW8lrbpS61WeipREoi/DhA9EMuEbWB7o=
   file_glob: true
   file: "$CRATE_NAME-$TRAVIS_TAG-$TARGET.*"
   on:
+    repo: perryrh0dan/tmpo
     condition: "$TRAVIS_RUST_VERSION = stable"
     tags: true
-  provider: releases
-  skip_cleanup: true
+  skip_cleanup: 'true'
 cache: cargo
 before_cache:
 - chmod -R a+r $HOME/.cargo
