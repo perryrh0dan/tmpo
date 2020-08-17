@@ -1,76 +1,52 @@
-# Based on the "trust" template v0.1.2
-# https://github.com/japaric/trust/tree/v0.1.2
-
 dist: trusty
 language: rust
 services: docker
 sudo: required
-
 env:
   global:
-    - CRATE_NAME=tmpo
-
+  - CRATE_NAME=tmpo
 matrix:
   include:
-
-    # Linux
-    - env: TARGET=aarch64-unknown-linux-gnu
-    - env: TARGET=arm-unknown-linux-gnueabi
-    - env: TARGET=x86_64-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-musl
-
-    # OSX
-    - env: TARGET=x86_64-apple-darwin
-      os: osx
-
-    # Windows
-    - env: TARGET=x86_64-pc-windows-gnu
-
-    # Testing other channels
-    - env: TARGET=x86_64-unknown-linux-gnu
-      rust: nightly
-    - env: TARGET=x86_64-apple-darwin
-      os: osx
-      rust: nightly
-
+  - env: TARGET=aarch64-unknown-linux-gnu
+  - env: TARGET=arm-unknown-linux-gnueabi
+  - env: TARGET=x86_64-unknown-linux-gnu
+  - env: TARGET=x86_64-unknown-linux-musl
+  - env: TARGET=x86_64-apple-darwin
+    os: osx
+  - env: TARGET=x86_64-pc-windows-gnu
+  - env: TARGET=x86_64-unknown-linux-gnu
+    rust: nightly
+  - env: TARGET=x86_64-apple-darwin
+    os: osx
+    rust: nightly
 before_install:
-  - set -e
-  - rustup self update
-
+- set -e
+- rustup self update
 install:
-  - sh scripts/install.sh
-  - source ~/.cargo/env || true
-
+- sh scripts/install.sh
+- source ~/.cargo/env || true
 script:
-  - bash scripts/script.sh
-
+- bash scripts/script.sh
 after_script: set +e
-
 before_deploy:
-  - sh scripts/before_deploy.sh
-
+- sh scripts/before_deploy.sh
 deploy:
   api_key:
-    secure: h2dTLaK2+NqDrdaoHHI6C8ulRqyGRN6fy2Brmj9fX+gSPOx6xwtpdL3BIqOMZwy5ydFoJgCLwgbWckU70u9MWndVS+ar+92zwMX2lhlM/BsKy1uKZEQLFJiWtl3hgKShpshFgK5U4KsmgGrkymBDTbUqZ3t7y0aXC882S85kFP86w25xLafFC9x2du+8CcKMpUewk5GHvPGCwHOMOgkj8Xi0D+i9acAVmQSsFtlCyjfPTBoVON3LM+QFHLjnlKqhOlO/HBXE1hRfWj6r+Gg6EmRkbP5xqDjCvxBmS+sOcQZikGAPSztr5f+VUb5LjoNEs4XoCM+huE2ERb+6e4WuJiqm4mfIk4jW82nSnB/Nz/Xygo6Gt8ppW64dDbc+frVXAfSV4IKJ2RezrDuU29Si+SkjJv640ShrV/zjLPC19gKhqYKFz9YDzZ2EeZHvQ5vIDJlZi9VRGZiC11wvRMt+wQg3ptnPAVth9SOJvNvUH6u2FZyBQGnyTT9ygSeKd4WhYyPoS/tO8KHakIRZpwTISaib+Y4Ijo5E+XzzjQ0TXTFy5OgcxaJisBUkC2Ag45/HKmGNWf3V0riShcrVoPs42pA9QViuOmilC8BN7vLBtg5RuuUmR6LGQTXoBJ7a2S/GhaWRFgUekVr0ObfE4ozD/cer41gFRCC1GWS0Syq+RRA=
+    secure: m702tdOBH8xCj/i/iQK+ht/fDQZt37XpYp48CFPy+/VYE0tof+1+1zVLJH5nxD36YJOMdZTmyDP8GHXDK5f3Z212PiRAWG9F4DW4zoj83T6TCfmosQCh3gVMFWlCh2788o1VO9g83K3dbZmsWoGb/i1cwLlt5LnWhCpNyr1kgx4cwozrSGG2qcMFDn3jvJSjFgq+7LsjKImeoXdTwth0J3g37Yg9fkoqorqWGf2+kGwib6bGfzqGtKOAsEl/XfmLD+ORUpdxTmgtu+pm4QWQOpJwAyEO/J+b1h/p9pu7ofLqtF5D+G0nWk8N2hOKiRB7vT5il5ha0bTVFbFebvM2vu0DigCgNgwBXkVrf1mnY5VpHEJvZy10yBv3igWUpg4Epd+tJkcN9zVp2a0uXgYqY3XWPXWCeLzjMegzZx6KF3nykQq0nPQI7PASAhimwZs6m0M+gUP4f/3393Hqqf3d6QTW38z8TDT08+IIPSiEgw8/WCMMZGT7+8apjGU+ioW66huj4CNNonwIB9EH/zSRHPzGEZQluD3UutiozzaXp4EYw0c8ospIxytEdC1WYHNxyKiVDGujOOQBQEErA94jDzEJmcXZC84mwIs/stNUJ8WpAbFA/MbfUriTVUDLQKTDIQdQ/VAwEr0gr1ZdvUHUD+U2qpHtAwgGXNxwMk/ABPg=
   file_glob: true
-  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  file: "$CRATE_NAME-$TRAVIS_TAG-$TARGET.*"
   on:
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: "$TRAVIS_RUST_VERSION = stable"
     tags: true
   provider: releases
   skip_cleanup: true
-
 cache: cargo
 before_cache:
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
-
+- chmod -R a+r $HOME/.cargo
 branches:
   only:
-    # release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
-
+  - "/^v\\d+\\.\\d+\\.\\d+.*$/"
+  - master
 notifications:
   email:
     on_success: never
