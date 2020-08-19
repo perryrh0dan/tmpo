@@ -1,7 +1,7 @@
 use std::str;
 use std::path::Path;
 
-use crate::renderer;
+use crate::out;
 
 #[macro_use]
 use log::debug;
@@ -117,7 +117,7 @@ fn do_fetch<'a>(
   } else if auth == "token" {
     debug!("[git]: authentication using token");
     if opts.token.is_none() {
-      renderer::errors::missing_token();
+      out::errors::missing_token();
       return Err(git2::Error::from_str("missing auth token"));
     }
     token = opts.token.clone().unwrap();
@@ -217,7 +217,7 @@ fn do_merge<'a>(
     match repo.find_reference(&refname) {
       Ok(mut r) => {
         fast_forward(repo, &mut r, &fetch_commit)?;
-        renderer::success_update_templates()
+        out::success_update_templates()
       }
       Err(_) => {
         // The branch doesn't exist so just set the reference to the

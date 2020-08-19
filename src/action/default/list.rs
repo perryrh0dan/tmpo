@@ -2,7 +2,7 @@ use std::io::ErrorKind;
 
 use crate::cli::select;
 use crate::config::Config;
-use crate::renderer;
+use crate::out;
 use crate::repository::Repository;
 
 use clap::ArgMatches;
@@ -17,7 +17,7 @@ pub fn list(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          renderer::errors::no_repositories();
+          out::errors::no_repositories();
           return;
         },
         _ => return,
@@ -38,5 +38,5 @@ pub fn list(config: &Config, args: &ArgMatches) {
     names.push(template.name);
   }
 
-  renderer::list_templates(&names);
+  out::list_templates(&names);
 }

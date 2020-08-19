@@ -1,5 +1,7 @@
 use std::fs::File;
 
+use crate::out;
+
 extern crate tar;
 extern crate self_update;
 extern crate flate2;
@@ -18,7 +20,7 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
   // check version 
   let version = crate_version!();
   if releases[0].version == version {
-    println!("Tmpo is already up to date");
+    out::no_app_update();
     return Ok(());
   }
 
@@ -60,6 +62,6 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
     Err(error) => println!("{}", error),
   };
 
-  println!("Successfully updated tmpo");
+  out::success_update_app();
   Ok(())
 }

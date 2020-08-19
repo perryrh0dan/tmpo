@@ -4,7 +4,7 @@ use std::path::{PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
-use crate::renderer;
+use crate::out;
 use crate::template;
 
 extern crate custom_error;
@@ -113,7 +113,7 @@ impl Repository {
       };
       match git::update(&directory, &self.config.git_options) {
         Ok(()) => (),
-        Err(_e) => renderer::errors::update_templates(),
+        Err(_e) => out::errors::update_templates(),
       }
     }
 

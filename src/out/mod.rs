@@ -12,6 +12,16 @@ pub fn list_templates(templates: &Vec<String>) {
   }
 }
 
+pub fn no_app_update() {
+  let text = format!("tmpo is alread up to date").green();
+  println!("{}", text);
+}
+
+pub fn success_update_app() {
+  let text = format!("Successful updated app").green();
+  println!("{}", text);
+}
+
 pub fn success_create(name: &str) {
   let text = format!("Created workspace: {}", name).green();
   println!("{}", text);

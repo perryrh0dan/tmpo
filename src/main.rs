@@ -2,7 +2,7 @@ mod action;
 mod cli;
 mod config;
 mod git;
-mod renderer;
+mod out;
 mod repository;
 mod template;
 mod utils;
