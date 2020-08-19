@@ -1,10 +1,8 @@
 [package]
 name = "tmpo"
-version = "1.0.7"
+version = "1.0.6"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { git = "https://github.com/clap-rs/clap/" }
@@ -18,5 +16,12 @@ env_logger = "0.7.1"
 git2 = "0.12"
 custom_error = "1.7.1"
 colored = "1.9.3"
-self_update = "0.14"
 dialoguer = "0.6.2"
+reqwest = "0.10.7"
+tempfile = "3.1.0"
+flate2 = "1.0.17"
+tar = "0.4.29"
+
+[dependencies.self_update]
+version = "0.14"
+features = ["archive-tar"]
