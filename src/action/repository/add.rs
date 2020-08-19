@@ -1,4 +1,4 @@
-use crate::cli::{input, password};
+use crate::cli::{input, password, confirm};
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::repository::Repository;
@@ -36,10 +36,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         password: None,
     };
     // Enable git
-    git_options.enabled = match input("Enable remote repository: (y:n)", false) {
-        Some(value) => value == "y",
-        None => return,
-    };
+    git_options.enabled = confirm("Enable remote repository?");
     // Git options
     if git_options.enabled {
         git_options.url = input("Please enter the remote repository url", false);

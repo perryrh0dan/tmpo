@@ -13,6 +13,20 @@ pub fn input(text: &str, allow_empty: bool ) -> Option<String> {
   }
 }
 
+pub fn confirm(text: &str) -> bool {
+  let mut question = text.to_owned();
+  question.push_str(" [Y/n]");
+
+  match Input::<String>::with_theme(&ColorfulTheme::default())
+    .with_prompt(&question)
+    .allow_empty(false)
+    .interact()
+  {
+    Ok(value) => value == "Y" || value == "y",
+    Err(_error) => false,
+  }
+}
+
 pub fn password(text: &str) -> Result<String, Error> {
   return Password::with_theme(&ColorfulTheme::default())
     .with_prompt(text)

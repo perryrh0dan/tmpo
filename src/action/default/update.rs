@@ -1,6 +1,7 @@
 use std::fs::File;
 
 use crate::out;
+use crate::cli::confirm;
 
 extern crate tar;
 extern crate self_update;
@@ -22,9 +23,29 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
   if releases[0].version == version {
     out::no_app_update();
     return Ok(());
-  }
+  } 
 
-  let asset = releases[0].asset_for(&self_update::get_target()).unwrap();
+  println!("Checking target-arch: {}", &self_update::get_target());
+  println!("Checking current version: {}", &version);
+  println!("New release found! {} --> {}", &version, &releases[0].version);
+
+  let asset = match releases[0].asset_for(&self_update::get_target()) {
+    Some(value) => value,
+    None => {
+      println!("New release is not compatible");
+      return Ok(());
+    }
+  };
+
+  println!("New release is compatible");
+  println!();
+
+  // user input
+  let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
+
+  if !update {
+    return Ok(());
+  }
 
   let tmp_dir = tempfile::Builder::new().tempdir_in(::std::env::current_dir()?)?;
   let tmp_tarball_path = tmp_dir.path().join(&asset.name);
