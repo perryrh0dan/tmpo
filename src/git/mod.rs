@@ -1,10 +1,6 @@
-use std::str;
 use std::path::Path;
-
-use crate::out;
-
-#[macro_use]
-use log::debug;
+use std::str;
+use log;
 
 extern crate custom_error;
 extern crate git2;
@@ -99,6 +95,9 @@ fn do_fetch<'a>(
   opts: &GitOptions,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
   // token needs to be declared here to live longer than the fetchOptions
+
+  log::info!("Fetching repository");
+
   let token;
   let mut fo = git2::FetchOptions::new();
   let mut callbacks = git2::RemoteCallbacks::new();
@@ -115,9 +114,9 @@ fn do_fetch<'a>(
   //     )
   // });
   } else if auth == "token" {
-    debug!("[git]: authentication using token");
+    log::debug!("[git]: authentication using token");
     if opts.token.is_none() {
-      out::errors::missing_token();
+      log::error!("No token was provided");
       return Err(git2::Error::from_str("missing auth token"));
     }
     token = opts.token.clone().unwrap();
@@ -125,7 +124,7 @@ fn do_fetch<'a>(
       git2::Cred::userpass_plaintext(&token, "")
     });
   } else {
-    debug!("[git]: no authentication");
+    log::debug!("[git]: no authentication");
   }
 
   // Always fetch all tags.
@@ -217,7 +216,6 @@ fn do_merge<'a>(
     match repo.find_reference(&refname) {
       Ok(mut r) => {
         fast_forward(repo, &mut r, &fetch_commit)?;
-        out::success_update_templates()
       }
       Err(_) => {
         // The branch doesn't exist so just set the reference to the

@@ -144,7 +144,7 @@ fn config_location() -> PathBuf {
   return dir;
 }
 
-fn directory() -> PathBuf {
+pub fn directory() -> PathBuf {
   let mut path = config_location();
   path.pop();
 

@@ -44,22 +44,7 @@ pub fn copy_template() {
   println!("{}", text);
 }
 
-pub fn template_dir_not_found(dir: &str) {
-  let text = format!("{} {}", "Cant find template dir:", dir).red();
-  println!("{}", text);
-}
-
-pub fn template_dir_permission_denied(dir: &str) {
-  let text = format!("{} {}", "Cant read template dir:", dir).red();
-  println!("{}", text);
-}
-
 pub fn missing_token() {
   let text = format!("Error fetching templates: authentication token is missing").red();
-  println!("{}", text);
-}
-
-pub fn unknown() {
-  let text = format!("Unknown error occured").red();
   println!("{}", text);
 }

@@ -6,13 +6,17 @@ mod out;
 mod repository;
 mod template;
 mod utils;
+mod logger;
+use log::{error, info, warn};
 
 use clap::{crate_version, App, AppSettings, Arg};
-use env_logger;
 
 fn main() {
-  // initialize logger
-  env_logger::init();
+  // Initiate config
+  let mut config = config::init().unwrap();
+
+  // Initiate logger
+  logger::init();
 
   let matches = App::new("tmpo")
     .version(crate_version!())
@@ -93,8 +97,6 @@ fn main() {
         .subcommand(App::new("remove").about("Remove a repository")),
     )
     .get_matches();
-
-  let mut config = config::init().unwrap();
 
   match matches.subcommand() {
     ("init", Some(init_matches)) => {

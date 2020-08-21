@@ -2,13 +2,20 @@ use std::fs;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
-
 use std::process::{Command, Stdio};
-
-pub mod meta;
 
 use crate::repository::Repository;
 use crate::utils;
+
+extern crate custom_error;
+use custom_error::custom_error;
+
+pub mod meta;
+mod placeholder;
+
+custom_error! {pub TemplateError
+  InitializeTemplate = "Unable to initialize template"
+}
 
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -16,7 +23,6 @@ pub struct Options {
   pub repository: Option<String>,
   pub username: Option<String>,
   pub email: Option<String>,
-  pub replace: bool,
 }
 
 pub struct Template {
@@ -26,13 +32,6 @@ pub struct Template {
   pub scripts: Option<meta::Scripts>,
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
-}
-
-extern crate custom_error;
-use custom_error::custom_error;
-
-custom_error! {pub TemplateError
-  InitializeTemplate = "Unable to initialize template"
 }
 
 impl Template {
@@ -90,7 +89,7 @@ impl Template {
         .before_install
         .as_ref()
         .unwrap();
-      let script = replace_placeholders(script, &opts)?;
+      let script = placeholder::replace(script, &opts)?;
 
       run_script(&script, target);
     }
@@ -106,7 +105,7 @@ impl Template {
         .after_install
         .as_ref()
         .unwrap();
-      let script = replace_placeholders(script, &opts)?;
+      let script = placeholder::replace(script, &opts)?;
 
       run_script(&script, target);
     }
@@ -131,7 +130,7 @@ impl Template {
       path.push(source_name);
 
       // replace placeholders in path
-      path = PathBuf::from(replace_placeholders(&path.to_string_lossy(), &opts)?);
+      path = PathBuf::from(placeholder::replace(&path.to_string_lossy(), &opts)?);
 
       // check if entry is directory
       if entry.path().is_dir() {
@@ -145,7 +144,7 @@ impl Template {
 
         self.copy_folder(&source_path, &path, opts)?
       } else {
-        if is_excluded(&source_name, &self.exclude) {
+        if self.is_excluded(&source_name) {
           continue;
         }
 
@@ -160,7 +159,7 @@ impl Template {
         drop(src);
 
         // replace placeholders in data
-        data = replace_placeholders(&data, &opts)?;
+        data = placeholder::replace(&data, &opts)?;
 
         // create file
         let mut dst = File::create(path)?;
@@ -169,6 +168,26 @@ impl Template {
     }
 
     Ok(())
+  }
+
+  fn is_excluded(&self, name: &str) -> bool {
+    if name == "meta.json" {
+      return true;
+    };
+  
+    let items = match &self.exclude {
+      None => return false,
+      Some(x) => x,
+    };
+  
+    // check meta exclude
+    for item in items.iter() {
+      if item == &name {
+        return true;
+      }
+    }
+  
+    return false;
   }
 }
 
@@ -196,41 +215,4 @@ fn run_script(script: &String, target: &Path) {
   let status = cmd.wait();
 }
 
-fn is_excluded(name: &str, exclude: &Option<Vec<String>>) -> bool {
-  if name == "meta.json" {
-    return true;
-  };
 
-  let items = match &exclude {
-    None => return false,
-    Some(x) => x,
-  };
-
-  // check meta exclude
-  for item in items.iter() {
-    if item == &name {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-fn replace_placeholders(data: &str, opts: &Options) -> Result<String, Error> {
-  // replace placeholder with actual value
-  let mut data = data.replace("{{name}}", &opts.name);
-
-  if !opts.repository.is_none() {
-    data = data.replace("{{repository}}", opts.repository.as_ref().unwrap());
-  }
-
-  if !opts.username.is_none() {
-    data = data.replace("{{username}}", opts.username.as_ref().unwrap());
-  }
-
-  if !opts.email.is_none() {
-    data = data.replace("{{email}}", opts.email.as_ref().unwrap());
-  }
-
-  Ok(data)
-}
