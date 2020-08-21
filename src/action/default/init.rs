@@ -129,7 +129,6 @@ pub fn init(config: &Config, args: &ArgMatches) {
     repository: Some(String::from(&workspace_repository)),
     username: username,
     email: email,
-    replace: false,
   };
 
   //// Copy the template

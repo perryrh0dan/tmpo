@@ -10,19 +10,18 @@ use clap::{crate_version};
 use tar::Archive;
 use flate2::read::GzDecoder;
 
-
-pub fn update() -> Result<(), Box<::std::error::Error>> {
+pub fn update(interactive: bool) {
   let releases = self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")
     .repo_name("tmpo")
-    .build()?
-    .fetch()?;
+    .build().unwrap()
+    .fetch().unwrap();
 
   // check version 
   let version = crate_version!();
   if releases[0].version == version {
-    out::no_app_update();
-    return Ok(());
+    if interactive { out::no_app_update() };
+    return;
   } 
 
   println!("Checking target-arch: {}", &self_update::get_target());
@@ -33,7 +32,7 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
     Some(value) => value,
     None => {
       println!("New release is not compatible");
-      return Ok(());
+      return;
     }
   };
 
@@ -41,15 +40,17 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
   println!();
 
   // user input
-  let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
-
-  if !update {
-    return Ok(());
+  if interactive {
+    let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
+  
+    if !update {
+      return;
+    }
   }
 
-  let tmp_dir = tempfile::Builder::new().tempdir_in(::std::env::current_dir()?)?;
+  let tmp_dir = tempfile::Builder::new().tempdir_in(::std::env::current_dir().unwrap()).unwrap();
   let tmp_tarball_path = tmp_dir.path().join(&asset.name);
-  std::fs::File::create(&tmp_tarball_path)?;
+  std::fs::File::create(&tmp_tarball_path).unwrap();
   let tmp_tarball = std::fs::OpenOptions::new().create(true).append(true).open(&tmp_tarball_path).unwrap();
 
   // download asset
@@ -75,7 +76,7 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
   let bin_path = tmp_dir.path().join(bin_name);
   self_update::Move::from_source(&bin_path)
     .replace_using_temp(&tmp_file)
-    .to_dest(&::std::env::current_exe()?)?;
+    .to_dest(&::std::env::current_exe().unwrap()).unwrap();
 
   // remove tmp folder
   match std::fs::remove_dir_all(tmp_dir) {
@@ -84,5 +85,4 @@ pub fn update() -> Result<(), Box<::std::error::Error>> {
   };
 
   out::success_update_app();
-  Ok(())
 }

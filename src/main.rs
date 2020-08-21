@@ -6,13 +6,20 @@ mod out;
 mod repository;
 mod template;
 mod utils;
+mod logger;
 
 use clap::{crate_version, App, AppSettings, Arg};
-use env_logger;
 
 fn main() {
-  // initialize logger
-  env_logger::init();
+  // Initiate config
+  let mut config = config::init().unwrap();
+
+  // Initiate logger
+  logger::init();
+
+  if config.auto_update {
+    action::default::update::update(false);
+  }
 
   let matches = App::new("tmpo")
     .version(crate_version!())
@@ -94,8 +101,6 @@ fn main() {
     )
     .get_matches();
 
-  let mut config = config::init().unwrap();
-
   match matches.subcommand() {
     ("init", Some(init_matches)) => {
       action::default::init::init(&config, init_matches);
@@ -104,7 +109,7 @@ fn main() {
       action::default::list::list(&config, list_matches);
     }
     ("update", Some(_update_matches)) => {
-      action::default::update::update();
+      action::default::update::update(true);
     }
     ("view", Some(view_matches)) => {
       action::default::view::view(&config, view_matches);
