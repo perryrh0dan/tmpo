@@ -10,7 +10,7 @@ use clap::{crate_version};
 use tar::Archive;
 use flate2::read::GzDecoder;
 
-pub fn update() {
+pub fn update(interactive: bool) {
   let releases = self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")
     .repo_name("tmpo")
@@ -20,7 +20,7 @@ pub fn update() {
   // check version 
   let version = crate_version!();
   if releases[0].version == version {
-    out::no_app_update();
+    if interactive { out::no_app_update() };
     return;
   } 
 
@@ -40,10 +40,12 @@ pub fn update() {
   println!();
 
   // user input
-  let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
-
-  if !update {
-    return;
+  if interactive {
+    let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
+  
+    if !update {
+      return;
+    }
   }
 
   let tmp_dir = tempfile::Builder::new().tempdir_in(::std::env::current_dir().unwrap()).unwrap();

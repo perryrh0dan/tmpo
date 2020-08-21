@@ -12,6 +12,7 @@ extern crate serde_yaml;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
+  pub auto_update: bool,
   pub templates_dir: String,
   pub templates_repositories: Vec<RepositoryOptions>,
 }
@@ -126,6 +127,7 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
+    auto_update: true,
     templates_dir: template_dir,
     templates_repositories: repo_options,
   };

@@ -13,7 +13,7 @@ pub fn list_templates(templates: &Vec<String>) {
 }
 
 pub fn no_app_update() {
-  let text = format!("tmpo is alread up to date").green();
+  let text = format!("tmpo is already up to date").green();
   println!("{}", text);
 }
 

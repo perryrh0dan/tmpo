@@ -7,7 +7,6 @@ mod repository;
 mod template;
 mod utils;
 mod logger;
-use log::{error, info, warn};
 
 use clap::{crate_version, App, AppSettings, Arg};
 
@@ -17,6 +16,10 @@ fn main() {
 
   // Initiate logger
   logger::init();
+
+  if config.auto_update {
+    action::default::update::update(false);
+  }
 
   let matches = App::new("tmpo")
     .version(crate_version!())
@@ -106,7 +109,7 @@ fn main() {
       action::default::list::list(&config, list_matches);
     }
     ("update", Some(_update_matches)) => {
-      action::default::update::update();
+      action::default::update::update(true);
     }
     ("view", Some(view_matches)) => {
       action::default::view::view(&config, view_matches);
