@@ -41,7 +41,7 @@ pub fn update(interactive: bool) {
 
   // user input
   if interactive {
-    let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
+    let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced. Do you want to continue?");
   
     if !update {
       return;

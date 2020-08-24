@@ -17,6 +17,7 @@ fn main() {
   // Initiate logger
   logger::init();
 
+  // Check auto update
   if config.auto_update {
     action::default::update::update(false);
   }
