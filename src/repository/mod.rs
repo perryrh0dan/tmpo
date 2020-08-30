@@ -6,6 +6,7 @@ use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
 use crate::template;
+use crate::meta;
 
 extern crate custom_error;
 use custom_error::custom_error;
@@ -138,7 +139,7 @@ impl Repository {
       }
 
       let path = entry.path().to_string_lossy().into_owned();
-      let meta = template::meta::load_meta(&path).unwrap();
+      let meta = meta::load_meta(&path).unwrap();
 
       // If type is None or unqual template skip entry
       if meta.kind.is_none() || meta.kind != Some(String::from("template")) {

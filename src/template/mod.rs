@@ -6,23 +6,17 @@ use std::process::{Command, Stdio};
 
 use crate::repository::Repository;
 use crate::utils;
+use crate::meta;
 
 extern crate custom_error;
 use custom_error::custom_error;
+extern crate serde;
 
-pub mod meta;
-mod placeholder;
+pub mod context;
+mod renderer;
 
 custom_error! {pub TemplateError
   InitializeTemplate = "Unable to initialize template"
-}
-
-#[derive(Clone, Debug)]
-pub struct Options {
-  pub name: String,
-  pub repository: Option<String>,
-  pub username: Option<String>,
-  pub email: Option<String>,
 }
 
 pub struct Template {
@@ -67,7 +61,7 @@ impl Template {
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &Path, opts: Options) -> Result<(), Error> {
+  pub fn copy(&self, repository: &Repository, target: &Path, opts: context::Context) -> Result<(), Error> {
     // get list of all super templates
     let super_templates = match &self.extend {
       None => Vec::new(),
@@ -89,7 +83,7 @@ impl Template {
         .before_install
         .as_ref()
         .unwrap();
-      let script = placeholder::replace(script, &opts)?;
+      let script = renderer::render(script, &opts);
 
       run_script(&script, target);
     }
@@ -105,7 +99,7 @@ impl Template {
         .after_install
         .as_ref()
         .unwrap();
-      let script = placeholder::replace(script, &opts)?;
+      let script = renderer::render(script, &opts);
 
       run_script(&script, target);
     }
@@ -113,7 +107,7 @@ impl Template {
     Ok(())
   }
 
-  fn copy_folder(&self, src: &str, target: &Path, opts: &Options) -> Result<(), Error> {
+  fn copy_folder(&self, src: &str, target: &Path, opts: &context::Context) -> Result<(), Error> {
     // Loop at selected template directory
     for entry in fs::read_dir(src)? {
       let entry = &entry.unwrap();
@@ -130,7 +124,7 @@ impl Template {
       path.push(source_name);
 
       // replace placeholders in path
-      path = PathBuf::from(placeholder::replace(&path.to_string_lossy(), &opts)?);
+      path = PathBuf::from(renderer::render(&path.to_string_lossy(), &opts));
 
       // check if entry is directory
       if entry.path().is_dir() {
@@ -159,7 +153,7 @@ impl Template {
         drop(src);
 
         // replace placeholders in data
-        data = placeholder::replace(&data, &opts)?;
+        data = renderer::render(&data, &opts);
 
         // create file
         let mut dst = File::create(path)?;

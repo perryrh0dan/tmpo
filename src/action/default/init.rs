@@ -124,7 +124,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     }
   };
 
-  let options = template::Options {
+  let options = template::context::Context {
     name: String::from(&workspace_name),
     repository: Some(String::from(&workspace_repository)),
     username: username,

@@ -3,6 +3,7 @@ mod cli;
 mod config;
 mod git;
 mod out;
+mod meta;
 mod repository;
 mod template;
 mod utils;
