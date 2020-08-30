@@ -38,6 +38,11 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
     return Err(Error::from(ErrorKind::InvalidData))
   };
 
+  // TODO check
+  // if options.len() == 1 {
+  //    return Ok(options[0].to_owned());
+  // }
+
   let selection = match Select::with_theme(&ColorfulTheme::default())
     .with_prompt(String::from("Select a ") + name)
     .default(0)
