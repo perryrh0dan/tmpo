@@ -32,7 +32,7 @@ impl Repository {
       Option::None => return Err(RepositoryError::NotFound),
     };
 
-    let directory = String::from(&config.templates_dir) + "/" + &name;
+    let directory = String::from(&config.templates_dir) + "/" + &utils::lowercase(name);
 
     let mut repository = Repository {
       directory: directory,
