@@ -33,6 +33,10 @@ Visit the [contributing guidelines](https://github.com/perryrh0dan/tmpo/blob/mas
 
 Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
 
+<div align="center">
+  <img alt="diagram" width="80%" src="./media/diagram.png"/>
+</div>
+
 ## Highlights
 - Setup complex workspaces in seconds
 - Templates support inheritence and placeholders
