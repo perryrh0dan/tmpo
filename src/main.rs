@@ -28,6 +28,12 @@ fn main() {
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
+    .arg(
+      Arg::with_name("verbose")
+        .short('v')
+        .long("verbose")
+        .required(false)
+    )
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")
@@ -61,6 +67,13 @@ fn main() {
             .takes_value(true)
             .help("The directory name to create the workspace in.")
             .required(false),
+        )
+        .arg(
+          Arg::with_name("remote")
+            .long("remote")
+            .takes_value(true)
+            .help("Remote URL")
+            .required(false)
         )
         .arg(
           Arg::with_name("replace")

@@ -41,7 +41,7 @@ pub fn view(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_templates();
+          out::errors::no_templates(&repository.config.name);
           return;
         },
         _ => return,

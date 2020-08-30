@@ -28,8 +28,8 @@ pub fn template_not_found(template: &str) {
   println!("{}", text);
 }
 
-pub fn no_templates() {
-  let text = format!("No templates exist in this repository").red();
+pub fn no_templates(repository: &str) {
+  let text = format!("No templates exist in repository: {}", repository).red();
   println!("{}", text);
 }
 
