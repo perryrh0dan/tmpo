@@ -16,6 +16,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let repository_name = args.value_of("repository");
   let template_name = args.value_of("template");
   let workspace_directory = args.value_of("directory");
+  let remote_url = args.value_of("remote");
 
   out::initiate_workspace();
 
@@ -62,7 +63,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_templates();
+          out::errors::no_templates(&repository.config.name);
           return;
         },
         _ => return,
@@ -83,9 +84,13 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   //// Get workspace git repository url from user input
-  let workspace_repository = match input::text("Please enter a git remote url", true) {
-    Some(value) => value,
-    None => return,
+  let workspace_repository = if remote_url.is_none() {
+    match input::text("Please enter a git remote url", true) {
+      Some(value) => value,
+      None => return,
+    }
+  } else {
+    remote_url.unwrap().to_string()
   };
 
   //// Create the workspace directory

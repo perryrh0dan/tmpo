@@ -7,6 +7,7 @@ use crate::git;
 use crate::out;
 use crate::template;
 use crate::meta;
+use crate::utils;
 
 extern crate custom_error;
 use custom_error::custom_error;
@@ -96,7 +97,7 @@ impl Repository {
 
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
     let mut directory = PathBuf::from(&config.templates_dir);
-    directory.push(&self.config.name);
+    directory.push(&utils::lowercase(&self.config.name));
     let r = fs::create_dir_all(&directory);
     match r {
       Ok(fc) => fc,

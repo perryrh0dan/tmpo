@@ -5,6 +5,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::git;
+use crate::utils;
 
 extern crate dirs;
 extern crate serde;
@@ -26,7 +27,7 @@ pub struct RepositoryOptions {
 
 impl Config {
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
-    let config = self.templates_repositories.iter().find(|&x| x.name == name);
+    let config = self.templates_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
     if config.is_some() {
       return Some(config.unwrap().clone());
