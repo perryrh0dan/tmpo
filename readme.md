@@ -82,7 +82,7 @@ A repository is a folder that contains up to n different templates. A repository
 
 ### Templates
 
-Templates can be configured with a `meta.json` in the template root. The official template repository can be found [here](https://github.com/perryrh0dan/templates).
+Templates can be configured with a `meta.json` in the template root. The official template repository with detailed instructions can be found [here](https://github.com/perryrh0dan/templates).
 
 #### Format
 
