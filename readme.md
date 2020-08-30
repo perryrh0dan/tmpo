@@ -29,13 +29,13 @@
 
 Tmpo enables you to effectively create new workspaces based on predefined templates. To share templates across your team tmpo is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients. 
 
+<div align="center">
+  <img alt="diagram" width="90%" src="./media/diagram.png"/>
+</div>
+
 Visit the [contributing guidelines](https://github.com/perryrh0dan/tmpo/blob/master/contributing.md) to learn more on how help developing tmpo.
 
 Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
-
-<div align="center">
-  <img alt="diagram" width="80%" src="./media/diagram.png"/>
-</div>
 
 ## Highlights
 - Setup complex workspaces in seconds
