@@ -1,200 +1,218 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write, Error, ErrorKind};
-use std::path::Path;
+use std::io::{Error, ErrorKind, Read, Write};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
-mod meta;
-
-use crate::config::Config; 
-use crate::renderer;
+use crate::repository::Repository;
 use crate::utils;
+
+extern crate custom_error;
+use custom_error::custom_error;
+
+pub mod meta;
+mod placeholder;
+
+custom_error! {pub TemplateError
+  InitializeTemplate = "Unable to initialize template"
+}
 
 #[derive(Clone, Debug)]
 pub struct Options {
-  pub template: String,
-  pub dir: String,
   pub name: String,
   pub repository: Option<String>,
-  pub replace: bool,
+  pub username: Option<String>,
+  pub email: Option<String>,
 }
 
 pub struct Template {
   pub name: String,
   pub path: String,
+  pub description: Option<String>,
+  pub scripts: Option<meta::Scripts>,
+  pub extend: Option<Vec<String>>,
+  pub exclude: Option<Vec<String>>,
 }
 
-pub fn copy(config: &Config, opts: Options) -> Result<(), Error> {
-  // check if template exists and get absolute path
-  let template_path = match get_template_path(config, &opts.template) {
-    Ok(path) => path,
-    Err(error) => {
-      match error.kind() {
-        ErrorKind::NotFound => renderer::errors::template_dir_not_found(&config.templates_dir),
-        ErrorKind::PermissionDenied => renderer::errors::template_dir_permission_denied(&config.templates_dir),
-        _ => renderer::errors::unknown(),
-      }
-      return Err(error);
-    }
-  };
-
-  // load meta informations 
-  let meta = meta::load_meta(&template_path)?;
-
-  // get list of all super tempaltes 
-  let templates = match &meta.extend {
-    None => Vec::new(),
-    Some(x) => x.clone(),
-  };
-
-  // copy all super tempaltes into the directory
-  for template in templates {
-    let mut opts = opts.clone();
-    opts.template = template;
-
-    copy(&config, opts)?;
-  }
-
-  // copy the template into the directory
-  copy_template(config, &opts, &meta)?;
-
-  Ok(())
-}
-
-pub fn get_all_templates(config: &Config) -> Result<Vec<Template>, Error> {
-  let mut templates = Vec::<Template>::new();
-  
-  // check if folder exists
-  match fs::read_dir(&config.templates_dir) {
-    Ok(fc) => fc,
-    Err(error) => return Err(error),
-  };
-
-  // Load meta of the templates directory
-  let meta = meta::load_meta(&config.templates_dir)?;
-
-  // Loop at all entries in templates directory
-  for entry in fs::read_dir(&config.templates_dir).unwrap() {
-    let entry = &entry.unwrap();
-    // check if entry is file, if yes skip entry
-    if !entry.path().is_dir() {
-      continue;
-    }
-
-    let entry_path = entry.path().to_string_lossy().into_owned();
-    let entry_meta = meta::load_meta(&entry_path)?;
+impl Template {
+  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, TemplateError> {
+    let path = dir.path().to_string_lossy().into_owned();
+    let meta = meta::load_meta(&path).unwrap();
 
     // If type is None or unqual template skip entry
-    if entry_meta.kind.is_none() || entry_meta.kind != Some(String::from("template")) {
-      continue;
+    if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
+      return Err(TemplateError::InitializeTemplate);
     }
 
     let name;
-    if entry_meta.name.is_none() {
-      // if no name is provided use dir name
-      name = entry.path().file_name().unwrap().to_string_lossy().into_owned();
+    if meta.name.is_none() {
+      name = dir
+        .path()
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
     } else {
-      name = entry_meta.name.unwrap();
-    }
-
-    if meta::exclude_file(&name, &meta){
-      continue;
+      name = meta.name.unwrap();
     }
 
     // make all names lowercase
-    let template = Template {
+    return Ok(Template {
       name: utils::lowercase(&name),
-      path: entry_path,
+      path: path,
+      description: meta.description,
+      scripts: meta.scripts,
+      extend: meta.extend,
+      exclude: meta.exclude,
+    });
+  }
+
+  pub fn copy(&self, repository: &Repository, target: &Path, opts: Options) -> Result<(), Error> {
+    // get list of all super templates
+    let super_templates = match &self.extend {
+      None => Vec::new(),
+      Some(x) => x.clone(),
     };
 
-    templates.push(template);
+    for name in super_templates {
+      let template = repository.get_template_by_name(&name).unwrap();
+      let opts = opts.clone();
+      template.copy(repository, target, opts)?;
+    }
+
+    // run before install script
+    if self.scripts.is_some() && self.scripts.as_ref().unwrap().before_install.is_some() {
+      let script = self
+        .scripts
+        .as_ref()
+        .unwrap()
+        .before_install
+        .as_ref()
+        .unwrap();
+      let script = placeholder::replace(script, &opts)?;
+
+      run_script(&script, target);
+    }
+
+    self.copy_folder(&self.path, &target, &opts)?;
+
+    // run after install script
+    if self.scripts.is_some() && self.scripts.as_ref().unwrap().after_install.is_some() {
+      let script = self
+        .scripts
+        .as_ref()
+        .unwrap()
+        .after_install
+        .as_ref()
+        .unwrap();
+      let script = placeholder::replace(script, &opts)?;
+
+      run_script(&script, target);
+    }
+
+    Ok(())
   }
 
-  return Ok(templates);
-}
+  fn copy_folder(&self, src: &str, target: &Path, opts: &Options) -> Result<(), Error> {
+    // Loop at selected template directory
+    for entry in fs::read_dir(src)? {
+      let entry = &entry.unwrap();
 
-fn copy_template(config: &Config, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
-  // check if template exists
-  let template_path = get_template_path(config, &opts.template)?;
+      let source_path = &entry.path().to_string_lossy().into_owned();
+      let source_name = &entry
+        .path()
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
 
-  copy_folder(&template_path, &opts.dir, opts, meta)?;
+      let mut path = target.to_path_buf();
+      path.push(source_name);
 
-  Ok(())
-}
+      // replace placeholders in path
+      path = PathBuf::from(placeholder::replace(&path.to_string_lossy(), &opts)?);
 
-fn copy_folder(src: &str, target: &str, opts: &Options, meta: &meta::Meta) -> Result<(), Error> {
-  // Loop at selected template directory
-  for entry in fs::read_dir(src)? {
-    let entry = &entry.unwrap();
+      // check if entry is directory
+      if entry.path().is_dir() {
+        match fs::create_dir(&path) {
+          Ok(()) => (),
+          Err(error) => match error.kind() {
+            ErrorKind::AlreadyExists => (),
+            _ => return Err(error),
+          },
+        };
 
-    let source_path = &entry.path().to_string_lossy().into_owned();
-    let source_name = &entry.path().file_name().unwrap().to_string_lossy().into_owned();
-    let dir_path = target.to_string() + "/" + source_name;
+        self.copy_folder(&source_path, &path, opts)?
+      } else {
+        if self.is_excluded(&source_name) {
+          continue;
+        }
 
-    // check if entry if directory
-    if entry.path().is_dir() {
-      let dir = target.to_string() + "/" + source_name;
-      fs::create_dir(Path::new(&dir))?;
+        // Open file
+        let mut src = File::open(Path::new(&source_path))?;
+        let mut data = String::new();
 
-      copy_folder(&source_path, &dir, opts, meta)?
-    } else {
-      if meta::exclude_file(&source_name, meta) {
-        continue;
+        // Write to data string
+        src.read_to_string(&mut data)?;
+
+        // close file
+        drop(src);
+
+        // replace placeholders in data
+        data = placeholder::replace(&data, &opts)?;
+
+        // create file
+        let mut dst = File::create(path)?;
+        dst.write(data.as_bytes())?;
       }
-
-      // Open file
-      let mut src = File::open(Path::new(&source_path))?;
-      let mut data = String::new();
-
-      // Write to data string
-      src.read_to_string(&mut data)?;
-
-      // close file
-      drop(src);
-      
-      data = fill_template(&data, &opts)?;
-
-      // create file
-      let mut dst = File::create(dir_path)?;
-      dst.write(data.as_bytes())?;
     }
+
+    Ok(())
   }
 
-  Ok(())
-}
-
-fn fill_template(tempalte: &str, opts: &Options) -> Result<String, Error> {
-  // replace placeholder with actual value
-  let mut data = tempalte.replace("{{name}}", &opts.name);
-
-  if !opts.repository.is_none() {
-    data = data.replace("{{repository}}", opts.repository.as_ref().unwrap());
-  }
-
-  Ok(data)
-}
-
-fn get_template_path(config: &Config, template: &str) -> Result<String, Error> {
-  let templates = get_all_templates(config)?;
-
-  // all templates are lowercase
-  let template = utils::lowercase(template);
-
-  let mut template_path: Option<String> = None;
-  for temp in templates {
-    if temp.name == template {
-      template_path = Some(temp.path);
-      break;
-    }
-  }
-
-  if template_path.is_none() {
-    renderer::errors::template_not_found(&template);
-    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Template not found"))
-  }
-
-  let template_path = template_path.unwrap();
+  fn is_excluded(&self, name: &str) -> bool {
+    if name == "meta.json" {
+      return true;
+    };
   
-  // check if path exists
-  fs::read_dir(&template_path)?;  
-  return Ok(template_path);
+    let items = match &self.exclude {
+      None => return false,
+      Some(x) => x,
+    };
+  
+    // check meta exclude
+    for item in items.iter() {
+      if item == &name {
+        return true;
+      }
+    }
+  
+    return false;
+  }
 }
+
+fn run_script(script: &String, target: &Path) {
+  // Run before script if exists
+  let mut cmd = if cfg!(target_os = "windows") {
+    Command::new("cmd")
+      .current_dir(target)
+      .arg(script)
+      .stdout(Stdio::inherit())
+      .stderr(Stdio::inherit())
+      .spawn()
+      .expect("failed to execute process")
+  } else {
+    Command::new("sh")
+      .current_dir(target)
+      .arg("-c")
+      .arg(script)
+      .stdout(Stdio::inherit())
+      .stderr(Stdio::inherit())
+      .spawn()
+      .expect("failed to execute process")
+  };
+
+  let status = cmd.wait();
+}
+
+

@@ -1,39 +1,52 @@
-use std::io;
-use std::io::{Error};
-use std::io::*;
+use std::io::{Error, ErrorKind};
 
-pub fn get_value(name: &str, required: bool, default: Option<&str>) -> std::result::Result<Option<String>, Error> {
-  let mut message;
-  
-  // check if required, add question mark for optional parameters
-  if required {
-    message = format!("Enter the {}: ", name);
-  } else {
-    message = format!{"Enter the {}?: ", name};
+use dialoguer::{theme::ColorfulTheme, Input, Select, Password};
+
+pub fn text(text: &str, allow_empty: bool ) -> Option<String> {
+  match Input::<String>::with_theme(&ColorfulTheme::default())
+    .with_prompt(text)
+    .allow_empty(allow_empty)
+    .interact()
+  {
+    Ok(value) => Some(value),
+    Err(_error) => return None,
   }
+}
 
-  // check if default values is provided
-  if !default.is_none() {
-    message = format!("message ({})", default.unwrap());
+pub fn confirm(text: &str) -> bool {
+  let mut question = text.to_owned();
+  question.push_str(" [Y/n]");
+
+  match Input::<String>::with_theme(&ColorfulTheme::default())
+    .with_prompt(&question)
+    .allow_empty(false)
+    .interact()
+  {
+    Ok(value) => value == "Y" || value == "y",
+    Err(_error) => false,
   }
+}
 
-  // finally print message
-  print!("{}", message);
+pub fn password(text: &str) -> Result<String, Error> {
+  return Password::with_theme(&ColorfulTheme::default())
+    .with_prompt(text)
+    .interact();
+}
 
-  // directly print message
-  io::stdout().flush()?;
+pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
+  if options.len() == 0 {
+    return Err(Error::from(ErrorKind::InvalidData))
+  };
 
-  let mut value = String::new();
-  loop {
-    io::stdin().read_line(&mut value).expect("error: unable to read user input");
-    // remove whitespaces and new line
-    value = value.trim().to_string();
-    if value == "" && !required {
-      return Ok(None);
-    } else if value != "" {
-      break;
-    }
-  }
-
-  Ok(Some(value))
+  let selection = match Select::with_theme(&ColorfulTheme::default())
+    .with_prompt(String::from("Select a ") + name)
+    .default(0)
+    .items(options)
+    .interact()
+  {
+    Ok(selection) => selection,
+    Err(error) => return Err(error),
+  };
+  let result = String::from(&options[selection]);
+  return Ok(result);
 }

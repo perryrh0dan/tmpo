@@ -1,19 +1,27 @@
 [package]
-name = "charon"
-version = "0.1.0"
+name = "tmpo"
+version = "1.1.2"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { git = "https://github.com/clap-rs/clap/" }
 serde = { version = "1.0.104", features = ["derive"] }
+openssl = { version = "0.10.30", features = ["vendored"] }
 serde_json = "1.0.48"
+serde_yaml = "0.8.13"
 dirs = "2.0.2"
 log = "0.4.8"
-env_logger = "0.7.1"
+log4rs = "0.13.0"
 git2 = "0.12"
 custom_error = "1.7.1"
 colored = "1.9.3"
-ctrlc = "3.1.4"
+dialoguer = "0.6.2"
+reqwest = "0.10.7"
+tempfile = "3.1.0"
+flate2 = "1.0.17"
+tar = "0.4.29"
+
+[dependencies.self_update]
+version = "0.14"
+features = ["archive-tar"]
