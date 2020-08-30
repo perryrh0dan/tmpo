@@ -13,27 +13,24 @@ use clap::{crate_version, App, AppSettings, Arg};
 
 fn main() {
   // Initiate config
-  let mut config = config::init().unwrap();
+  let mut config = match config::init() {
+    Ok(data) => data,
+    Err(_error) => {
+      out::errors::load_config();
+      std::process::exit(1)
+    }
+  };
 
   // Initiate logger
   logger::init();
 
-  // Check auto update
-  if config.auto_update {
-    action::default::update::update(false);
-  }
+  // TODO Check for update
 
   let matches = App::new("tmpo")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
-    .arg(
-      Arg::with_name("verbose")
-        .short('v')
-        .long("verbose")
-        .required(false)
-    )
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")

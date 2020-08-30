@@ -1,4 +1,5 @@
 use std::fs::File;
+use log;
 
 use crate::out;
 use crate::cli::input::confirm;
@@ -74,9 +75,21 @@ pub fn update(interactive: bool) {
   let bin_name = "tmpo";
   let tmp_file = tmp_dir.path().join("replacement_tmp");
   let bin_path = tmp_dir.path().join(bin_name);
-  self_update::Move::from_source(&bin_path)
+  let success = match self_update::Move::from_source(&bin_path)
     .replace_using_temp(&tmp_file)
-    .to_dest(&::std::env::current_exe().unwrap()).unwrap();
+    .to_dest(&::std::env::current_exe().unwrap()) {
+      Ok(_) => ( true ),
+      Err(error) => match error {
+        self_update::errors::Error::Io { .. } => {
+          out::errors::selfupdate_no_permission();
+          false
+        },
+        _ => { 
+          log::error!("{}", error);
+          false
+        }
+      }
+    };
 
   // remove tmp folder
   match std::fs::remove_dir_all(tmp_dir) {
@@ -84,5 +97,7 @@ pub fn update(interactive: bool) {
     Err(error) => println!("{}", error),
   };
 
-  out::success_update_app();
+  if success {
+    out::success_update_app();
+  }
 }
