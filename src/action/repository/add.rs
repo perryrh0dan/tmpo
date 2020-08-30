@@ -1,4 +1,4 @@
-use crate::cli::{input, password, confirm};
+use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::repository::Repository;
@@ -9,7 +9,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     let repository_name = args.value_of("repository");
     //// Get repository name from user input
     let repository_name = if repository_name.is_none() {
-        match input("repository name", false) {
+        match input::text("repository name", false) {
             Some(value) => value,
             None => return,
         }
@@ -23,7 +23,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         return;
     }
     //// Get repository description from user input
-    let repository_description = match input("repository description", false) {
+    let repository_description = match input::text("repository description", false) {
         Some(value) => value,
         None => return,
     };
@@ -36,12 +36,12 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         password: None,
     };
     // Enable git
-    git_options.enabled = confirm("Enable remote repository?");
+    git_options.enabled = input::confirm("Enable remote repository?");
     // Git options
     if git_options.enabled {
-        git_options.url = input("Please enter the remote repository url", false);
-        git_options.username = input("Please enter your git username", false);
-        git_options.username = match password("Please enter your git password") {
+        git_options.url = input::text("Please enter the remote repository url", false);
+        git_options.username = input::text("Please enter your git username", false);
+        git_options.username = match input::password("Please enter your git password") {
             Ok(value) => Some(value),
             Err(_error) => return,
         }

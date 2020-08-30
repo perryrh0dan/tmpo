@@ -2,7 +2,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::{PathBuf};
 
-use crate::cli::{input, select};
+use crate::cli::input;
 use crate::config::Config;
 use crate::git;
 use crate::out;
@@ -21,7 +21,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   //// Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
-    match input("Please enter the project name", false) {
+    match input::text("Please enter the project name", false) {
       Some(value) => value,
       None => return,
     }
@@ -32,7 +32,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   //// Get repository name from user input
   let repository_name = if repository_name.is_none() {
     let repositories = Repository::get_repositories(config);
-    match select("repository", &repositories) {
+    match input::select("repository", &repositories) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
@@ -58,7 +58,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   //// Get template name from user input
   let template_name = if template_name.is_none() {
     let templates = repository.get_templates();
-    match select("template", &templates) {
+    match input::select("template", &templates) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
@@ -74,7 +74,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   //// Get workspace directory from user input
   let workspace_directory = if workspace_directory.is_none() {
-    match input("Please enter the target diectory", false) {
+    match input::text("Please enter the target diectory", false) {
       Some(value) => value,
       None => return,
     }
@@ -83,7 +83,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   //// Get workspace git repository url from user input
-  let workspace_repository = match input("Please enter a git remote url", true) {
+  let workspace_repository = match input::text("Please enter a git remote url", true) {
     Some(value) => value,
     None => return,
   };
@@ -124,7 +124,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     }
   };
 
-  let options = template::Options {
+  let options = template::context::Context {
     name: String::from(&workspace_name),
     repository: Some(String::from(&workspace_repository)),
     username: username,

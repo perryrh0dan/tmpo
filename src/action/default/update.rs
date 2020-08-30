@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use crate::out;
-use crate::cli::confirm;
+use crate::cli::input::confirm;
 
 extern crate tar;
 extern crate self_update;

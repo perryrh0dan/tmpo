@@ -1,6 +1,6 @@
 use std::io::ErrorKind;
 
-use crate::cli::{select};
+use crate::cli::input::select;
 use crate::config::{Config};
 use crate::out;
 use crate::repository::Repository;
