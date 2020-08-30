@@ -1,5 +1,11 @@
 use colored::Colorize;
 
+// config
+pub fn load_config() {
+  let text = format!("Unable to load the configuration file").red();
+  println!("{}", text);
+}
+
 // repository
 pub fn repository_not_found(repository: &str) {
   let text = format!("Repository: {} not found", repository).red();
@@ -46,5 +52,11 @@ pub fn copy_template() {
 
 pub fn missing_token() {
   let text = format!("Error fetching templates: authentication token is missing").red();
+  println!("{}", text);
+}
+
+// self update
+pub fn selfupdate_no_permission() {
+  let text = format!("Permission denied, try as root user").red();
   println!("{}", text);
 }

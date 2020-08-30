@@ -13,7 +13,6 @@ extern crate serde_yaml;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
-  pub auto_update: bool,
   pub templates_dir: String,
   pub templates_repositories: Vec<RepositoryOptions>,
 }
@@ -103,7 +102,13 @@ fn load_config() -> Result<Config, Error> {
 
   // Write to data string
   src.read_to_string(&mut data)?;
-  let config: Config = serde_yaml::from_str(&data).unwrap();
+  let config: Config = match serde_yaml::from_str(&data) {
+    Ok(data) => data,
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
+    }
+  };
   return Ok(config);
 }
 
@@ -128,7 +133,6 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
-    auto_update: true,
     templates_dir: template_dir,
     templates_repositories: repo_options,
   };
