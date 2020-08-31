@@ -131,6 +131,7 @@ impl Repository {
           git::GitError::AddRemoteError => println!("Add Remote Error"),
         },
       };
+      
       match git::update(&directory, &self.config.git_options) {
         Ok(()) => (),
         Err(_e) => out::error::update_templates(),

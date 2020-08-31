@@ -1,6 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Read, Write};
+use log;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -234,6 +235,8 @@ fn run_script(script: &String, target: &Path) {
     return;
   }
 
+  log::info!("Run script: {}", script);
+
   // Run before script if exists
   let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")
@@ -254,7 +257,15 @@ fn run_script(script: &String, target: &Path) {
       .expect("failed to execute process")
   };
 
-  let status = cmd.wait();
+  let status = match cmd.wait() {
+    Ok(status) => status,
+    Err(error) => { 
+      log::error!("Script exited with error: {}", error);
+      return;
+    },
+  };
+
+  log::info!("Script exit status: {}", status);
 }
 
 

@@ -150,7 +150,7 @@ fn get_default_config() -> Config {
   return config;
 }
 
-fn config_location() -> PathBuf {
+pub fn config_location() -> PathBuf {
   let mut dir = match dirs::home_dir() {
     Some(path) => PathBuf::from(path),
     None => PathBuf::from(""),
