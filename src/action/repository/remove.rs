@@ -16,7 +16,7 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
             Ok(value) => value,
             Err(error) => match error.kind() {
                 ErrorKind::InvalidData => {
-                    out::errors::no_repositories();
+                    out::error::no_repositories();
                     return;
                 }
                 _ => return,

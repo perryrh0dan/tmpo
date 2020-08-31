@@ -18,7 +18,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let workspace_directory = args.value_of("directory");
   let remote_url = args.value_of("remote");
 
-  out::initiate_workspace();
+  out::info::initiate_workspace();
 
   //// Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
@@ -37,7 +37,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_repositories();
+          out::error::no_repositories();
           return;
         },
         _ => std::process::exit(130),
@@ -51,7 +51,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => match error {
-      RepositoryError::NotFound => return out::errors::repository_not_found(&repository_name),
+      RepositoryError::NotFound => return out::error::repository_not_found(&repository_name),
       _ => return,
     },
   };
@@ -63,7 +63,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_templates(&repository.config.name);
+          out::error::no_templates(&repository.config.name);
           return;
         },
         _ => return,
@@ -102,7 +102,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Err(error) => match error.kind() {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
-        out::errors::create_directory(&dir.to_string_lossy());
+        out::error::create_directory(&dir.to_string_lossy());
         return;
       }
     },
@@ -124,7 +124,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
     Err(_error) => {
-      out::errors::template_not_found(&template_name);
+      out::error::template_not_found(&template_name);
       return;
     }
   };
@@ -140,7 +140,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   match template.copy(&repository, &dir, options) {
     Ok(()) => (),
     Err(_error) => {
-      out::errors::copy_template();
+      out::error::copy_template();
       return;
     }
   };
@@ -150,11 +150,11 @@ pub fn init(config: &Config, args: &ArgMatches) {
     match git::init(&dir, &workspace_repository) {
       Ok(()) => (),
       Err(_error) => {
-        out::errors::init_repository();
+        out::error::init_repository();
         return;
       }
     }
   }
 
-  out::success_create(&workspace_name);
+  out::success::workspace_created(&workspace_name);
 }

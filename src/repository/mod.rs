@@ -80,8 +80,10 @@ impl Repository {
     meta.name = Some(name.to_owned());
     meta.version = Some(String::from("1.0.0"));
 
-    let meta_data = serde_json::to_string(&meta).unwrap();
+    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
     meta_file.write(meta_data.as_bytes())?;
+
+    out::success::template_created(&template_path.to_str().unwrap());
 
     Ok(())
   }
@@ -130,7 +132,7 @@ impl Repository {
       };
       match git::update(&directory, &self.config.git_options) {
         Ok(()) => (),
-        Err(_e) => out::errors::update_templates(),
+        Err(_e) => out::error::update_templates(),
       }
     }
 
@@ -155,7 +157,13 @@ impl Repository {
       }
 
       let path = entry.path().to_string_lossy().into_owned();
-      let meta = meta::load_meta(&path).unwrap();
+      let meta = match meta::load_meta(&path) {
+        Ok(meta) => meta,
+        Err(error) => {
+          log::error!("{}", error);
+          continue;
+        }
+      };
 
       // If type is None or unqual template skip entry
       if meta.kind.is_none() || meta.kind != Some(String::from("template")) {

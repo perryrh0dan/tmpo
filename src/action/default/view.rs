@@ -18,7 +18,7 @@ pub fn view(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_repositories();
+          out::error::no_repositories();
           return;
         },
         _ => return,
@@ -41,7 +41,7 @@ pub fn view(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_templates(&repository.config.name);
+          out::error::no_templates(&repository.config.name);
           return;
         },
         _ => return,
@@ -53,5 +53,5 @@ pub fn view(config: &Config, args: &ArgMatches) {
 
   let template = repository.get_template_by_name(&template_name).unwrap();
 
-  out::display_template(template);
+  out::info::display_template(template);
 }
