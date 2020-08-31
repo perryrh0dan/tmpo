@@ -43,11 +43,11 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
 
     // Update config
     let index = config
-        .templates_repositories
+        .template_repositories
         .iter()
         .position(|x| x.name == repository_name)
         .unwrap();
-    config.templates_repositories.remove(index);
+    config.template_repositories.remove(index);
     
     match config.save() {
         Ok(()) => (),
