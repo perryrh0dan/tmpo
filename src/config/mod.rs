@@ -25,6 +25,16 @@ pub struct RepositoryOptions {
 }
 
 impl Config {
+  pub fn get_repositories(&self) -> Vec<String> {
+    let mut repositories = Vec::<String>::new();
+
+    for entry in self.templates_repositories.iter() {
+      repositories.push(String::from(&entry.name));
+    }
+
+    return repositories;
+  }
+
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self.templates_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 

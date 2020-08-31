@@ -111,6 +111,12 @@ fn main() {
         .subcommand(App::new("add").about("Add new repository"))
         .subcommand(App::new("remove").about("Remove a repository")),
     )
+    .subcommand(
+      App::new("template")
+        .about("Maintain templates")
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .subcommand(App::new("create").about("Create new template"))
+    )
     .get_matches();
 
   match matches.subcommand() {
@@ -132,6 +138,12 @@ fn main() {
         ("remove", Some(repo_delete_matches)) => {
           action::repository::remove::remove(&mut config, repo_delete_matches)
         }
+        _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
+      }
+    }
+    ("template", Some(repository_matches)) => {
+      match repository_matches.subcommand() {
+        ("create", Some(template_create_matches)) => action::template::create::create(&mut config, template_create_matches),
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
     }

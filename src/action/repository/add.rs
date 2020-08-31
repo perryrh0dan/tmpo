@@ -16,13 +16,14 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     } else {
         String::from(repository_name.unwrap())
     };
+
     // validate name
-    let repositories = Repository::get_repositories(config);
+    let repositories = config.get_repositories();
     if repositories.contains(&repository_name) {
         // TODO error
         return;
     }
-    //// Get repository description from user input
+    // Get repository description from user input
     let repository_description = match input::text("repository description", false) {
         Some(value) => value,
         None => return,
@@ -35,6 +36,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         username: None,
         password: None,
     };
+
     // Enable git
     git_options.enabled = input::confirm("Enable remote repository?");
     // Git options

@@ -12,7 +12,7 @@ pub fn list(config: &Config, args: &ArgMatches) {
 
   //// Get repository name from user input
   let repository_name = if repository_name.is_none() {
-    let repositories = Repository::get_repositories(config);
+    let repositories = config.get_repositories();
     match select("repository", &repositories) {
       Ok(value) => value,
       Err(error) => match error.kind() {
