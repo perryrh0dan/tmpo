@@ -56,11 +56,6 @@ pub fn copy_template() {
   println!("{}", text);
 }
 
-pub fn missing_token() {
-  let text = format!("Error fetching templates: authentication token is missing").red();
-  println!("{}", text);
-}
-
 pub fn unknown() {
   let text = format!("Unknown error. See the logs for more details").red();
   println!("{}", text);

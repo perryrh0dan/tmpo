@@ -104,7 +104,7 @@ fn do_fetch<'a>(
   let auth = opts.auth.clone().unwrap();
 
   if auth == "ssh" {
-    log::debug!("[git]: authentication using ssh");
+    log::info!("[git]: authentication using ssh");
   // callbacks.credentials(|_url, username_from_url, _allowed_types| {
   //     git2::Cred::ssh_key(
   //     username_from_url.unwrap(),
@@ -124,7 +124,7 @@ fn do_fetch<'a>(
       git2::Cred::userpass_plaintext(&token, "")
     });
   } else if auth == "basic" {
-    log::debug!("[git]: authentication using token");
+    log::info!("[git]: authentication using token");
     if opts.username.is_none() || opts.password.is_none() {
       log::error!("Username or Password is missing");
       return Err(git2::Error::from_str("missing credentials"));
@@ -133,7 +133,7 @@ fn do_fetch<'a>(
       git2::Cred::userpass_plaintext(&opts.username.clone().unwrap(), &opts.password.clone().unwrap())
     });
   } else {
-    log::debug!("[git]: no authentication");
+    log::info!("[git]: no authentication");
   }
 
   // Always fetch all tags.
