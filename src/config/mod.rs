@@ -13,8 +13,8 @@ extern crate serde_yaml;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Config {
-  pub templates_dir: String,
-  pub templates_repositories: Vec<RepositoryOptions>,
+  pub template_dir: String,
+  pub template_repositories: Vec<RepositoryOptions>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -28,7 +28,7 @@ impl Config {
   pub fn get_repositories(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
-    for entry in self.templates_repositories.iter() {
+    for entry in self.template_repositories.iter() {
       repositories.push(String::from(&entry.name));
     }
 
@@ -36,7 +36,7 @@ impl Config {
   }
 
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
-    let config = self.templates_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
+    let config = self.template_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
     if config.is_some() {
       return Some(config.unwrap().clone());
@@ -56,7 +56,7 @@ pub fn init() -> Result<Config, Error> {
 
   let config = load_config()?;
 
-  ensure_template_dir(&config.templates_dir)?;
+  ensure_template_dir(&config.template_dir)?;
 
   Ok(config)
 }
@@ -143,8 +143,8 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
-    templates_dir: template_dir,
-    templates_repositories: repo_options,
+    template_dir: template_dir,
+    template_repositories: repo_options,
   };
 
   return config;
