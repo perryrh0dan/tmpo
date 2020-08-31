@@ -11,6 +11,7 @@ use crate::meta;
 extern crate custom_error;
 use custom_error::custom_error;
 extern crate serde;
+use serde::{Serialize};
 
 pub mod context;
 mod renderer;
@@ -19,13 +20,16 @@ custom_error! {pub TemplateError
   InitializeTemplate = "Unable to initialize template"
 }
 
+#[derive(Serialize)]
+pub struct Info {
+  name: String,
+  version: Option<String>
+}
+
 pub struct Template {
   pub name: String,
   pub path: String,
-  pub description: Option<String>,
-  pub scripts: Option<meta::Scripts>,
-  pub extend: Option<Vec<String>>,
-  pub exclude: Option<Vec<String>>,
+  pub meta: meta::Meta,
 }
 
 impl Template {
@@ -47,23 +51,20 @@ impl Template {
         .to_string_lossy()
         .into_owned();
     } else {
-      name = meta.name.unwrap();
+      name = meta.name.clone().unwrap();
     }
 
     // make all names lowercase
     return Ok(Template {
       name: utils::lowercase(&name),
       path: path,
-      description: meta.description,
-      scripts: meta.scripts,
-      extend: meta.extend,
-      exclude: meta.exclude,
+      meta: meta,
     });
   }
 
   pub fn copy(&self, repository: &Repository, target: &Path, opts: context::Context) -> Result<(), Error> {
     // get list of all super templates
-    let super_templates = match &self.extend {
+    let super_templates = match &self.meta.extend {
       None => Vec::new(),
       Some(x) => x.clone(),
     };
@@ -75,9 +76,8 @@ impl Template {
     }
 
     // run before install script
-    if self.scripts.is_some() && self.scripts.as_ref().unwrap().before_install.is_some() {
-      let script = self
-        .scripts
+    if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
+      let script = self.meta.scripts
         .as_ref()
         .unwrap()
         .before_install
@@ -88,12 +88,15 @@ impl Template {
       run_script(&script, target);
     }
 
+    // copy files
     self.copy_folder(&self.path, &target, &opts)?;
 
+    // create meta file
+    self.create_meta(&target)?;
+
     // run after install script
-    if self.scripts.is_some() && self.scripts.as_ref().unwrap().after_install.is_some() {
-      let script = self
-        .scripts
+    if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
+      let script = self.meta.scripts
         .as_ref()
         .unwrap()
         .after_install
@@ -138,7 +141,7 @@ impl Template {
 
         self.copy_folder(&source_path, &path, opts)?
       } else {
-        if self.is_excluded(&source_name) {
+        if self.is_excluded_copy(&source_name) {
           continue;
         }
 
@@ -153,28 +156,51 @@ impl Template {
         drop(src);
 
         // replace placeholders in data
-        data = renderer::render(&data, &opts);
+        // skip if file should be excluded
+        if !self.is_excluded_renderer(&source_name) {
+          data = renderer::render(&data, &opts);
+        }
 
         // create file
         let mut dst = File::create(path)?;
         dst.write(data.as_bytes())?;
+
+        // close file
+        drop(dst);
       }
     }
 
     Ok(())
   }
 
-  fn is_excluded(&self, name: &str) -> bool {
+  fn is_excluded_renderer(&self, name: &str) -> bool {
+    if self.meta.renderer.is_none() {
+      return false;
+    }
+
+    let items = match &self.meta.renderer.as_ref().unwrap().exclude {
+      None => return false,
+      Some(x) => x,
+    };
+
+    self.is_excluded(name, items)
+  }
+
+  fn is_excluded_copy(&self, name: &str) -> bool {
     if name == "meta.json" {
       return true;
     };
   
-    let items = match &self.exclude {
+    let items = match &self.meta.exclude {
       None => return false,
       Some(x) => x,
     };
   
-    // check meta exclude
+    self.is_excluded(name, items)
+  }
+
+  fn is_excluded(&self, name: &str, items: &Vec<String>) -> bool {
+    // check if excluded
     for item in items.iter() {
       if item == &name {
         return true;
@@ -182,6 +208,23 @@ impl Template {
     }
   
     return false;
+  }
+
+  fn create_meta(&self, target: &Path) -> Result<(), std::io::Error> {
+    // create .tmpo.yaml file
+    let meta_path = &target.to_path_buf().join(".tmpo.yaml");
+    let mut meta_file = fs::File::create(meta_path)?;
+
+    // fill meta
+    let info = Info {
+      name: self.name.to_owned(),
+      version: self.meta.version.clone(),
+    };
+
+    let meta_data = serde_yaml::to_string(&info).unwrap();
+    meta_file.write(meta_data.as_bytes())?;
+
+    Ok(())
   }
 }
 
