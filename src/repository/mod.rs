@@ -33,7 +33,7 @@ impl Repository {
       Option::None => return Err(RepositoryError::NotFound),
     };
 
-    let directory = String::from(&config.templates_dir) + "/" + &utils::lowercase(name);
+    let directory = String::from(&config.template_dir) + "/" + &utils::lowercase(name);
 
     let mut repository = Repository {
       directory: directory,
@@ -52,7 +52,7 @@ impl Repository {
   }
 
   pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
-    let mut repository_dir = PathBuf::from(&config.templates_dir);
+    let mut repository_dir = PathBuf::from(&config.template_dir);
     repository_dir.push(&utils::lowercase(name));
 
     log::info!("Delete repository directory {}", &repository_dir.to_owned().to_str().unwrap());
@@ -114,7 +114,7 @@ impl Repository {
   }
 
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
-    let mut directory = PathBuf::from(&config.templates_dir);
+    let mut directory = PathBuf::from(&config.template_dir);
     directory.push(&utils::lowercase(&self.config.name));
     let r = fs::create_dir_all(&directory);
     match r {
@@ -131,7 +131,7 @@ impl Repository {
           git::GitError::AddRemoteError => println!("Add Remote Error"),
         },
       };
-      
+
       match git::update(&directory, &self.config.git_options) {
         Ok(()) => (),
         Err(_e) => out::error::update_templates(),
