@@ -70,37 +70,29 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 
 ## Usage
 
-### Cli
+### CLI
 
 ``` bash
-tmpo init example --repository default --template typescript --directory .
+tmpo init example --repository default --template typescript --directory . --remote https://github.com/perryrh0dan/2fa
 ```
 
 ### Repositories
 
-A repository is a folder that contains up to n different templates. A repository can be connected with a remote git repository. Templates are then automaticly synced. Repositories are located in the 'template_dir'. 
+A repository is a folder that contains up to n different templates. A repository can be connected with a remote git repository. Templates are then automaticly synced. Repositories are located in the 'template_dir'.
+
+To add a new repository use the `repository subcommand` and follow the instructions on the screen.
+
+``` bash
+tmpo repository add
+```
 
 ### Templates
 
-Templates can be configured with a `meta.json` in the template root. The official template repository with detailed instructions can be found [here](https://github.com/perryrh0dan/templates).
-
-#### Format
-
-``` json
-{
-    "name": "",
-    "extend": [""],
-    "exclude": [""],
-    "scripts": {
-      "before_install": "",
-      "after_install": ""
-    }
-}
-```
-
-For a detailed description how to create and maintain templates have a look at the default tempaltes [repository](https://github.com/perryrh0dan/templates)
+Templates can be configured with a `meta.json` in the template root. 
+For a detailed description how to create and maintain templates have a look at the instructions and default templates [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
+The configuration file should only be changed by experienced users.
 
 To configure tmpo navigate to the ~/.tmpo/config.yaml file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
 
@@ -119,51 +111,6 @@ The following illustrates all the available options with their respective defaul
         username: ~
         password: ~
 ```
-
-### In Detail
-
-#### templates_dir
-- Type: String
-- Default: $HOME/.tmpo/templates
-
-Filesystem path where all the templates are stored.
-
-#### templates_repo
-- Type: String
-- Default: $HOME/.tmpo/templates
-
-##### url
-- Type: String
-- Default: $HOME/.tmpo/templates
-
-Url of the repository where templates are managed.
-
-##### auth
-- Type: String
-- Default: none
-- Values: `none`, `token`
-
-##### token
-- Type: String
-- Default: none
-
-Access token is only used when auth type is token
-
-##### username
-- Type: String
-- Default: none
-
-Coming soon
-
-##### password
-- Type: String
-- Default: none
-
-##### privatekey
-
-Coming soon
-
-##### 
 
 ## Development
 
