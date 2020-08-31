@@ -1,6 +1,7 @@
 use std::fs;
-use std::io::{Error};
-use std::path::{PathBuf};
+use std::fs::File;
+use std::io::{Error, Write};
+use std::path::{Path, PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
@@ -50,16 +51,6 @@ impl Repository {
     return Ok(repository);
   }
 
-  pub fn get_repositories(config: &Config) -> Vec<String> {
-    let mut repositories = Vec::<String>::new();
-
-    for entry in &config.templates_repositories {
-      repositories.push(String::from(&entry.name));
-    }
-
-    return repositories;
-  }
-
   pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
     let mut repository_dir = PathBuf::from(&config.templates_dir);
     repository_dir.push(&name);
@@ -72,6 +63,30 @@ impl Repository {
     return Ok(());
   }
 
+  pub fn create_template(&self, config: &Config, name: &str) -> Result<(), Error> {
+    let repository_path = Path::new(&self.directory);
+    let template_path = repository_path.join(&name);
+
+    // Create template directory
+    fs::create_dir(&template_path)?;
+
+    // Create meta.json
+    let meta_path = template_path.join("meta.json");
+    let mut meta_file = File::create(meta_path)?;
+
+    // Create meta data
+    let mut meta = meta::default();
+    meta.kind = Some(String::from("template"));
+    meta.name = Some(name.to_owned());
+    meta.version = Some(String::from("1.0.0"));
+
+    let meta_data = serde_json::to_string(&meta).unwrap();
+    meta_file.write(meta_data.as_bytes())?;
+
+    Ok(())
+  }
+
+  /// Return list of all template names in this repository
   pub fn get_templates(&self) -> Vec<String> {
     let mut templates = Vec::<String>::new();
 
