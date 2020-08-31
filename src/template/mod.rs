@@ -229,6 +229,11 @@ impl Template {
 }
 
 fn run_script(script: &String, target: &Path) {
+  // Check if script is empty
+  if script == "" {
+    return;
+  }
+
   // Run before script if exists
   let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")

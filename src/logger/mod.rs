@@ -28,7 +28,7 @@ pub fn init() {
 
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .appender(Appender::builder().filter(Box::new(ThresholdFilter::new(log::LevelFilter::Error))).build("stderr", Box::new(stderr)))
+        .appender(Appender::builder().filter(Box::new(ThresholdFilter::new(log::LevelFilter::Off))).build("stderr", Box::new(stderr)))
         .build(Root::builder()
             .appender("logfile")
             .appender("stderr")

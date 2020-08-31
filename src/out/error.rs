@@ -39,6 +39,12 @@ pub fn no_templates(repository: &str) {
   println!("{}", text);
 }
 
+// self update
+pub fn selfupdate_no_permission() {
+  let text = format!("Permission denied, try as root user").red();
+  println!("{}", text);
+}
+
 // more
 pub fn create_directory(dir: &str) {
   let text = format!("{} {}", "Cant create directory:", dir).red();
@@ -55,8 +61,7 @@ pub fn missing_token() {
   println!("{}", text);
 }
 
-// self update
-pub fn selfupdate_no_permission() {
-  let text = format!("Permission denied, try as root user").red();
+pub fn unknown() {
+  let text = format!("Unknown error. See the logs for more details").red();
   println!("{}", text);
 }
