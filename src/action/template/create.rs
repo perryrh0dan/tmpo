@@ -57,7 +57,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
         return;
     }
 
-    match repository.create_template(config, &template_name) {
+    match repository.create_template(&template_name) {
         Ok(()) => (),
         Err(error) => {
             log::error!("{}", error);

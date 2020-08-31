@@ -126,11 +126,11 @@ fn do_fetch<'a>(
   } else if auth == "basic" {
     log::debug!("[git]: authentication using token");
     if opts.username.is_none() || opts.password.is_none() {
-      log:error!("Username or Password is missing")
+      log::error!("Username or Password is missing");
       return Err(git2::Error::from_str("missing credentials"));
     }
     callbacks.credentials(|_url, _username_from_url, _allowed_types| {
-      git2::Cred::userpass_plaintext(username: &otps.username.unwrap(), password: &opts.password.unwrap())
+      git2::Cred::userpass_plaintext(&opts.username.clone().unwrap(), &opts.password.clone().unwrap())
     });
   } else {
     log::debug!("[git]: no authentication");

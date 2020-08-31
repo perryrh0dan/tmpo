@@ -53,8 +53,9 @@ impl Repository {
 
   pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
     let mut repository_dir = PathBuf::from(&config.templates_dir);
-    repository_dir.push(&name);
+    repository_dir.push(&utils::lowercase(name));
 
+    log::info!("Delete repository directory {}", &repository_dir.to_owned().to_str().unwrap());
     match fs::remove_dir_all(repository_dir) {
       Ok(()) => (),
       Err(error) => return Err(error)
@@ -63,7 +64,7 @@ impl Repository {
     return Ok(());
   }
 
-  pub fn create_template(&self, config: &Config, name: &str) -> Result<(), Error> {
+  pub fn create_template(&self, name: &str) -> Result<(), Error> {
     let repository_path = Path::new(&self.directory);
     let template_path = repository_path.join(&name);
 
