@@ -17,7 +17,7 @@ pub fn list(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => match error.kind() {
         ErrorKind::InvalidData => {
-          out::errors::no_repositories();
+          out::error::no_repositories();
           return;
         },
         _ => return,
@@ -38,5 +38,5 @@ pub fn list(config: &Config, args: &ArgMatches) {
     names.push(template.name);
   }
 
-  out::list_templates(&names);
+  out::info::list_templates(&names);
 }

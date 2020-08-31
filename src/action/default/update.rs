@@ -21,7 +21,7 @@ pub fn update(interactive: bool) {
   // check version 
   let version = crate_version!();
   if releases[0].version == version {
-    if interactive { out::no_app_update() };
+    if interactive { out::info::no_app_update() };
     return;
   } 
 
@@ -81,7 +81,7 @@ pub fn update(interactive: bool) {
       Ok(_) => ( true ),
       Err(error) => match error {
         self_update::errors::Error::Io { .. } => {
-          out::errors::selfupdate_no_permission();
+          out::error::selfupdate_no_permission();
           false
         },
         _ => { 
@@ -98,6 +98,6 @@ pub fn update(interactive: bool) {
   };
 
   if success {
-    out::success_update_app();
+    out::success::app_updated();
   }
 }

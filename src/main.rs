@@ -16,7 +16,7 @@ fn main() {
   let mut config = match config::init() {
     Ok(data) => data,
     Err(_error) => {
-      out::errors::load_config();
+      out::error::load_config();
       std::process::exit(1)
     }
   };

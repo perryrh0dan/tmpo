@@ -21,7 +21,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
         Ok(value) => value,
         Err(error) => match error.kind() {
             ErrorKind::InvalidData => {
-            out::errors::no_repositories();
+            out::error::no_repositories();
             return;
             },
             _ => std::process::exit(130),
@@ -35,7 +35,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
     let repository = match Repository::new(config, &repository_name) {
         Ok(repository) => repository,
         Err(error) => match error {
-        RepositoryError::NotFound => return out::errors::repository_not_found(&repository_name),
+        RepositoryError::NotFound => return out::error::repository_not_found(&repository_name),
         _ => return,
         },
     };
