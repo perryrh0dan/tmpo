@@ -119,26 +119,42 @@ impl Repository {
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
     let mut directory = PathBuf::from(&config.template_dir);
     directory.push(&utils::lowercase(&self.config.name));
-    let r = fs::create_dir(&directory);
-    match r {
-      Ok(fc) => fc,
-      Err(error) => return Err(error),
+    
+    if !directory.exists() {
+      match fs::create_dir(&directory) {
+        Ok(_) => (),
+        Err(error) => return Err(error),
+      }
     }
 
     // Initialize git repository if enabled
-    if self.config.git_options.enabled {
+    if !self.config.git_options.enabled {
+      return Ok(());
+    }
+
+    // check if directory is already a git repository
+    let already_initialized = match git2::Repository::open(&directory) {
+      Ok(_) => true,
+      Err(_error) => false,
+    };
+
+    // initialize git
+    if !already_initialized {
       match git::init(&directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
-        Err(error) => match error {
-          git::GitError::InitError => log::error!("Init Error"),
-          git::GitError::AddRemoteError => log::error!("Add Remote Error"),
+        Err(error) => { 
+          log::error!("{}", error);
+          match error {
+            git::GitError::InitError => (),
+            git::GitError::AddRemoteError => (),
+          };
         },
       };
+    }
 
-      match git::update(&directory, &self.config.git_options) {
-        Ok(()) => (),
-        Err(_e) => out::error::update_templates(),
-      }
+    match git::update(&directory, &self.config.git_options) {
+      Ok(()) => (),
+      Err(_e) => out::error::update_templates(),
     }
 
     Ok(())
