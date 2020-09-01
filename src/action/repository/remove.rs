@@ -34,7 +34,6 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
         Err(error) => match error.kind() {
             ErrorKind::NotFound => (),
             _ => {
-                log::error!("{}", error);
                 out::error::unknown();
                 return;
             },

@@ -20,6 +20,12 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   out::info::initiate_workspace();
 
+  // check if repositories exist
+  if config.get_repositories().len() <= 0 {
+    out::error::no_repositories();
+    return;
+  }
+
   //// Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
     match input::text("Please enter the project name", false) {
@@ -35,12 +41,10 @@ pub fn init(config: &Config, args: &ArgMatches) {
     let repositories = config.get_repositories();
     match input::select("repository", &repositories) {
       Ok(value) => value,
-      Err(error) => match error.kind() {
-        ErrorKind::InvalidData => {
-          out::error::no_repositories();
-          return;
-        },
-        _ => std::process::exit(130),
+      Err(error) => {
+        log::error!("{}", error);
+        out::error::unknown();
+        return;
       },
     }
   } else {

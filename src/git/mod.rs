@@ -114,7 +114,7 @@ fn do_fetch<'a>(
   //     )
   // });
   } else if auth == "token" {
-    log::debug!("[git]: authentication using token");
+    log::info!("[git]: authentication using token");
     if opts.token.is_none() {
       log::error!("No token was provided");
       return Err(git2::Error::from_str("missing auth token"));
@@ -143,7 +143,9 @@ fn do_fetch<'a>(
 
   match remote.fetch(refs, Some(&mut fo), None) {
     Ok(()) => (),
-    Err(error) => println!("{}", error.message()),
+    Err(error) => {
+      log::error!("{}", error);
+    },
   };
   let fetch_head = repo.find_reference("FETCH_HEAD")?;
   Ok(repo.reference_to_annotated_commit(&fetch_head)?)
@@ -186,7 +188,7 @@ fn normal_merge(
   let mut idx = repo.merge_trees(&ancestor, &local_tree, &remote_tree, None)?;
 
   if idx.has_conflicts() {
-    println!("Merge conficts detected...");
+    log::error!("Merge conficts detected...");
     repo.checkout_index(Some(&mut idx), None)?;
     return Ok(());
   }

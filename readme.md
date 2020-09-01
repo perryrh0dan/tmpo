@@ -67,6 +67,7 @@ Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts 
 
 1. Download the latest release for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
+3. Add a repository with `tmpo repository add` and follow the instructions on the screen.
 
 ## Usage
 

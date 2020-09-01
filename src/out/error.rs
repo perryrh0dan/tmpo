@@ -18,10 +18,9 @@ pub fn init_repository() {
 }
 
 pub fn no_repositories() {
-  let text = format!("No repositories are maintained").red();
+  let text = format!("{}\nUse {} to add an repository.", "No repositories are maintained!".red(), "tmpo repository add".green());
   println!("{}", text);
 }
-
 
 // template
 pub fn update_templates() {
