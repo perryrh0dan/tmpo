@@ -106,8 +106,10 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
     // move file to current executable
     #[cfg(not(windows))]
     let bin_name = "tmpo";
+
     #[cfg(windows)]
     let bin_name = "tmpo.exe";
+    
     let tmp_file = tmp_dir.path().join("replacement_tmp");
     let bin_path = tmp_dir.path().join(bin_name);
     let dest_path = std::env::current_exe().unwrap();
