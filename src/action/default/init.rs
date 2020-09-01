@@ -26,7 +26,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     return;
   }
 
-  //// Get workspace name form user input
+  // Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
     match input::text("Please enter the project name", false) {
       Some(value) => value,
@@ -36,7 +36,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     workspace_name.unwrap().to_string()
   };
 
-  //// Get repository name from user input
+  // Get repository name from user input
   let repository_name = if repository_name.is_none() {
     let repositories = config.get_repositories();
     match input::select("repository", &repositories) {
@@ -54,30 +54,35 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Load repository
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
-    Err(error) => match error {
-      RepositoryError::NotFound => return out::error::repository_not_found(&repository_name),
-      _ => return,
+    Err(error) => { 
+      log::error!("{}", error);
+      match error {
+        RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
+        _ => out::error::unknown(),
+      }
+      return;
     },
   };
 
-  //// Get template name from user input
+  // Get template name from user input
   let template_name = if template_name.is_none() {
     let templates = repository.get_templates();
     match input::select("template", &templates) {
       Ok(value) => value,
-      Err(error) => match error.kind() {
-        ErrorKind::InvalidData => {
-          out::error::no_templates(&repository.config.name);
-          return;
-        },
-        _ => return,
+      Err(error) => { 
+        log::error!("{}", error);
+        match error.kind() {
+          ErrorKind::InvalidData => out::error::no_templates(&repository.config.name),
+          _ => out::error::unknown(),
+        };
+        return;
       },
     }
   } else {
     String::from(template_name.unwrap())
   };
 
-  //// Get workspace directory from user input
+  // Get workspace directory from user input
   let workspace_directory = if workspace_directory.is_none() {
     match input::text("Please enter the target diectory", false) {
       Some(value) => value,
@@ -87,7 +92,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     workspace_directory.unwrap().to_string()
   };
 
-  //// Get workspace git repository url from user input
+  // Get workspace git repository url from user input
   let workspace_repository = if remote_url.is_none() {
     match input::text("Please enter a git remote url", true) {
       Some(value) => value,
@@ -97,7 +102,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     remote_url.unwrap().to_string()
   };
 
-  //// Create the workspace directory
+  // Create the workspace directory
   let mut dir = PathBuf::from(workspace_directory);
   dir.push(&workspace_name);
 
@@ -124,7 +129,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Err(_error) => (),
   };
 
-  //// Get the template
+  // Get the template
   let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
     Err(_error) => {
@@ -140,7 +145,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     email: email,
   };
 
-  //// Copy the template
+  // Copy the template
   match template.copy(&repository, &dir, options) {
     Ok(()) => (),
     Err(_error) => {
