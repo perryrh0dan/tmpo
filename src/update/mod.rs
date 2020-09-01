@@ -10,6 +10,12 @@ use clap::crate_version;
 use flate2::read::GzDecoder;
 use tar::Archive;
 
+#[cfg(windows)]
+const BIN_NAME: &str = "tmpo.exe";
+
+#[cfg(not(windows))]
+const BIN_NAME: &str = "tmpo";
+
 pub fn check_version() -> Option<self_update::update::ReleaseAsset> {
     log::info!("Fetch release list");
     let releases = self_update::backends::github::ReleaseList::configure()
@@ -104,14 +110,8 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
     };
 
     // move file to current executable
-    #[cfg(not(windows))]
-    let bin_name = "tmpo";
-
-    #[cfg(windows)]
-    let bin_name = "tmpo.exe";
-    
     let tmp_file = tmp_dir.path().join("replacement_tmp");
-    let bin_path = tmp_dir.path().join(bin_name);
+    let bin_path = tmp_dir.path().join(BIN_NAME);
     let dest_path = std::env::current_exe().unwrap();
 
     log::info!(
