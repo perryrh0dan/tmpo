@@ -7,6 +7,7 @@ mod meta;
 mod out;
 mod repository;
 mod template;
+mod update;
 mod utils;
 
 use clap::{crate_version, App, AppSettings, Arg};
@@ -128,7 +129,7 @@ fn main() {
       action::default::init::init(&config, init_matches);
     }
     ("update", Some(_update_matches)) => {
-      action::default::update::update(true);
+      action::default::update::update();
     }
     ("repository", Some(repository_matches)) => {
       match repository_matches.subcommand() {
