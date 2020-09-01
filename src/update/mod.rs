@@ -117,27 +117,25 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
         bin_path.to_owned().to_str().unwrap(),
         dest_path.to_owned().to_str().unwrap()
     );
-    let success = match self_update::Move::from_source(&bin_path)
+    match self_update::Move::from_source(&bin_path)
         .replace_using_temp(&tmp_file)
         .to_dest(&dest_path)
     {
-        Ok(_) => (true),
+        Ok(_) => (),
         Err(error) => {
             log::error!("{}", error);
             match error {
                 self_update::errors::Error::Io { .. } => {
                     out::error::selfupdate_no_permission();
-                    false
+                    return;
                 }
                 _ => {
                     out::error::unknown();
-                    false
+                    return;
                 }
             }
         }
     };
 
-    if success {
-        out::success::app_updated();
-    }
+    out::success::app_updated();
 }
