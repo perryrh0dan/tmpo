@@ -47,7 +47,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         git_options.url = input::text("Please enter the remote repository url", false);
         
         // Get authentication type
-        git_options.auth = match input::select("Auth type", &vec![String::from("basic"), String::from("token")]) {
+        git_options.auth = match input::select("Auth type", &vec![String::from("basic"), String::from("token"), String::from("none")]) {
             Ok(value) => Some(value),
             Err(_error) => return,
         };

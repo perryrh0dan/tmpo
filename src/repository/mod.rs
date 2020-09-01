@@ -58,7 +58,10 @@ impl Repository {
     log::info!("Delete repository directory {}", &repository_dir.to_owned().to_str().unwrap());
     match fs::remove_dir_all(repository_dir) {
       Ok(()) => (),
-      Err(error) => return Err(error)
+      Err(error) => {
+        log::error!{"{}", error}
+        return Err(error)
+      }
     }
 
     return Ok(());
@@ -116,7 +119,7 @@ impl Repository {
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
     let mut directory = PathBuf::from(&config.template_dir);
     directory.push(&utils::lowercase(&self.config.name));
-    let r = fs::create_dir_all(&directory);
+    let r = fs::create_dir(&directory);
     match r {
       Ok(fc) => fc,
       Err(error) => return Err(error),
@@ -127,8 +130,8 @@ impl Repository {
       match git::init(&directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
         Err(error) => match error {
-          git::GitError::InitError => println!("Init Error"),
-          git::GitError::AddRemoteError => println!("Add Remote Error"),
+          git::GitError::InitError => log::error!("Init Error"),
+          git::GitError::AddRemoteError => log::error!("Add Remote Error"),
         },
       };
 

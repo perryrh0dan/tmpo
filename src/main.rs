@@ -25,7 +25,6 @@ fn main() {
   logger::init();
 
   // TODO Check for update
-
   let matches = App::new("tmpo")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
