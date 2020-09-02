@@ -38,9 +38,7 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
 
     let text = format!("New release found! {} --> {}", &version, &releases[0].version);
     log::info!("{}", text);
-    if verbose {
-      println!("{}", text);
-    }
+    println!("{}", text);
 
     let asset = match releases[0].asset_for(self_update::get_target()) {
         Some(value) => value,
