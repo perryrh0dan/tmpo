@@ -97,12 +97,13 @@ impl Repository {
     let mut templates = Vec::<String>::new();
 
     for template in &self.templates {
-      templates.push(String::from(&template.name));
+      templates.push(utils::lowercase(&template.name));
     }
 
     return templates;
   }
 
+  /// Return template with given name
   pub fn get_template_by_name(
     &self,
     name: &str,
@@ -119,7 +120,7 @@ impl Repository {
   fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
     let mut directory = PathBuf::from(&config.template_dir);
     directory.push(&utils::lowercase(&self.config.name));
-    
+
     if !directory.exists() {
       match fs::create_dir(&directory) {
         Ok(_) => (),
@@ -142,7 +143,7 @@ impl Repository {
     if !already_initialized {
       match git::init(&directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
-        Err(error) => { 
+        Err(error) => {
           log::error!("{}", error);
           match error {
             git::GitError::InitError => (),

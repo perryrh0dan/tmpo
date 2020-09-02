@@ -8,6 +8,7 @@ use crate::git;
 use crate::out;
 use crate::repository::{Repository, RepositoryError};
 use crate::template;
+use crate::utils;
 
 use clap::ArgMatches;
 
@@ -33,7 +34,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       None => return,
     }
   } else {
-    workspace_name.unwrap().to_string()
+    utils::lowercase(workspace_name.unwrap())
   };
 
   // Get repository name from user input
@@ -54,7 +55,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Load repository
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
-    Err(error) => { 
+    Err(error) => {
       log::error!("{}", error);
       match error {
         RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
@@ -64,12 +65,17 @@ pub fn init(config: &Config, args: &ArgMatches) {
     },
   };
 
-  // Get template name from user input
+  // check if templates exist
+  if repository.get_templates().len() <= 0 {
+    out::error::no_templates(&repository_name);
+    return;
+  }
+
   let template_name = if template_name.is_none() {
     let templates = repository.get_templates();
     match input::select("template", &templates) {
       Ok(value) => value,
-      Err(error) => { 
+      Err(error) => {
         log::error!("{}", error);
         match error.kind() {
           ErrorKind::InvalidData => out::error::no_templates(&repository.config.name),
@@ -80,6 +86,15 @@ pub fn init(config: &Config, args: &ArgMatches) {
     }
   } else {
     String::from(template_name.unwrap())
+  };
+
+  // Get the template
+  let template = match repository.get_template_by_name(&template_name) {
+    Ok(template) => template,
+    Err(_error) => {
+      out::error::template_not_found(&template_name);
+      return;
+    }
   };
 
   // Get workspace directory from user input
@@ -127,15 +142,6 @@ pub fn init(config: &Config, args: &ArgMatches) {
   match git::get_username() {
     Ok(value) => username = Some(value),
     Err(_error) => (),
-  };
-
-  // Get the template
-  let template = match repository.get_template_by_name(&template_name) {
-    Ok(template) => template,
-    Err(_error) => {
-      out::error::template_not_found(&template_name);
-      return;
-    }
   };
 
   let options = template::context::Context {

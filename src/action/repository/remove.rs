@@ -1,31 +1,31 @@
-use log;
 use std::io::ErrorKind;
 
 use crate::cli::input::select;
 use crate::config::{Config};
 use crate::out;
 use crate::repository::Repository;
+use crate::utils;
 
 use clap::ArgMatches;
 
 pub fn remove(config: &mut Config, args: &ArgMatches) {
     let repository_name = args.value_of("repository");
 
-    //// Get repository name from user input
+    // Get repository name from user input
     let repository_name = if repository_name.is_none() {
-        let repositories = config.get_repositories();
-        match select("repository", &repositories) {
-            Ok(value) => value,
-            Err(error) => match error.kind() {
-                ErrorKind::InvalidData => {
-                    out::error::no_repositories();
-                    return;
-                }
-                _ => return,
-            },
-        }
+      let repositories = config.get_repositories();
+      match select("repository", &repositories) {
+        Ok(value) => value,
+        Err(error) => match error.kind() {
+          ErrorKind::InvalidData => {
+            out::error::no_repositories();
+            return;
+          }
+          _ => return,
+        },
+      }
     } else {
-        String::from(repository_name.unwrap())
+      utils::lowercase(repository_name.unwrap())
     };
 
     // remove template folder
@@ -47,7 +47,7 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
         .position(|x| x.name == repository_name)
         .unwrap();
     config.template_repositories.remove(index);
-    
+
     match config.save() {
         Ok(()) => (),
         Err(_error) => return,

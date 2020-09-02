@@ -2,6 +2,7 @@ use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
+use crate::utils;
 
 use clap::ArgMatches;
 
@@ -10,12 +11,12 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
 
     //// Get repository name from user input
     let repository_name = if repository_name.is_none() {
-        match input::text("repository name", false) {
-            Some(value) => value,
-            None => return,
-        }
+      match input::text("repository name", false) {
+        Some(value) => value,
+        None => return,
+      }
     } else {
-        String::from(repository_name.unwrap())
+      utils::lowercase(repository_name.unwrap())
     };
 
     // validate name
@@ -24,6 +25,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         // TODO error
         return;
     }
+
     // Get repository description from user input
     let repository_description = match input::text("repository description", false) {
         Some(value) => value,
@@ -45,7 +47,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     if git_options.enabled {
         // Get repository remote url
         git_options.url = input::text("Please enter the remote repository url", false);
-        
+
         // Get authentication type
         git_options.auth = match input::select("Auth type", &vec![String::from("basic"), String::from("token"), String::from("none")]) {
             Ok(value) => Some(value),

@@ -1,5 +1,8 @@
 use std::io::{Error, ErrorKind};
 
+use crate::utils;
+
+extern crate dialoguer;
 use dialoguer::{theme::ColorfulTheme, Input, Select, Password};
 
 pub fn text(text: &str, allow_empty: bool ) -> Option<String> {
@@ -38,20 +41,27 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
     return Err(Error::from(ErrorKind::InvalidData))
   };
 
-  // TODO check
+  // TODO
   // if options.len() == 1 {
-  //    return Ok(options[0].to_owned());
+  //    return Ok(options[0]);
   // }
+
+  // capitalize options
+  let mut capitalized_options = Vec::new();
+
+  for value in options {
+    capitalized_options.push(utils::capitalize(value));
+  }
 
   let selection = match Select::with_theme(&ColorfulTheme::default())
     .with_prompt(String::from("Select a ") + name)
     .default(0)
-    .items(options)
+    .items(&capitalized_options)
     .interact()
   {
     Ok(selection) => selection,
     Err(error) => return Err(error),
   };
-  let result = String::from(&options[selection]);
+  let result = utils::lowercase(&options[selection]);
   return Ok(result);
 }
