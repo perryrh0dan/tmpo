@@ -41,11 +41,6 @@ pub fn display_config(_config: &Config, config_path: &str) {
 }
 
 pub fn no_app_update() {
-    let text = format!("tmpo is already up to date").green();
-    println!("{}", text);
-}
-
-pub fn app_update_available() {
-    let text = format!("Update available").green();
+    let text = format!("There are no updates available").green();
     println!("{}", text);
 }
