@@ -16,7 +16,7 @@ const BIN_NAME: &str = "tmpo.exe";
 #[cfg(not(windows))]
 const BIN_NAME: &str = "tmpo";
 
-pub fn check_version() -> Option<self_update::update::ReleaseAsset> {
+pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset> {
     log::info!("Fetch release list");
     let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner("perryrh0dan")
@@ -29,34 +29,29 @@ pub fn check_version() -> Option<self_update::update::ReleaseAsset> {
     // check version
     let version = crate_version!();
     if releases[0].version == version {
-        log::info!("No update");
-        out::info::no_app_update();
+        log::info!("No update found");
+        if verbose {
+          out::info::no_app_update();
+        }
         return None;
     }
 
-    println!("Checking target-arch: {}", &self_update::get_target());
-    println!("Checking current version: {}", &version);
-    println!(
-        "New release found! {} --> {}",
-        &version, &releases[0].version
-    );
+    let text = format!("New release found! {} --> {}", &version, &releases[0].version);
+    log::info!("{}", text);
+    if verbose {
+      println!("{}", text);
+    }
 
-    log::info!(
-        "New release found! {} --> {}",
-        &version,
-        &releases[0].version
-    );
-
-    let asset = match releases[0].asset_for(&self_update::get_target()) {
+    let asset = match releases[0].asset_for(self_update::get_target()) {
         Some(value) => value,
         None => {
-            println!("New release is not compatible");
+            log::info!("New release is not compatible");
+            if verbose {
+              println!("New release is not compatible");
+            }
             return None;
         }
     };
-
-    println!("New release is compatible");
-    println!();
 
     return Some(asset);
 }
@@ -86,7 +81,7 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
     );
     match self_update::Download::from_url(&asset.download_url)
         .show_progress(true)
-        .set_headers(headers)
+        // .set_headers(headers)
         .download_to(&tmp_tarball)
     {
         Ok(_) => (),

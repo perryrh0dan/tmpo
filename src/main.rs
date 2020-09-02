@@ -25,7 +25,12 @@ fn main() {
   // Initiate logger
   logger::init();
 
-  // TODO Check for update
+  // Check for update
+  match update::check_version(false) {
+    Some(_) => out::info::app_update_available(),
+    None => (),
+  }
+
   let matches = App::new("tmpo")
     .version(crate_version!())
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")

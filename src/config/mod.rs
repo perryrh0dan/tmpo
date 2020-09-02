@@ -29,7 +29,7 @@ impl Config {
     let mut repositories = Vec::<String>::new();
 
     for entry in self.template_repositories.iter() {
-      repositories.push(String::from(&entry.name));
+      repositories.push(utils::lowercase(&entry.name));
     }
 
     return repositories;

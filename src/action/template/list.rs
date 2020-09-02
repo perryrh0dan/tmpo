@@ -4,6 +4,7 @@ use crate::cli::input::select;
 use crate::config::Config;
 use crate::out;
 use crate::repository::Repository;
+use crate::utils;
 
 use clap::ArgMatches;
 
@@ -24,7 +25,7 @@ pub fn list(config: &Config, args: &ArgMatches) {
       },
     }
   } else {
-    String::from(repository_name.unwrap())
+    utils::lowercase(repository_name.unwrap())
   };
 
   // Load repository

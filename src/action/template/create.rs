@@ -7,6 +7,7 @@ use crate::cli::input;
 use crate::config::{Config};
 use crate::out;
 use crate::repository::{Repository, RepositoryError};
+use crate::utils;
 
 use clap::ArgMatches;
 
@@ -14,21 +15,21 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
     let repository_name = args.value_of("repository");
     let template_name = args.value_of("template");
 
-      //// Get repository name from user input
+    // Get repository name from user input
     let repository_name = if repository_name.is_none() {
-        let repositories = config.get_repositories();
-        match input::select("repository", &repositories) {
+      let repositories = config.get_repositories();
+      match input::select("repository", &repositories) {
         Ok(value) => value,
         Err(error) => match error.kind() {
-            ErrorKind::InvalidData => {
+          ErrorKind::InvalidData => {
             out::error::no_repositories();
             return;
-            },
-            _ => std::process::exit(130),
+          },
+          _ => std::process::exit(130),
         },
-        }
+      }
     } else {
-        String::from(repository_name.unwrap())
+      utils::lowercase(repository_name.unwrap())
     };
 
     // Load repository
@@ -40,7 +41,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
         },
     };
 
-    //// Get template name from user input
+    // Get template name from user input
     let template_name = if template_name.is_none() {
         match input::text("template name", false) {
             Some(value) => value,
