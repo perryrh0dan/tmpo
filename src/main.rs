@@ -26,10 +26,7 @@ fn main() {
   logger::init();
 
   // Check for update
-  match update::check_version(false) {
-    Some(_) => out::info::app_update_available(),
-    None => (),
-  }
+  update::check_version(false);
 
   let matches = App::new("tmpo")
     .version(crate_version!())
