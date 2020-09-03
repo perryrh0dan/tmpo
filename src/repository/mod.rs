@@ -30,7 +30,10 @@ impl Repository {
   pub fn new(config: &Config, name: &str) -> Result<Repository, RepositoryError> {
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
-      Option::None => return Err(RepositoryError::NotFound),
+      Option::None => {
+        log::error!("Repository not found: {}", name);
+        return Err(RepositoryError::NotFound);
+      },
     };
 
     let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
@@ -81,12 +84,10 @@ impl Repository {
     Ok(())
   }
 
-  pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
-    let mut repository_dir = PathBuf::from(&config.template_dir);
-    repository_dir.push(&utils::lowercase(name));
-
-    log::info!("Delete repository directory {}", &repository_dir.to_owned().to_str().unwrap());
-    match fs::remove_dir_all(repository_dir) {
+  /// delete
+  pub fn delete_repository(&self) -> Result<(), Error> {
+    log::info!("Delete repository directory {}", &self.directory.to_owned().to_str().unwrap());
+    match fs::remove_dir_all(&self.directory) {
       Ok(()) => (),
       Err(error) => {
         log::error!{"{}", error}
@@ -97,6 +98,7 @@ impl Repository {
     return Ok(());
   }
 
+  /// Create a new template with given name in the repository directory
   pub fn create_template(&self, name: &str) -> Result<(), Error> {
     let repository_path = Path::new(&self.directory);
     let template_path = repository_path.join(&name);

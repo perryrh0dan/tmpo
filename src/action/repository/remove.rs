@@ -3,7 +3,7 @@ use std::io::ErrorKind;
 use crate::cli::input::select;
 use crate::config::{Config};
 use crate::out;
-use crate::repository::Repository;
+use crate::repository::{Repository, RepositoryError};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -28,8 +28,17 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
       utils::lowercase(repository_name.unwrap())
     };
 
+    // Load repository
+    let repository = match Repository::new(config, &repository_name) {
+      Ok(repository) => repository,
+      Err(error) => return match error {
+          RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
+          _ => out::error::unknown(),
+      },
+    };
+
     // remove template folder
-    match Repository::delete_repository(config, &repository_name) {
+    match repository.delete_repository() {
         Ok(()) => (),
         Err(error) => match error.kind() {
             ErrorKind::NotFound => (),

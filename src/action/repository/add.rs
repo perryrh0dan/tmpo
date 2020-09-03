@@ -73,19 +73,16 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         git_options: git_options,
     });
 
-    // test repository
-    let mut repository = match Repository::new(config, &repository_name) {
-        Ok(repository) => repository,
-        Err(error) => {
-            log::error!("{}", error);
-            match error {
-                RepositoryError::InitializationError => out::error::init_repository(),
-                _ => out::error::unknown(),
-            }
-            return;
-        },
+    // Load repository
+    let repository = match Repository::new(config, &repository_name) {
+      Ok(repository) => repository,
+      Err(error) => return match error {
+          RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
+          _ => out::error::unknown(),
+      },
     };
 
+    // Test repository
     match repository.test() {
       Ok(()) => (),
       Err(_) => {
