@@ -29,29 +29,27 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
     // check version
     let version = crate_version!();
     if releases[0].version == version {
-        log::info!("No update found");
-        if verbose {
-          out::info::no_app_update();
-        }
         return None;
     }
 
-    let text = format!("New release found! {} --> {}", &version, &releases[0].version);
-    log::info!("{}", text);
-    if verbose {
-      println!("{}", text);
+    let mut target = self_update::get_target();
+
+    // needs to be investigated
+    if target == "x86_64-pc-windows-msvc" {
+      target = "x86_64-pc-windows-gnu";
     }
 
-    let asset = match releases[0].asset_for(self_update::get_target()) {
+    let asset = match releases[0].asset_for(target) {
         Some(value) => value,
         None => {
             log::info!("New release is not compatible");
-            if verbose {
-              println!("New release is not compatible");
-            }
             return None;
         }
     };
+
+    if verbose {
+      log::info!("New release found! {} --> {}", &version, &releases[0].version);
+    }
 
     return Some(asset);
 }
