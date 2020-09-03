@@ -22,6 +22,11 @@ pub fn no_repositories() {
   println!("{}", text);
 }
 
+pub fn repository_exists(repository: &str) {
+  let text = format!("Repository: {} already exists", repository).red();
+  println!("{}", text);
+}
+
 // template
 pub fn update_templates() {
   let text = format!("{}", "Error updating templates".red());

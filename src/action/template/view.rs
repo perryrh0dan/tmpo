@@ -30,7 +30,7 @@ pub fn view(config: &Config, args: &ArgMatches) {
   };
 
   // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  let mut repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);
@@ -40,6 +40,11 @@ pub fn view(config: &Config, args: &ArgMatches) {
       }
       return;
     },
+  };
+
+  match repository.init() {
+    Ok(()) => (),
+    Err(_) => (),
   };
 
   // Get template name from user input

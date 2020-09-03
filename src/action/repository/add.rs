@@ -2,6 +2,7 @@ use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
+use crate::repository::{Repository, RepositoryError};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -22,7 +23,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     // validate name
     let repositories = config.get_repositories();
     if repositories.contains(&repository_name) {
-        // TODO error
+        out::error::repository_exists(&repository_name);
         return;
     }
 
@@ -71,6 +72,27 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         description: repository_description,
         git_options: git_options,
     });
+
+    // test repository
+    let mut repository = match Repository::new(config, &repository_name) {
+        Ok(repository) => repository,
+        Err(error) => {
+            log::error!("{}", error);
+            match error {
+                RepositoryError::InitializationError => out::error::init_repository(),
+                _ => out::error::unknown(),
+            }
+            return;
+        },
+    };
+
+    match repository.test() {
+      Ok(()) => (),
+      Err(_) => {
+        out::error::init_repository();
+        return;
+      },
+    };
 
     match config.save() {
         Ok(()) => (),

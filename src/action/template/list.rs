@@ -29,15 +29,14 @@ pub fn list(config: &Config, args: &ArgMatches) {
   };
 
   // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  let mut repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(_error) => return,
   };
 
-  let mut names = Vec::new();
-  for template in repository.templates {
-    names.push(template.name);
-  }
+  repository.init();
 
-  out::info::list_templates(&names);
+  let templates = repository.get_templates();
+
+  out::info::list_templates(&templates);
 }
