@@ -21,18 +21,24 @@ pub struct GitOptions {
   pub password: Option<String>,
 }
 
-pub fn init(dir: &Path, repository: &str) -> Result<(), GitError> {
+pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   // Initialize git repository
   let repo = match git2::Repository::init(dir) {
     Ok(repo) => repo,
-    Err(_e) => return Err(GitError::InitError),
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(error);
+    },
   };
 
   // Set remote
   match repo.remote_set_url("origin", repository) {
     Ok(()) => (),
-    Err(_e) => return Err(GitError::AddRemoteError),
-  }
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(error);
+    },
+  };
 
   Ok(())
 }

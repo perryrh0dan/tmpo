@@ -47,8 +47,16 @@ impl Repository {
   pub fn init(&mut self) -> Result<(), RepositoryError> {
     match self.ensure_repository_dir() {
       Ok(()) => (),
-      Err(_error) => return Err(RepositoryError::InitializationError),
+      Err(_error) => (),
     };
+
+    // ensure git setup if enabled
+    if self.config.git_options.enabled {
+      match self.ensure_repository_git() {
+        Ok(()) => (),
+        Err(_) => (),
+      };
+    }
 
     self.load_templates();
 
@@ -61,6 +69,14 @@ impl Repository {
       Ok(()) => (),
       Err(error) => return Err(error),
     };
+
+    // ensure git setup if enabled
+    if self.config.git_options.enabled {
+      match self.ensure_repository_git() {
+        Ok(()) => (),
+        Err(_) => return Err(Error::from(ErrorKind::InvalidData)),
+      };
+    }
 
     Ok(())
   }
@@ -139,11 +155,10 @@ impl Repository {
       }
     }
 
-    // Initialize git repository if enabled
-    if !self.config.git_options.enabled {
-      return Ok(());
-    }
+    Ok(())
+  }
 
+  fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // check if directory is already a git repository
     let already_initialized = match git2::Repository::open(&self.directory) {
       Ok(_) => true,
@@ -155,8 +170,7 @@ impl Repository {
       match git::init(&self.directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
         Err(error) => {
-          log::error!("{}", error);
-          return Err(Error::from(ErrorKind::InvalidData));
+          return Err(error)
         },
       };
     }
@@ -166,7 +180,7 @@ impl Repository {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
-        out::error::update_templates();
+        return Err(error);
       },
     }
 

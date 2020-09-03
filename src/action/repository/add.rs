@@ -74,8 +74,8 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     });
 
     // test repository
-    match Repository::new(config, &repository_name) {
-        Ok(_) => (),
+    let mut repository = match Repository::new(config, &repository_name) {
+        Ok(repository) => repository,
         Err(error) => {
             log::error!("{}", error);
             match error {
@@ -84,8 +84,16 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
             }
             return;
         },
-    }; 
-    
+    };
+
+    match repository.test() {
+      Ok(()) => (),
+      Err(_) => {
+        out::error::init_repository();
+        return;
+      },
+    };
+
     match config.save() {
         Ok(()) => (),
         Err(_error) => return,

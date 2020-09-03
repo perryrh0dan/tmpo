@@ -33,13 +33,15 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
     };
 
     // Load repository
-    let repository = match Repository::new(config, &repository_name) {
+    let mut repository = match Repository::new(config, &repository_name) {
         Ok(repository) => repository,
         Err(error) => match error {
         RepositoryError::NotFound => return out::error::repository_not_found(&repository_name),
         _ => return,
         },
     };
+
+    repository.init();
 
     // Get template name from user input
     let template_name = if template_name.is_none() {

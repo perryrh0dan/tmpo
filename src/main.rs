@@ -99,7 +99,18 @@ fn main() {
         .about("Maintain templates")
         .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(App::new("create").about("Create new template"))
-        .subcommand(App::new("list").about("List all available templates"))
+        .subcommand(
+          App::new("list")
+            .about("List all available templates")
+            .arg(
+              Arg::with_name("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .help("Name of the repository")
+                .required(false)
+            )
+          )
         .subcommand(
           App::new("view")
             .about("View template details")

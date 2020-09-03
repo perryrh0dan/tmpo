@@ -6,13 +6,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/tmpo.exe",
-            "args": [
-                "init",
-                "https://github.com/perryrh0dan/templates/2fa",
-                "default",
-                "."
-            ],
-            // "args": ["list"],
+            "args": ["repository", "add"],
             "cwd": "${workspaceRoot}",
             "console": "externalTerminal"
         },
