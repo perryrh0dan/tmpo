@@ -3,7 +3,7 @@ use std::io::ErrorKind;
 use crate::cli::input::select;
 use crate::config::Config;
 use crate::out;
-use crate::repository::Repository;
+use crate::repository::{Repository, RepositoryError};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -31,10 +31,16 @@ pub fn list(config: &Config, args: &ArgMatches) {
   // Load repository
   let mut repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
-    Err(_error) => return,
+    Err(error) => return match error {
+        RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
+        _ => out::error::unknown(),
+    },
   };
 
-  repository.init();
+  match repository.init() {
+    Ok(_) => (),
+    Err(_) => (),
+  };
 
   let templates = repository.get_templates();
 

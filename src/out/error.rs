@@ -28,11 +28,6 @@ pub fn repository_exists(repository: &str) {
 }
 
 // template
-pub fn update_templates() {
-  let text = format!("{}", "Error updating templates".red());
-  println!("{}", text);
-}
-
 pub fn template_not_found(template: &str) {
   let text = format!("Template: {} not found", template).red();
   println!("{}", text);
