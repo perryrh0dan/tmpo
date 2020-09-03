@@ -53,7 +53,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  let mut repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);
@@ -64,6 +64,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
       return;
     },
   };
+
+  repository.init();
 
   // check if templates exist
   if repository.get_templates().len() <= 0 {

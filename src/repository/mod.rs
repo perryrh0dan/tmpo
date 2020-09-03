@@ -1,6 +1,6 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Error, Write};
+use std::io::{Error, Write, ErrorKind};
 use std::path::{Path, PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
@@ -14,7 +14,7 @@ extern crate custom_error;
 use custom_error::custom_error;
 
 pub struct Repository {
-  pub directory: String,
+  pub directory: PathBuf,
   pub config: RepositoryOptions,
   pub templates: Vec<template::Template>,
 }
@@ -33,22 +33,36 @@ impl Repository {
       Option::None => return Err(RepositoryError::NotFound),
     };
 
-    let directory = String::from(&config.template_dir) + "/" + &utils::lowercase(name);
+    let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
 
-    let mut repository = Repository {
+    let repository = Repository {
       directory: directory,
       config: cfg,
       templates: Vec::<template::Template>::new(),
     };
 
-    match repository.ensure_repository_dir(&config) {
+    return Ok(repository);
+  }
+
+  pub fn init(&mut self) -> Result<(), RepositoryError> {
+    match self.ensure_repository_dir() {
       Ok(()) => (),
       Err(_error) => return Err(RepositoryError::InitializationError),
     };
 
-    repository.load_templates();
+    self.load_templates();
 
-    return Ok(repository);
+    Ok(())
+  }
+
+
+  pub fn test(self) -> Result<(), Error> {
+    match self.ensure_repository_dir() {
+      Ok(()) => (),
+      Err(error) => return Err(error),
+    };
+
+    Ok(())
   }
 
   pub fn delete_repository(config: &Config, name: &str) -> Result<(), Error> {
@@ -117,12 +131,9 @@ impl Repository {
     return Err(RepositoryError::TemplateNotFound);
   }
 
-  fn ensure_repository_dir(&self, config: &Config) -> Result<(), Error> {
-    let mut directory = PathBuf::from(&config.template_dir);
-    directory.push(&utils::lowercase(&self.config.name));
-
-    if !directory.exists() {
-      match fs::create_dir(&directory) {
+  fn ensure_repository_dir(&self) -> Result<(), Error> {
+    if !self.directory.exists() {
+      match fs::create_dir(&self.directory) {
         Ok(_) => (),
         Err(error) => return Err(error),
       }
@@ -134,28 +145,29 @@ impl Repository {
     }
 
     // check if directory is already a git repository
-    let already_initialized = match git2::Repository::open(&directory) {
+    let already_initialized = match git2::Repository::open(&self.directory) {
       Ok(_) => true,
       Err(_error) => false,
     };
 
     // initialize git
     if !already_initialized {
-      match git::init(&directory, &self.config.git_options.url.clone().unwrap()) {
+      match git::init(&self.directory, &self.config.git_options.url.clone().unwrap()) {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
-          match error {
-            git::GitError::InitError => (),
-            git::GitError::AddRemoteError => (),
-          };
+          return Err(Error::from(ErrorKind::InvalidData));
         },
       };
     }
 
-    match git::update(&directory, &self.config.git_options) {
+    // update repository
+    match git::update(&self.directory, &self.config.git_options) {
       Ok(()) => (),
-      Err(_e) => out::error::update_templates(),
+      Err(error) => {
+        log::error!("{}", error);
+        out::error::update_templates();
+      },
     }
 
     Ok(())
