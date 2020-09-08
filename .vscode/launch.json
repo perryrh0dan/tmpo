@@ -15,6 +15,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/tmpo",
+            "args": ["update"],
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
             // "args": ["repository", "remove"],
             "cwd": "${workspaceRoot}",
