@@ -47,8 +47,10 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
         }
     };
 
+    log::info!("New release found! {} --> {}", &version, &releases[0].version);
+
     if verbose {
-      log::info!("New release found! {} --> {}", &version, &releases[0].version);
+        println!("New release found! {} --> {}", &version, &releases[0].version);
     }
 
     return Some(asset);
@@ -79,12 +81,13 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
     );
     match self_update::Download::from_url(&asset.download_url)
         .show_progress(true)
-        // .set_headers(headers)
+        .set_headers(headers)
         .download_to(&tmp_tarball)
     {
         Ok(_) => (),
         Err(error) => {
             log::error!("{}", error);
+            out::error::unknown();
             return;
         }
     };
@@ -98,6 +101,7 @@ pub fn update(asset: self_update::update::ReleaseAsset) {
         Ok(_) => (),
         Err(error) => {
             log::error!("{}", error);
+            out::error::unknown();
             return;
         }
     };
