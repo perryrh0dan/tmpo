@@ -51,12 +51,30 @@ impl Config {
 }
 
 pub fn init() -> Result<Config, Error> {
-  ensure_root_dir()?;
-  ensure_config_file()?;
+  match ensure_root_dir() {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(error);
+    }
+  };
+  match ensure_config_file() {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(error);
+    }
+  };
 
   let config = load_config()?;
 
-  ensure_template_dir(&config.template_dir)?;
+  match ensure_template_dir(&config.template_dir) {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(error);
+    }
+  };
 
   Ok(config)
 }

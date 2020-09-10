@@ -16,7 +16,7 @@ fn main() {
   // Initiate config
   let mut config = match config::init() {
     Ok(data) => data,
-    Err(_error) => {
+    Err(_) => {
       out::error::load_config();
       std::process::exit(1)
     }
@@ -81,10 +81,7 @@ fn main() {
             .required(false),
         ),
     )
-    .subcommand(
-      App::new("config")
-        .about("View configuration"),
-    )
+    .subcommand(App::new("config").about("View configuration"))
     .subcommand(App::new("update").about("Update to the latest release"))
     .subcommand(
       App::new("repository")
@@ -92,7 +89,26 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(App::new("add").about("Add new repository"))
         .subcommand(App::new("list").about("List all available repository"))
-        .subcommand(App::new("remove").about("Remove a repository")),
+        .subcommand(
+          App::new("remove").about("Remove a repository").arg(
+            Arg::with_name("repository")
+              .short('r')
+              .long("repository")
+              .takes_value(true)
+              .help("Name of the repository")
+              .required(true),
+          ),
+        )
+        .subcommand(
+          App::new("view").about("View repository details").arg(
+            Arg::with_name("repository")
+              .short('r')
+              .long("repository")
+              .takes_value(true)
+              .help("Name of the repository")
+              .required(false),
+          ),
+        ),
     )
     .subcommand(
       App::new("template")
@@ -100,17 +116,15 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(App::new("create").about("Create new template"))
         .subcommand(
-          App::new("list")
-            .about("List all available templates")
-            .arg(
-              Arg::with_name("repository")
-                .short('r')
-                .long("repository")
-                .takes_value(true)
-                .help("Name of the repository")
-                .required(false)
-            )
-          )
+          App::new("list").about("List all available templates").arg(
+            Arg::with_name("repository")
+              .short('r')
+              .long("repository")
+              .takes_value(true)
+              .help("Name of the repository")
+              .required(false),
+          ),
+        )
         .subcommand(
           App::new("view")
             .about("View template details")
@@ -128,7 +142,7 @@ fn main() {
                 .long("template")
                 .takes_value(true)
                 .help("Name of the template")
-                .required(false)
+                .required(false),
             ),
         ),
     )
@@ -149,11 +163,17 @@ fn main() {
         ("add", Some(repo_add_matches)) => {
           action::repository::add::add(&mut config, repo_add_matches)
         }
-        ("remove", Some(repo_delete_matches)) => {
-          action::repository::remove::remove(&mut config, repo_delete_matches)
+        ("create", Some(repo_create_matches)) => {
+          action::repository::create::create(&mut config, repo_create_matches)
         }
         ("list", Some(_list_matches)) => {
           action::repository::list::list(&config);
+        }
+        ("remove", Some(repo_delete_matches)) => {
+          action::repository::remove::remove(&mut config, repo_delete_matches)
+        }
+        ("view", Some(repo_view_matches)) => {
+          action::repository::view::view(&config, repo_view_matches)
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }

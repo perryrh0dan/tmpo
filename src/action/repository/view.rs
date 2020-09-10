@@ -4,7 +4,7 @@ use crate::out;
 
 use clap::ArgMatches;
 
-pub fn list(config: &Config, args: &ArgMatches) {
+pub fn view(config: &Config, args: &ArgMatches) {
   let repository_name = args.value_of("repository");
 
   // Get repository
@@ -13,7 +13,5 @@ pub fn list(config: &Config, args: &ArgMatches) {
     None => return,
   };
 
-  let templates = repository.get_templates();
-
-  out::info::list_templates(&templates);
+  out::info::display_repository(&repository);
 }

@@ -2,11 +2,11 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::{PathBuf};
 
+use crate::action;
 use crate::cli::input;
 use crate::config::Config;
 use crate::git;
 use crate::out;
-use crate::repository::{Repository, RepositoryError};
 use crate::template;
 use crate::utils;
 
@@ -37,38 +37,15 @@ pub fn init(config: &Config, args: &ArgMatches) {
     utils::lowercase(workspace_name.unwrap())
   };
 
-  // Get repository name from user input
-  let repository_name = if repository_name.is_none() {
-    let repositories = config.get_repositories();
-    match input::select("repository", &repositories) {
-      Ok(value) => value,
-      Err(error) => {
-        log::error!("{}", error);
-        out::error::unknown();
-        return;
-      },
-    }
-  } else {
-    String::from(repository_name.unwrap())
-  };
-
-  // Load repository
-  let mut repository = match Repository::new(config, &repository_name) {
-    Ok(repository) => repository,
-    Err(error) => return match error {
-        RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
-        _ => out::error::unknown(),
-    },
-  };
-
-  match repository.init() {
-    Ok(_) => (),
-    Err(_) => (),
+  // Get repository name
+  let repository = match action::get_repository(&config, repository_name) {
+    Some(value) => value,
+    None => return,
   };
 
   // check if templates exist
   if repository.get_templates().len() <= 0 {
-    out::error::no_templates(&repository_name);
+    out::error::no_templates(&repository.config.name);
     return;
   }
 

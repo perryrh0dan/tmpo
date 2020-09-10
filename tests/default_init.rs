@@ -24,3 +24,24 @@ fn template_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
 
   Ok(())
 }
+
+#[test]
+fn success() -> Result<(), Box<dyn std::error::Error>> {
+  // Create temp directory for test
+  let tmp_dir = tempfile::Builder::new()
+    .tempdir_in(::std::env::current_dir().unwrap())
+    .unwrap();
+
+  let tmp_dir_path = tmp_dir.path().to_str().unwrap();
+
+  let mut cmd = Command::cargo_bin("tmpo")?;
+
+  cmd.arg("init").arg("name");
+  cmd.arg("-r").arg("default");
+  cmd.arg("-t").arg("golang");
+  cmd.arg("-d").arg(tmp_dir_path);
+  cmd.arg("--remote").arg("github.com");
+  cmd.assert().success().stdout(predicate::str::contains("Created workspace: name"));
+
+  Ok(())
+}
