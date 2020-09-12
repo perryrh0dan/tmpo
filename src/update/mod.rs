@@ -121,7 +121,6 @@ pub fn update(asset: self_update::update::ReleaseAsset) -> Result<(), RunError> 
   {
     Ok(_) => (),
     Err(error) => {
-      log::error!("{}", error);
       return match error {
         self_update::errors::Error::Io { .. } => {
           Err(RunError::Update(String::from("No permission")))

@@ -13,8 +13,12 @@ pub fn create(config: &mut config::Config, args: &ArgMatches) {
   // Get repository name from user input
   let repository_name = if repository_name.is_none() {
     match input::text("repository name", false) {
-      Some(value) => value,
-      None => return,
+      Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
     }
   } else {
     utils::lowercase(repository_name.unwrap())

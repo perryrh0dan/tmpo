@@ -23,5 +23,5 @@ pub fn get_repository(
   // Load repository
   let repository = Repository::new(config, &repository_name)?;
 
-  return Ok(repository);
+  Ok(repository)
 }

@@ -26,7 +26,7 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
     repository.config.name
   );
   if !input::confirm(&text) {
-    return;
+    exit(0);
   }
 
   // Remove template folder
@@ -47,7 +47,11 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
 
   match config.save() {
     Ok(()) => (),
-    Err(_error) => return,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    },
   }
 
   out::success::repository_removed(&repository.config.name);

@@ -55,14 +55,12 @@ pub fn init() -> Result<Config, RunError> {
   match ensure_root_dir() {
     Ok(()) => (),
     Err(error) => {
-      log::error!("{}", error);
       return Err(RunError::IO(error));
     }
   };
   match ensure_config_file() {
     Ok(()) => (),
     Err(error) => {
-      log::error!("{}", error);
       return Err(RunError::IO(error));
     }
   };
@@ -72,7 +70,6 @@ pub fn init() -> Result<Config, RunError> {
   match ensure_template_dir(&config.template_dir) {
     Ok(()) => (),
     Err(error) => {
-      log::error!("{}", error);
       return Err(RunError::IO(error));
     }
   };

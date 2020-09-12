@@ -9,3 +9,8 @@ pub fn repository_exists(repository: &str) {
   let text = format!("Repository: {} already exists", repository);
   eprintln!("{}", text);
 }
+
+pub fn template_exists(template: &str) {
+  let text = format!("Template: {} already exists", template);
+  eprintln!("{}", text);
+}

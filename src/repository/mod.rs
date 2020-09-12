@@ -21,7 +21,6 @@ impl Repository {
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
       Option::None => {
-        log::error!("Repository not found: {}", name);
         return Err(RunError::Repository(String::from("Not found")));
       }
     };
@@ -60,7 +59,10 @@ impl Repository {
     if self.config.git_options.enabled {
       match self.ensure_repository_git() {
         Ok(()) => (),
-        Err(_) => return Err(RunError::Repository(String::from("Initialization"))),
+        Err(error) => {
+          log::error!("{}", error);
+          return Err(RunError::Repository(String::from("Initialization")))
+        },
       };
     }
 
@@ -148,7 +150,6 @@ impl Repository {
     ) {
       Ok(()) => (),
       Err(error) => {
-        log::error!("{}", error);
         return Err(error);
       },
     };
@@ -157,7 +158,6 @@ impl Repository {
     match git::update(&self.directory, &self.config.git_options) {
       Ok(()) => (),
       Err(error) => {
-        log::error!("{}", error);
         return Err(error);
       }
     }

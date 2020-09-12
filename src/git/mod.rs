@@ -2,14 +2,9 @@ use std::path::Path;
 use std::str;
 use log;
 
-extern crate custom_error;
-extern crate git2;
-use custom_error::custom_error;
+// use crate::error::RunError;
 
-custom_error! {pub GitError
-    InitError      = "Unable to initialize git",
-    AddRemoteError = "Unable to add remote",
-}
+extern crate git2;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct GitOptions {

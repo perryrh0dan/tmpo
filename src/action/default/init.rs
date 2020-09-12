@@ -30,8 +30,12 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
     match input::text("Please enter the project name", false) {
-      Some(value) => value,
-      None => exit(1),
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     utils::lowercase(workspace_name.unwrap())
@@ -79,8 +83,12 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Get workspace directory from user input
   let workspace_directory = if workspace_directory.is_none() {
     match input::text("Please enter the target diectory", false) {
-      Some(value) => value,
-      None => exit(1),
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     workspace_directory.unwrap().to_string()
@@ -89,8 +97,12 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Get workspace git repository url from user input
   let workspace_repository = if remote_url.is_none() {
     match input::text("Please enter a git remote url", true) {
-      Some(value) => value,
-      None => exit(1),
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     remote_url.unwrap().to_string()
