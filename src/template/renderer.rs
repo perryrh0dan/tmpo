@@ -10,8 +10,8 @@ pub fn render(text: &str, opts: &context::Context) -> String {
 
     let result = match handlebars.render_template(text, opts) {
         Ok(result) => result,
-        Err(_error) => { 
-            log::error!("Error rendering template");
+        Err(error) => {
+            log::error!("Error rendering template: Error: {}", error);
             text.to_owned()
         }
     };

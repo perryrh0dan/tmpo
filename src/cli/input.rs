@@ -1,18 +1,17 @@
-use std::io::{Error, ErrorKind};
-
+use crate::error::RunError;
 use crate::utils;
 
 extern crate dialoguer;
-use dialoguer::{theme::ColorfulTheme, Input, Select, Password};
+use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 
-pub fn text(text: &str, allow_empty: bool ) -> Option<String> {
+pub fn text(text: &str, allow_empty: bool) -> Result<String, RunError> {
   match Input::<String>::with_theme(&ColorfulTheme::default())
     .with_prompt(text)
     .allow_empty(allow_empty)
     .interact()
   {
-    Ok(value) => Some(value),
-    Err(_error) => return None,
+    Ok(value) => Ok(value),
+    Err(error) => Err(RunError::IO(error)),
   }
 }
 
@@ -30,15 +29,19 @@ pub fn confirm(text: &str) -> bool {
   }
 }
 
-pub fn password(text: &str) -> Result<String, Error> {
-  return Password::with_theme(&ColorfulTheme::default())
+pub fn password(text: &str) -> Result<String, RunError> {
+  match Password::with_theme(&ColorfulTheme::default())
     .with_prompt(text)
-    .interact();
+    .interact()
+  {
+    Ok(value) => Ok(value),
+    Err(error) => Err(RunError::IO(error)),
+  }
 }
 
-pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
+pub fn select(name: &str, options: &Vec<String>) -> Result<String, RunError> {
   if options.len() == 0 {
-    return Err(Error::from(ErrorKind::InvalidData))
+    return Err(RunError::Input(String::from("No Options")));
   };
 
   // TODO
@@ -60,7 +63,7 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
     .interact()
   {
     Ok(selection) => selection,
-    Err(error) => return Err(error),
+    Err(error) => return Err(RunError::IO(error)),
   };
   let result = utils::lowercase(&options[selection]);
   return Ok(result);

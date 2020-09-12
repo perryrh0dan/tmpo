@@ -1,4 +1,5 @@
-use std::io::ErrorKind;
+use log;
+use std::process::exit;
 
 use crate::action;
 use crate::cli::input::select;
@@ -12,22 +13,30 @@ pub fn view(config: &Config, args: &ArgMatches) {
 
   // Get repository
   let repository = match action::get_repository(&config, repository_name) {
-    Some(value) => value,
-    None => return,
+    Ok(repository) => repository,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    },
   };
+
+  // Check if templates exist
+  if repository.get_templates().len() <= 0 {
+    eprintln!("No templates exist in repository: {}", repository.config.name);
+    exit(1);
+  }
 
   // Get template name from user input
   let template_name = if template_name.is_none() {
     let templates = repository.get_templates();
     match select("template", &templates) {
       Ok(value) => value,
-      Err(error) => match error.kind() {
-        ErrorKind::InvalidData => {
-          out::error::no_templates(&repository.config.name);
-          return;
-        }
-        _ => return,
-      },
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
     }
   } else {
     String::from(template_name.unwrap())
@@ -36,9 +45,10 @@ pub fn view(config: &Config, args: &ArgMatches) {
   // Get the template
   let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
-    Err(_error) => {
-      out::error::template_not_found(&template_name);
-      return;
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
     }
   };
 

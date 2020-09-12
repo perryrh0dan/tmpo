@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::action;
 use crate::config::Config;
 use crate::out;
@@ -9,8 +11,12 @@ pub fn view(config: &Config, args: &ArgMatches) {
 
   // Get repository
   let repository = match action::get_repository(&config, repository_name) {
-    Some(value) => value,
-    None => return,
+    Ok(repository) => repository,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    }
   };
 
   out::info::display_repository(&repository);

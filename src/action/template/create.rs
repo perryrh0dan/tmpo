@@ -1,6 +1,5 @@
-// ask for private or public template
-// if public try to push
 use log;
+use std::process::exit;
 
 use crate::action;
 use crate::cli::input;
@@ -15,15 +14,23 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
 
   // Get repository
   let repository = match action::get_repository(&config, repository_name) {
-    Some(value) => value,
-    None => return,
+    Ok(repository) => repository,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    }
   };
 
   // Get template name from user input
   let template_name = if template_name.is_none() {
     match input::text("template name", false) {
-      Some(value) => value,
-      None => return,
+      Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
     }
   } else {
     String::from(template_name.unwrap())
@@ -32,15 +39,16 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   // validate name
   let templates = repository.get_templates();
   if templates.contains(&template_name) {
-    // TODO error
-    return;
+    out::error::template_exists(&template_name);
+    exit(1)
   }
 
   let template_path = match repository.create_template(&template_name) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);
-      return;
+      println!("{}", error);
+      exit(1)
     }
   };
 

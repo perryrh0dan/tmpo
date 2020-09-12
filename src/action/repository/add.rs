@@ -1,8 +1,10 @@
+use std::process::exit;
+
 use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
-use crate::repository::{Repository, RepositoryError};
+use crate::repository::{Repository};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -13,8 +15,12 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   // Get repository name from user input
   let repository_name = if repository_name.is_none() {
     match input::text("repository name", false) {
-      Some(value) => value,
-      None => return,
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     utils::lowercase(repository_name.unwrap())
@@ -24,13 +30,17 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repositories = config.get_repositories();
   if repositories.contains(&repository_name) {
     out::error::repository_exists(&repository_name);
-    return;
+    exit(1);
   }
 
   // Get repository description from user input
   let repository_description = match input::text("repository description", false) {
-    Some(value) => value,
-    None => return,
+    Ok(value) => value,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    },
   };
   let mut git_options = git::GitOptions {
     enabled: false,
@@ -47,7 +57,14 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   // Git options
   if git_options.enabled {
     // Get repository remote url
-    git_options.url = input::text("Please enter the remote repository url", false);
+    git_options.url = match input::text("Please enter the remote repository url", false) {
+      Ok(value) => Some(value),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
+    };
 
     // Get authentication type
     git_options.auth = match input::select(
@@ -59,18 +76,40 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
       ],
     ) {
       Ok(value) => Some(value),
-      Err(_error) => return,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      },
     };
 
     // Get credentials for different auth types
     if git_options.auth.clone().unwrap() == "basic" {
-      git_options.username = input::text("Please enter your git username", false);
+      git_options.username = match input::text("Please enter your git username", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
+      };
       git_options.password = match input::password("Please enter your git password") {
         Ok(value) => Some(value),
-        Err(_error) => return,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
       }
     } else if git_options.auth.clone().unwrap() == "token" {
-      git_options.token = input::text("Please enter your git token", false);
+      git_options.token = match input::text("Please enter your git token", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
+      }
     }
   }
 
@@ -84,25 +123,29 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
-      return match error {
-        RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
-        _ => out::error::unknown(),
-      }
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
     }
   };
 
   // Test repository
   match repository.test() {
     Ok(()) => (),
-    Err(_) => {
-      out::error::init_repository();
-      return;
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
     }
   };
 
   match config.save() {
     Ok(()) => (),
-    Err(_error) => return,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    },
   }
 
   out::success::repository_added(&repository_name);

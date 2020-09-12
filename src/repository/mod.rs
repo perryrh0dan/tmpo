@@ -1,16 +1,14 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Error, ErrorKind, Write};
+use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
+use crate::error::RunError;
 use crate::git;
 use crate::meta;
 use crate::template;
 use crate::utils;
-
-extern crate custom_error;
-use custom_error::custom_error;
 
 pub struct Repository {
   pub directory: PathBuf,
@@ -18,20 +16,12 @@ pub struct Repository {
   pub templates: Vec<template::Template>,
 }
 
-custom_error! {pub RepositoryError
-  InitializationError = "Unable to initialize repository",
-  NotFound = "Repository not found",
-  TemplateNotFound = "Unable to find template",
-  LoadingErrors = "Unable to load templates",
-}
-
 impl Repository {
-  pub fn new(config: &Config, name: &str) -> Result<Repository, RepositoryError> {
+  pub fn new(config: &Config, name: &str) -> Result<Repository, RunError> {
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
       Option::None => {
-        log::error!("Repository not found: {}", name);
-        return Err(RepositoryError::NotFound);
+        return Err(RunError::Repository(String::from("Not found")));
       }
     };
 
@@ -47,7 +37,7 @@ impl Repository {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
-        return Err(RepositoryError::InitializationError);
+        return Err(RunError::Repository(String::from("Initialization")))
       }
     };
 
@@ -64,12 +54,15 @@ impl Repository {
     return Ok(repository);
   }
 
-  pub fn test(self) -> Result<(), Error> {
+  pub fn test(self) -> Result<(), RunError> {
     // ensure git setup if enabled
     if self.config.git_options.enabled {
       match self.ensure_repository_git() {
         Ok(()) => (),
-        Err(_) => return Err(Error::from(ErrorKind::InvalidData)),
+        Err(error) => {
+          log::error!("{}", error);
+          return Err(RunError::Repository(String::from("Initialization")))
+        },
       };
     }
 
@@ -77,7 +70,7 @@ impl Repository {
   }
 
   /// delete
-  pub fn delete_repository(&self) -> Result<(), Error> {
+  pub fn delete_repository(&self) -> Result<(), RunError> {
     log::info!(
       "Delete repository directory {}",
       &self.directory.to_owned().to_str().unwrap()
@@ -85,8 +78,7 @@ impl Repository {
     match fs::remove_dir_all(&self.directory) {
       Ok(()) => (),
       Err(error) => {
-        log::error! {"{}", error}
-        return Err(error);
+        return Err(RunError::IO(error));
       }
     }
 
@@ -129,14 +121,14 @@ impl Repository {
   }
 
   /// Return template with given name
-  pub fn get_template_by_name(&self, name: &str) -> Result<&template::Template, RepositoryError> {
+  pub fn get_template_by_name(&self, name: &str) -> Result<&template::Template, RunError> {
     for template in &self.templates {
       if template.name == *name {
         return Ok(template);
       }
     }
 
-    return Err(RepositoryError::TemplateNotFound);
+    return Err(RunError::Template(String::from("Not found")));
   }
 
   fn ensure_repository_dir(&self) -> Result<(), Error> {
@@ -152,27 +144,20 @@ impl Repository {
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // check if directory is already a git repository
-    let already_initialized = match git2::Repository::open(&self.directory) {
-      Ok(_) => true,
-      Err(_error) => false,
+    match git::init(
+      &self.directory,
+      &self.config.git_options.url.clone().unwrap(),
+    ) {
+      Ok(()) => (),
+      Err(error) => {
+        return Err(error);
+      },
     };
-
-    // initialize git
-    if !already_initialized {
-      match git::init(
-        &self.directory,
-        &self.config.git_options.url.clone().unwrap(),
-      ) {
-        Ok(()) => (),
-        Err(error) => return Err(error),
-      };
-    }
 
     // update repository
     match git::update(&self.directory, &self.config.git_options) {
       Ok(()) => (),
       Err(error) => {
-        log::error!("{}", error);
         return Err(error);
       }
     }

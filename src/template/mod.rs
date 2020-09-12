@@ -1,10 +1,11 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Error, ErrorKind, Read, Write};
+use std::io::{ErrorKind, Read, Write};
 use log;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use crate::error::RunError;
 use crate::repository::Repository;
 use crate::utils;
 use crate::meta;
@@ -63,7 +64,7 @@ impl Template {
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &Path, opts: context::Context) -> Result<(), Error> {
+  pub fn copy(&self, repository: &Repository, target: &Path, opts: context::Context) -> Result<(), RunError> {
     // get list of all super templates
     let super_templates = match &self.meta.extend {
       None => Vec::new(),
@@ -111,9 +112,14 @@ impl Template {
     Ok(())
   }
 
-  fn copy_folder(&self, src: &str, target: &Path, opts: &context::Context) -> Result<(), Error> {
+  fn copy_folder(&self, src: &str, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Loop at selected template directory
-    for entry in fs::read_dir(src)? {
+    let entries = match fs::read_dir(src) {
+      Ok(values) => values,
+      Err(error) => return Err(RunError::IO(error)),
+    };
+
+    for entry in entries {
       let entry = &entry.unwrap();
 
       let source_path = &entry.path().to_string_lossy().into_owned();
@@ -136,7 +142,7 @@ impl Template {
           Ok(()) => (),
           Err(error) => match error.kind() {
             ErrorKind::AlreadyExists => (),
-            _ => return Err(error),
+            _ => return Err(RunError::IO(error)),
           },
         };
 
@@ -191,12 +197,12 @@ impl Template {
     if name == "meta.json" {
       return true;
     };
-  
+
     let items = match &self.meta.exclude {
       None => return false,
       Some(x) => x,
     };
-  
+
     self.is_excluded(name, items)
   }
 
@@ -207,7 +213,7 @@ impl Template {
         return true;
       }
     }
-  
+
     return false;
   }
 
@@ -259,7 +265,7 @@ fn run_script(script: &String, target: &Path) {
 
   let status = match cmd.wait() {
     Ok(status) => status,
-    Err(error) => { 
+    Err(error) => {
       log::error!("Script exited with error: {}", error);
       return;
     },

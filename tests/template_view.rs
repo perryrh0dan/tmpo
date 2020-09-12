@@ -9,7 +9,7 @@ fn repository_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
   cmd.arg("template");
   cmd.arg("view");
   cmd.arg("-r").arg("test");
-  cmd.assert().success().stdout(predicate::str::contains("Repository: test not found"));
+  cmd.assert().failure().stderr(predicate::str::contains("Unable to load repository! Error: Not found"));
 
   Ok(())
 }
@@ -22,7 +22,7 @@ fn template_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
   cmd.arg("view");
   cmd.arg("-r").arg("default");
   cmd.arg("-t").arg("test");
-  cmd.assert().success().stdout(predicate::str::contains("Template: test not found"));
+  cmd.assert().failure().stderr(predicate::str::contains("Unable to load template! Error: Not found"));
 
   Ok(())
 }
