@@ -1,6 +1,7 @@
 use std::io::ErrorKind;
 
 use crate::action;
+use crate::cli::input;
 use crate::config::{Config};
 use crate::out;
 
@@ -14,6 +15,12 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
       Some(value) => value,
       None => return,
     };
+
+    // Confirm
+    let text = format!("Are you sure you want to delete this item: {} (y/n): ", repository.config.name);
+    if !input::confirm(&text) {
+      return;
+    }
 
     // remove template folder
     match repository.delete_repository() {
