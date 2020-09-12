@@ -203,8 +203,6 @@ impl Repository {
         }
       };
 
-      println!("{:?}", meta);
-
       // If type is None or unqual template skip entry
       if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
         continue;

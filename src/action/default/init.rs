@@ -126,19 +126,44 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Get email from user input or global git config
   let email = if email.is_none() {
-    match git::get_email() {
+    let git_email = match git::get_email() {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        String::from("")
+      },
+    };
+
+    match input::text(&format!("Please enter your email ({}): ", &git_email), true) {
       Ok(value) => Some(value),
-      Err(_error) => None,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     Some(email.unwrap().to_owned())
   };
 
+
   // Get username from user input or global git config
   let username = if username.is_none() {
-    match git::get_username() {
+    let git_username = match git::get_username() {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        String::from("")
+      },
+    };
+
+    match input::text(&format!("Please enter your username ({}): ", &git_username), true) {
       Ok(value) => Some(value),
-      Err(_error) => None,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     Some(username.unwrap().to_owned())
