@@ -7,7 +7,7 @@ fn repository_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
   let mut cmd = Command::cargo_bin("tmpo")?;
 
   cmd.arg("init").arg("name");
-  cmd.arg("-r").arg("test");
+  cmd.arg("-r").arg("tttt");
   cmd.assert().failure().stderr(predicate::str::contains("Unable to load repository! Error: Not found"));
 
   Ok(())

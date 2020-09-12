@@ -28,11 +28,11 @@ pub struct Scripts {
     pub after_install: Option<String>,
 }
 
-pub fn load_meta(dir: &str) -> Result<Meta, Error> {
-    let meta_path = String::from(dir) + "/meta.json";
+pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
+    let meta_path = dir.join("meta.json");
 
     // check if file exists
-    if !Path::new(&meta_path).exists() {
+    if !meta_path.exists() {
         let meta = default();
         return Ok(meta);
     }

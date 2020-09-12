@@ -10,38 +10,39 @@ use crate::repository::Repository;
 use crate::utils;
 use crate::meta;
 
-extern crate custom_error;
-use custom_error::custom_error;
 extern crate serde;
 use serde::{Serialize};
 
 pub mod context;
 mod renderer;
 
-custom_error! {pub TemplateError
-  InitializeTemplate = "Unable to initialize template"
-}
-
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Info {
   name: String,
   version: Option<String>
 }
 
+#[derive(Debug)]
 pub struct Template {
   pub name: String,
-  pub path: String,
+  pub path: PathBuf,
   pub meta: meta::Meta,
 }
 
 impl Template {
-  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, TemplateError> {
-    let path = dir.path().to_string_lossy().into_owned();
-    let meta = meta::load_meta(&path).unwrap();
+  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, RunError> {
+    let meta = match meta::load_meta(&dir.path()) {
+      Ok(meta) => meta,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        return Err(RunError::Template(String::from("Unable to load meta")));
+      }
+    };
 
     // If type is None or unqual template skip entry
     if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
-      return Err(TemplateError::InitializeTemplate);
+      return Err(RunError::Template(String::from("Initialization")));
     }
 
     let name;
@@ -57,9 +58,9 @@ impl Template {
     }
 
     // make all names lowercase
-    return Ok(Template {
+    return Ok(Template{
       name: utils::lowercase(&name),
-      path: path,
+      path: dir.path(),
       meta: meta,
     });
   }
@@ -107,7 +108,7 @@ impl Template {
     Ok(())
   }
 
-  fn copy_folder(&self, src: &str, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  fn copy_folder(&self, src: &Path, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Loop at selected template directory
     let entries = match fs::read_dir(src) {
       Ok(values) => values,
@@ -117,7 +118,7 @@ impl Template {
     for entry in entries {
       let entry = &entry.unwrap();
 
-      let source_path = &entry.path().to_string_lossy().into_owned();
+      let source_path = &entry.path();
       let source_name = &entry
         .path()
         .file_name()
