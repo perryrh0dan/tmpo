@@ -1,3 +1,6 @@
+use log;
+use std::process::exit;
+
 mod action;
 mod cli;
 mod config;
@@ -14,17 +17,18 @@ mod utils;
 use clap::{crate_version, App, AppSettings, Arg};
 
 fn main() {
+  // Initiate logger
+  logger::init();
+
   // Initiate config
   let mut config = match config::init() {
     Ok(data) => data,
-    Err(_) => {
-      out::error::load_config();
-      std::process::exit(1)
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
     }
   };
-
-  // Initiate logger
-  logger::init();
 
   // Check for update
   update::check_version(true);

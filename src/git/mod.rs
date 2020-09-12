@@ -26,7 +26,6 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   let repo = match git2::Repository::init(dir) {
     Ok(repo) => repo,
     Err(error) => {
-      log::error!("{}", error);
       return Err(error);
     },
   };
@@ -35,7 +34,6 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   match repo.remote_set_url("origin", repository) {
     Ok(()) => (),
     Err(error) => {
-      log::error!("{}", error);
       return Err(error);
     },
   };

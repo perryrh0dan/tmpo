@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
@@ -24,7 +26,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repositories = config.get_repositories();
   if repositories.contains(&repository_name) {
     out::error::repository_exists(&repository_name);
-    return;
+    exit(1);
   }
 
   // Get repository description from user input
@@ -84,22 +86,29 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
-      return println!("{}", error);
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
     }
   };
 
   // Test repository
   match repository.test() {
     Ok(()) => (),
-    Err(_) => {
-      out::error::init_repository();
-      return;
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
     }
   };
 
   match config.save() {
     Ok(()) => (),
-    Err(_error) => return,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    },
   }
 
   out::success::repository_added(&repository_name);

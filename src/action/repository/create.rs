@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::config;
 use crate::cli::input;
 use crate::out;
@@ -22,6 +24,6 @@ pub fn create(config: &mut config::Config, args: &ArgMatches) {
   let repositories = config.get_repositories();
   if repositories.contains(&repository_name) {
     out::error::repository_exists(&repository_name);
-    return;
+    exit(1);
   }
 }

@@ -1,4 +1,3 @@
-use std::io::ErrorKind;
 use std::process::exit;
 
 use crate::action;
@@ -30,16 +29,12 @@ pub fn remove(config: &mut Config, args: &ArgMatches) {
     return;
   }
 
-  // remove template folder
+  // Remove template folder
   match repository.delete_repository() {
     Ok(()) => (),
-    Err(error) => match error.kind() {
-      ErrorKind::NotFound => (),
-      _ => {
-        out::error::unknown();
-        return;
-      }
-    },
+    Err(error) => {
+      log::error! {"{}", error}
+    }
   };
 
   // Update config

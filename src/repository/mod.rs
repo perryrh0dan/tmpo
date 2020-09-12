@@ -68,7 +68,7 @@ impl Repository {
   }
 
   /// delete
-  pub fn delete_repository(&self) -> Result<(), Error> {
+  pub fn delete_repository(&self) -> Result<(), RunError> {
     log::info!(
       "Delete repository directory {}",
       &self.directory.to_owned().to_str().unwrap()
@@ -76,8 +76,7 @@ impl Repository {
     match fs::remove_dir_all(&self.directory) {
       Ok(()) => (),
       Err(error) => {
-        log::error! {"{}", error}
-        return Err(error);
+        return Err(RunError::IO(error));
       }
     }
 
@@ -143,21 +142,16 @@ impl Repository {
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // check if directory is already a git repository
-    let already_initialized = match git2::Repository::open(&self.directory) {
-      Ok(_) => true,
-      Err(_error) => false,
+    match git::init(
+      &self.directory,
+      &self.config.git_options.url.clone().unwrap(),
+    ) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        return Err(error);
+      },
     };
-
-    // initialize git
-    if !already_initialized {
-      match git::init(
-        &self.directory,
-        &self.config.git_options.url.clone().unwrap(),
-      ) {
-        Ok(()) => (),
-        Err(error) => return Err(error),
-      };
-    }
 
     // update repository
     match git::update(&self.directory, &self.config.git_options) {

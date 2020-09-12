@@ -102,13 +102,11 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   match fs::create_dir(&dir) {
     Ok(()) => (),
-    Err(error) => match error.kind() {
-      std::io::ErrorKind::AlreadyExists => (),
-      _ => {
-        out::error::create_directory(&dir.to_string_lossy());
-        exit(1);
-      }
-    },
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
   };
 
   let mut email: Option<String> = None;
@@ -133,8 +131,9 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Copy the template
   match template.copy(&repository, &dir, options) {
     Ok(()) => (),
-    Err(_error) => {
-      out::error::copy_template();
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
       exit(1);
     }
   };
@@ -143,8 +142,9 @@ pub fn init(config: &Config, args: &ArgMatches) {
   if workspace_repository != "" {
     match git::init(&dir, &workspace_repository) {
       Ok(()) => (),
-      Err(_error) => {
-        out::error::init_repository();
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
         exit(1);
       }
     }

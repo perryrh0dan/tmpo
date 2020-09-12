@@ -8,6 +8,7 @@ pub enum RunError {
   Input(String),
   Repository(String),
   Template(String),
+  Update(String),
 }
 
 impl Display for RunError {
@@ -18,6 +19,7 @@ impl Display for RunError {
       Self::Input(e) => write!(f, "{}", e),
       Self::Repository(e) => write!(f, "Unable to load repository! Error: {}", e),
       Self::Template(e) => write!(f, "Unable to load template! Error: {}", e),
+      Self::Update(e) => write!(f, "Unable to update! Error: {}", e),
     }
   }
 }
