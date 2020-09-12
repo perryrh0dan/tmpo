@@ -22,7 +22,7 @@ pub struct Info {
   version: Option<String>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Template {
   pub name: String,
   pub path: PathBuf,
@@ -67,7 +67,10 @@ impl Template {
 
   pub fn copy(&self, repository: &Repository, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Get list of all super templates
-    let super_templates = self.get_super_templates(repository);
+    let super_templates = match self.get_super_templates(repository) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
 
     for template in super_templates {
       template.copy(repository, target, opts)?;
@@ -176,18 +179,25 @@ impl Template {
     Ok(())
   }
 
-  pub fn get_custom_values(&self, repository: &Repository) -> Vec<String> {
+  pub fn get_custom_values(&self, repository: &Repository) -> Result<Vec<String>, RunError> {
     // Get list of all super templates
-    let super_templates = self.get_super_templates(repository);
+    let super_templates = match self.get_super_templates(repository) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
 
-    let mut values = vec!{};
+    let mut values: Vec<String>  = vec!{};
     for template in super_templates {
-      values.extend(template.get_custom_values(repository));
+      let v = match template.get_custom_values(repository) {
+        Ok(values) => values,
+        Err(error) => return Err(error),
+      };
+      values.extend(v);
     }
 
     let renderer = match self.meta.renderer.to_owned() {
       Some(data) => data,
-      None => return values,
+      None => return Ok(values),
     };
 
     match renderer.values {
@@ -195,11 +205,11 @@ impl Template {
       None => (),
     };
 
-    values
+    Ok(values)
   }
 
   /// Get list of all super templates
-  fn get_super_templates(&self, repository: &Repository) -> Vec<Template> {
+  fn get_super_templates(&self, repository: &Repository) -> Result<Vec<Template>, RunError> {
     // get list of all super templates
     let super_templates = match &self.meta.extend {
       None => Vec::new(),
@@ -208,11 +218,24 @@ impl Template {
 
     let mut templates = vec!{};
     for name in super_templates {
-      let template = repository.get_template_by_name(&name).unwrap();
-      templates.extend(template.get_super_templates(repository));
+      let template = match repository.get_template_by_name(&name) {
+        Ok(template) =>  template,
+        Err(error) => {
+          log::error!("{}", error);
+          return Err(RunError::Template(String::from("Not found")));
+        },
+      };
+
+      let t = match template.get_super_templates(repository) {
+        Ok(templates) => templates,
+        Err(error) => return Err(error),
+      };
+
+      templates.extend(t);
+      templates.push(template.to_owned());
     }
 
-    templates
+    Ok(templates)
   }
 
   fn is_excluded_renderer(&self, name: &str) -> bool {

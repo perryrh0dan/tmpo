@@ -18,15 +18,21 @@ const BIN_NAME: &str = "tmpo";
 
 pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset> {
   log::info!("Fetch release list");
-  let releases = self_update::backends::github::ReleaseList::configure()
+  let releases = match self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")
     .repo_name("tmpo")
     .build()
     .unwrap()
     .fetch()
-    .unwrap();
+  {
+    Ok(releases) => releases,
+    Err(error) => {
+      log::error!("{}", error);
+      return None
+    },
+  };
 
-  // check version
+  // Check version
   let version = crate_version!();
   if releases[0].version == version {
     return None;
@@ -34,7 +40,7 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
 
   let mut target = self_update::get_target();
 
-  // needs to be investigated
+  // Needs to be investigated
   if target == "x86_64-pc-windows-msvc" {
     target = "x86_64-pc-windows-gnu";
   }
@@ -125,9 +131,7 @@ pub fn update(asset: self_update::update::ReleaseAsset) -> Result<(), RunError> 
         self_update::errors::Error::Io { .. } => {
           Err(RunError::Update(String::from("No permission")))
         }
-        _ => {
-          Err(RunError::Update(String::from("Unknown")))
-        }
+        _ => Err(RunError::Update(String::from("Unknown"))),
       }
     }
   };

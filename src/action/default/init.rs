@@ -171,7 +171,15 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Get template specific values
   let mut values = HashMap::new();
-  let keys = template.get_custom_values(&repository);
+  let keys = match template.get_custom_values(&repository) {
+    Ok(keys) => keys,
+    Err(error) => {
+      log::error!("{}", error);
+      println!("{}", error);
+      exit(1);
+    }
+  };
+
   for key in keys {
     let value = match input::text(&format!("Please enter {}", &key), true) {
       Ok(value) => value,
