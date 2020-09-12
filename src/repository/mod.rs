@@ -10,9 +10,11 @@ use crate::meta;
 use crate::template;
 use crate::utils;
 
+#[derive(Debug)]
 pub struct Repository {
-  pub directory: PathBuf,
   pub config: RepositoryOptions,
+  pub directory: PathBuf,
+  pub meta: meta::Meta,
   pub templates: Vec<template::Template>,
 }
 
@@ -27,9 +29,20 @@ impl Repository {
 
     let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
 
+    // Load meta
+    let meta = match meta::load_meta(&directory) {
+      Ok(meta) => meta,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        return Err(RunError::Repository(String::from("Unable to load meta")));
+      }
+    };
+
     let mut repository = Repository {
-      directory: directory,
       config: cfg,
+      directory: directory,
+      meta: meta,
       templates: Vec::<template::Template>::new(),
     };
 
@@ -182,8 +195,7 @@ impl Repository {
         continue;
       }
 
-      let path = entry.path().to_string_lossy().into_owned();
-      let meta = match meta::load_meta(&path) {
+      let meta = match meta::load_meta(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);

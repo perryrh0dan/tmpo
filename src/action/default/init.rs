@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{PathBuf};
 use std::process::exit;
@@ -18,6 +19,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let template_name = args.value_of("template");
   let workspace_directory = args.value_of("directory");
   let remote_url = args.value_of("remote");
+  let username = args.value_of("username");
+  let email = args.value_of("email");
 
   out::info::initiate_workspace();
 
@@ -121,27 +124,75 @@ pub fn init(config: &Config, args: &ArgMatches) {
     }
   };
 
-  let mut email: Option<String> = None;
-  match git::get_email() {
-    Ok(value) => email = Some(value),
-    Err(_error) => (),
+  // Get email from user input or global git config
+  let email = if email.is_none() {
+    let git_email = match git::get_email() {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        String::from("")
+      },
+    };
+
+    match input::text(&format!("Please enter your email ({}): ", &git_email), true) {
+      Ok(value) => Some(value),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
+    }
+  } else {
+    Some(email.unwrap().to_owned())
   };
 
-  let mut username: Option<String> = None;
-  match git::get_username() {
-    Ok(value) => username = Some(value),
-    Err(_error) => (),
+
+  // Get username from user input or global git config
+  let username = if username.is_none() {
+    let git_username = match git::get_username() {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        String::from("")
+      },
+    };
+
+    match input::text(&format!("Please enter your username ({}): ", &git_username), true) {
+      Ok(value) => Some(value),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
+    }
+  } else {
+    Some(username.unwrap().to_owned())
   };
+
+  // Get template specific values
+  let mut values = HashMap::new();
+  let keys = template.get_custom_values(&repository);
+  for key in keys {
+    let value = match input::text(&format!("Please enter {}", &key), true) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        String::from("")
+      },
+    };
+    values.insert(key, value);
+  }
 
   let options = template::context::Context {
     name: String::from(&workspace_name),
     repository: Some(String::from(&workspace_repository)),
     username: username,
     email: email,
+    values: values,
   };
 
   // Copy the template
-  match template.copy(&repository, &dir, options) {
+  match template.copy(&repository, &dir, &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);

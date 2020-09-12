@@ -10,38 +10,39 @@ use crate::repository::Repository;
 use crate::utils;
 use crate::meta;
 
-extern crate custom_error;
-use custom_error::custom_error;
 extern crate serde;
 use serde::{Serialize};
 
 pub mod context;
 mod renderer;
 
-custom_error! {pub TemplateError
-  InitializeTemplate = "Unable to initialize template"
-}
-
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Info {
   name: String,
   version: Option<String>
 }
 
+#[derive(Debug)]
 pub struct Template {
   pub name: String,
-  pub path: String,
+  pub path: PathBuf,
   pub meta: meta::Meta,
 }
 
 impl Template {
-  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, TemplateError> {
-    let path = dir.path().to_string_lossy().into_owned();
-    let meta = meta::load_meta(&path).unwrap();
+  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, RunError> {
+    let meta = match meta::load_meta(&dir.path()) {
+      Ok(meta) => meta,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        return Err(RunError::Template(String::from("Unable to load meta")));
+      }
+    };
 
     // If type is None or unqual template skip entry
     if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
-      return Err(TemplateError::InitializeTemplate);
+      return Err(RunError::Template(String::from("Initialization")));
     }
 
     let name;
@@ -57,27 +58,22 @@ impl Template {
     }
 
     // make all names lowercase
-    return Ok(Template {
+    return Ok(Template{
       name: utils::lowercase(&name),
-      path: path,
+      path: dir.path(),
       meta: meta,
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &Path, opts: context::Context) -> Result<(), RunError> {
-    // get list of all super templates
-    let super_templates = match &self.meta.extend {
-      None => Vec::new(),
-      Some(x) => x.clone(),
-    };
+  pub fn copy(&self, repository: &Repository, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+    // Get list of all super templates
+    let super_templates = self.get_super_templates(repository);
 
-    for name in super_templates {
-      let template = repository.get_template_by_name(&name).unwrap();
-      let opts = opts.clone();
+    for template in super_templates {
       template.copy(repository, target, opts)?;
     }
 
-    // run before install script
+    // Run before install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
       let script = self.meta.scripts
         .as_ref()
@@ -90,13 +86,13 @@ impl Template {
       run_script(&script, target);
     }
 
-    // copy files
+    // Copy files
     self.copy_folder(&self.path, &target, &opts)?;
 
-    // create meta file
+    // Create meta file
     self.create_meta(&target)?;
 
-    // run after install script
+    // Run after install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
       let script = self.meta.scripts
         .as_ref()
@@ -112,7 +108,7 @@ impl Template {
     Ok(())
   }
 
-  fn copy_folder(&self, src: &str, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  fn copy_folder(&self, src: &Path, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Loop at selected template directory
     let entries = match fs::read_dir(src) {
       Ok(values) => values,
@@ -122,7 +118,7 @@ impl Template {
     for entry in entries {
       let entry = &entry.unwrap();
 
-      let source_path = &entry.path().to_string_lossy().into_owned();
+      let source_path = &entry.path();
       let source_name = &entry
         .path()
         .file_name()
@@ -133,10 +129,10 @@ impl Template {
       let mut path = target.to_path_buf();
       path.push(source_name);
 
-      // replace placeholders in path
+      // Replace placeholders in path
       path = PathBuf::from(renderer::render(&path.to_string_lossy(), &opts));
 
-      // check if entry is directory
+      // Check if entry is directory
       if entry.path().is_dir() {
         match fs::create_dir(&path) {
           Ok(()) => (),
@@ -159,25 +155,64 @@ impl Template {
         // Write to data string
         src.read_to_string(&mut data)?;
 
-        // close file
+        // Close file
         drop(src);
 
-        // replace placeholders in data
-        // skip if file should be excluded
+        // Replace placeholders in data
+        // Skip if file should be excluded
         if !self.is_excluded_renderer(&source_name) {
           data = renderer::render(&data, &opts);
         }
 
-        // create file
+        // Create file
         let mut dst = File::create(path)?;
         dst.write(data.as_bytes())?;
 
-        // close file
+        // Close file
         drop(dst);
       }
     }
 
     Ok(())
+  }
+
+  pub fn get_custom_values(&self, repository: &Repository) -> Vec<String> {
+    // Get list of all super templates
+    let super_templates = self.get_super_templates(repository);
+
+    let mut values = vec!{};
+    for template in super_templates {
+      values.extend(template.get_custom_values(repository));
+    }
+
+    let renderer = match self.meta.renderer.to_owned() {
+      Some(data) => data,
+      None => return values,
+    };
+
+    match renderer.values {
+      Some(x) => values.extend(x.to_owned()),
+      None => (),
+    };
+
+    values
+  }
+
+  /// Get list of all super templates
+  fn get_super_templates(&self, repository: &Repository) -> Vec<Template> {
+    // get list of all super templates
+    let super_templates = match &self.meta.extend {
+      None => Vec::new(),
+      Some(x) => x.clone(),
+    };
+
+    let mut templates = vec!{};
+    for name in super_templates {
+      let template = repository.get_template_by_name(&name).unwrap();
+      templates.extend(template.get_super_templates(repository));
+    }
+
+    templates
   }
 
   fn is_excluded_renderer(&self, name: &str) -> bool {
@@ -207,7 +242,7 @@ impl Template {
   }
 
   fn is_excluded(&self, name: &str, items: &Vec<String>) -> bool {
-    // check if excluded
+    // Check if excluded
     for item in items.iter() {
       if item == &name {
         return true;
@@ -218,11 +253,12 @@ impl Template {
   }
 
   fn create_meta(&self, target: &Path) -> Result<(), std::io::Error> {
-    // create .tmpo.yaml file
+    // Create .tmpo.yaml file
+    // Not used yes
     let meta_path = &target.to_path_buf().join(".tmpo.yaml");
     let mut meta_file = fs::File::create(meta_path)?;
 
-    // fill meta
+    // Fill meta
     let info = Info {
       name: self.name.to_owned(),
       version: self.meta.version.clone(),
@@ -243,7 +279,6 @@ fn run_script(script: &String, target: &Path) {
 
   log::info!("Run script: {}", script);
 
-  // Run before script if exists
   let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")
       .current_dir(target)

@@ -24,7 +24,7 @@ pub fn list_repositories(repositories: &Vec<String>) {
 
 pub fn display_template(template: &Template) {
   println!("name: {}", template.name);
-  println!("path: {}", template.path);
+  println!("path: {}", template.path.to_str().unwrap());
 
   if !template.meta.description.is_none() {
     println!(
