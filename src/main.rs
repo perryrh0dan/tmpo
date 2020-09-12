@@ -87,7 +87,26 @@ fn main() {
       App::new("repository")
         .about("Maintain repositories")
         .setting(AppSettings::ArgRequiredElseHelp)
-        .subcommand(App::new("add").about("Add new repository"))
+        .subcommand(
+          App::new("add")
+            .about("Add new repository")
+            .arg(
+              Arg::with_name("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .help("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::with_name("description")
+                .short('d')
+                .long("description")
+                .takes_value(true)
+                .help("Description of the repository")
+                .required(false),
+            ),
+        )
         .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
           App::new("remove").about("Remove a repository").arg(
@@ -96,7 +115,7 @@ fn main() {
               .long("repository")
               .takes_value(true)
               .help("Name of the repository")
-              .required(true),
+              .required(false),
           ),
         )
         .subcommand(
