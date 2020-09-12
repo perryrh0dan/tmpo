@@ -2,12 +2,10 @@ use log;
 
 use crate::template::context;
 
-
 extern crate handlebars;
 extern crate serde_json;
 
 use handlebars::{Handlebars, Context};
-use serde_json::json;
 
 pub fn render(text: &str, opts: &context::Context) -> String {
     // create the handlebars registry
@@ -20,7 +18,6 @@ pub fn render(text: &str, opts: &context::Context) -> String {
       }
     };
 
-    // Default values
     let result = match handlebars.render_template_with_context(text, &context) {
         Ok(result) => result,
         Err(error) => {
