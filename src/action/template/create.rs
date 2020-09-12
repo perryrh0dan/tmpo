@@ -1,6 +1,5 @@
-// ask for private or public template
-// if public try to push
 use log;
+use std::process::exit;
 
 use crate::action;
 use crate::cli::input;
@@ -15,8 +14,12 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
 
   // Get repository
   let repository = match action::get_repository(&config, repository_name) {
-    Some(value) => value,
-    None => return,
+    Ok(repository) => repository,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    }
   };
 
   // Get template name from user input

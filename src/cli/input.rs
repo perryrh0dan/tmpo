@@ -1,5 +1,6 @@
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 
+use crate::error::RunError;
 use crate::utils;
 
 extern crate dialoguer;
@@ -36,9 +37,9 @@ pub fn password(text: &str) -> Result<String, Error> {
     .interact();
 }
 
-pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
+pub fn select(name: &str, options: &Vec<String>) -> Result<String, RunError> {
   if options.len() == 0 {
-    return Err(Error::from(ErrorKind::InvalidData))
+    return Err(RunError::Input(String::from("No Options")));
   };
 
   // TODO
@@ -60,7 +61,7 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, Error> {
     .interact()
   {
     Ok(selection) => selection,
-    Err(error) => return Err(error),
+    Err(error) => return Err(RunError::IO(error)),
   };
   let result = utils::lowercase(&options[selection]);
   return Ok(result);

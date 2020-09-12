@@ -4,6 +4,7 @@ use std::io::{Error, Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::error::RunError;
 use crate::git;
 use crate::utils;
 
@@ -50,19 +51,19 @@ impl Config {
   }
 }
 
-pub fn init() -> Result<Config, Error> {
+pub fn init() -> Result<Config, RunError> {
   match ensure_root_dir() {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
-      return Err(error);
+      return Err(RunError::IO(error));
     }
   };
   match ensure_config_file() {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
-      return Err(error);
+      return Err(RunError::IO(error));
     }
   };
 
@@ -72,7 +73,7 @@ pub fn init() -> Result<Config, Error> {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
-      return Err(error);
+      return Err(RunError::IO(error));
     }
   };
 
@@ -122,7 +123,7 @@ fn save_config(config: &Config) -> Result<(), Error> {
   Ok(())
 }
 
-fn load_config() -> Result<Config, Error> {
+fn load_config() -> Result<Config, RunError> {
   let path = config_location();
   // Open file
   let mut src = File::open(path)?;
@@ -134,7 +135,7 @@ fn load_config() -> Result<Config, Error> {
     Ok(data) => data,
     Err(error) => {
       log::error!("{}", error);
-      return Err(std::io::Error::from(std::io::ErrorKind::InvalidData));
+      return Err(RunError::Config(String::from("Deserialization")));
     }
   };
   return Ok(config);

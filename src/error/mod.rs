@@ -1,8 +1,13 @@
+use std::fmt;
+use std::fmt::{Formatter, Display};
+
 #[derive(Debug)]
 pub enum RunError {
-  Config(String)
-  IO(std::io::Error)
-  Yaml(String)
+  Config(String),
+  IO(std::io::Error),
+  Input(String),
+  Repository(String),
+  Template(String),
 }
 
 impl Display for RunError {
@@ -10,6 +15,9 @@ impl Display for RunError {
     match self {
       Self::Config(e) => write!(f, "Failed to load Config! Error: {}", e),
       Self::IO(e) => write!(f, "{}", e),
+      Self::Input(e) => write!(f, "{}", e),
+      Self::Repository(e) => write!(f, "Unable to load repository! Error: {}", e),
+      Self::Template(e) => write!(f, "Unable to load template! Error: {}", e),
     }
   }
 }

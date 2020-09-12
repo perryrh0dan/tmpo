@@ -1,6 +1,6 @@
 use std::fs;
-use std::io::ErrorKind;
 use std::path::{PathBuf};
+use std::process::exit;
 
 use crate::action;
 use crate::cli::input;
@@ -24,29 +24,33 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // check if repositories exist
   if config.get_repositories().len() <= 0 {
     out::error::no_repositories();
-    return;
+    exit(1);
   }
 
   // Get workspace name form user input
   let workspace_name = if workspace_name.is_none() {
     match input::text("Please enter the project name", false) {
       Some(value) => value,
-      None => return,
+      None => exit(1),
     }
   } else {
     utils::lowercase(workspace_name.unwrap())
   };
 
-  // Get repository name
+  // Get repository
   let repository = match action::get_repository(&config, repository_name) {
-    Some(value) => value,
-    None => return,
+    Ok(repository) => repository,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1)
+    },
   };
 
-  // check if templates exist
+  // Check if templates exist
   if repository.get_templates().len() <= 0 {
-    out::error::no_templates(&repository.config.name);
-    return;
+    eprintln!("No templates exist in repository: {}", repository.config.name);
+    exit(1);
   }
 
   let template_name = if template_name.is_none() {
@@ -55,11 +59,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
-        match error.kind() {
-          ErrorKind::InvalidData => out::error::no_templates(&repository.config.name),
-          _ => out::error::unknown(),
-        };
-        return;
+        eprintln!("{}", error);
+        exit(1);
       },
     }
   } else {
@@ -69,9 +70,9 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Get the template
   let template = match repository.get_template_by_name(&template_name) {
     Ok(template) => template,
-    Err(_error) => {
-      out::error::template_not_found(&template_name);
-      return;
+    Err(error) => {
+      eprintln!("{}", error);
+      exit(1);
     }
   };
 
@@ -79,7 +80,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let workspace_directory = if workspace_directory.is_none() {
     match input::text("Please enter the target diectory", false) {
       Some(value) => value,
-      None => return,
+      None => exit(1),
     }
   } else {
     workspace_directory.unwrap().to_string()
@@ -89,7 +90,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let workspace_repository = if remote_url.is_none() {
     match input::text("Please enter a git remote url", true) {
       Some(value) => value,
-      None => return,
+      None => exit(1),
     }
   } else {
     remote_url.unwrap().to_string()
@@ -105,7 +106,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       std::io::ErrorKind::AlreadyExists => (),
       _ => {
         out::error::create_directory(&dir.to_string_lossy());
-        return;
+        exit(1);
       }
     },
   };
@@ -134,7 +135,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Ok(()) => (),
     Err(_error) => {
       out::error::copy_template();
-      return;
+      exit(1);
     }
   };
 
@@ -144,7 +145,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       Ok(()) => (),
       Err(_error) => {
         out::error::init_repository();
-        return;
+        exit(1);
       }
     }
   }

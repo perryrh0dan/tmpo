@@ -2,7 +2,7 @@ use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
-use crate::repository::{Repository, RepositoryError};
+use crate::repository::{Repository};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -84,10 +84,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
-      return match error {
-        RepositoryError::NotFound => out::error::repository_not_found(&repository_name),
-        _ => out::error::unknown(),
-      }
+      return println!("{}", error);
     }
   };
 

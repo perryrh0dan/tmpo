@@ -7,11 +7,6 @@ pub fn load_config() {
 }
 
 // repository
-pub fn repository_not_found(repository: &str) {
-  let text = format!("Repository: {} not found", repository).red();
-  println!("{}", text);
-}
-
 pub fn init_repository() {
   let text = format!("Error initializing git").red();
   println!("{}", text);
@@ -24,17 +19,6 @@ pub fn no_repositories() {
 
 pub fn repository_exists(repository: &str) {
   let text = format!("Repository: {} already exists", repository).red();
-  println!("{}", text);
-}
-
-// template
-pub fn template_not_found(template: &str) {
-  let text = format!("Template: {} not found", template).red();
-  println!("{}", text);
-}
-
-pub fn no_templates(repository: &str) {
-  let text = format!("No templates exist in repository: {}", repository).red();
   println!("{}", text);
 }
 

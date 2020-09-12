@@ -1,6 +1,7 @@
 mod action;
 mod cli;
 mod config;
+mod error;
 mod git;
 mod logger;
 mod meta;
@@ -38,46 +39,46 @@ fn main() {
         .about("Initialize new workspace")
         .visible_alias("i")
         .arg(
-          Arg::with_name("name")
-            .help("The name of the new workspace and initial project.")
+          Arg::new("name")
+            .about("The name of the new workspace and initial project.")
             .required(false)
             .index(1),
         )
         .arg(
-          Arg::with_name("repository")
+          Arg::new("repository")
             .short('r')
             .long("repository")
             .takes_value(true)
-            .help("The repository to use")
+            .about("The repository to use")
             .required(false),
         )
         .arg(
-          Arg::with_name("template")
+          Arg::new("template")
             .short('t')
             .long("template")
             .takes_value(true)
-            .help("The name of the template to use for generation")
+            .about("The name of the template to use for generation")
             .required(false),
         )
         .arg(
-          Arg::with_name("directory")
+          Arg::new("directory")
             .short('d')
             .long("directory")
             .takes_value(true)
-            .help("The directory name to create the workspace in.")
+            .about("The directory name to create the workspace in.")
             .required(false),
         )
         .arg(
-          Arg::with_name("remote")
+          Arg::new("remote")
             .long("remote")
             .takes_value(true)
-            .help("Remote URL")
+            .about("Remote URL")
             .required(false),
         )
         .arg(
-          Arg::with_name("replace")
+          Arg::new("replace")
             .long("replace")
-            .help("When true, existing files are replaced")
+            .about("When true, existing files are replaced")
             .required(false),
         ),
     )
@@ -91,40 +92,40 @@ fn main() {
           App::new("add")
             .about("Add new repository")
             .arg(
-              Arg::with_name("name")
+              Arg::new("name")
                 .short('n')
                 .long("name")
                 .takes_value(true)
-                .help("Name of the repository")
+                .about("Name of the repository")
                 .required(false),
             )
             .arg(
-              Arg::with_name("description")
+              Arg::new("description")
                 .short('d')
                 .long("description")
                 .takes_value(true)
-                .help("Description of the repository")
+                .about("Description of the repository")
                 .required(false),
             ),
         )
         .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
           App::new("remove").about("Remove a repository").arg(
-            Arg::with_name("repository")
+            Arg::new("repository")
               .short('r')
               .long("repository")
               .takes_value(true)
-              .help("Name of the repository")
+              .about("Name of the repository")
               .required(false),
           ),
         )
         .subcommand(
           App::new("view").about("View repository details").arg(
-            Arg::with_name("repository")
+            Arg::new("repository")
               .short('r')
               .long("repository")
               .takes_value(true)
-              .help("Name of the repository")
+              .about("Name of the repository")
               .required(false),
           ),
         ),
@@ -136,11 +137,11 @@ fn main() {
         .subcommand(App::new("create").about("Create new template"))
         .subcommand(
           App::new("list").about("List all available templates").arg(
-            Arg::with_name("repository")
+            Arg::new("repository")
               .short('r')
               .long("repository")
               .takes_value(true)
-              .help("Name of the repository")
+              .about("Name of the repository")
               .required(false),
           ),
         )
@@ -148,19 +149,19 @@ fn main() {
           App::new("view")
             .about("View template details")
             .arg(
-              Arg::with_name("repository")
+              Arg::new("repository")
                 .short('r')
                 .long("repository")
                 .takes_value(true)
-                .help("Name of the repository")
+                .about("Name of the repository")
                 .required(false),
             )
             .arg(
-              Arg::with_name("template")
+              Arg::new("template")
                 .short('t')
                 .long("template")
                 .takes_value(true)
-                .help("Name of the template")
+                .about("Name of the template")
                 .required(false),
             ),
         ),
@@ -168,44 +169,44 @@ fn main() {
     .get_matches();
 
   match matches.subcommand() {
-    ("config", Some(_config_matches)) => {
+    Some(("config", _config_matches)) => {
       action::default::config::config(&config);
     }
-    ("init", Some(init_matches)) => {
+    Some(("init", init_matches)) => {
       action::default::init::init(&config, init_matches);
     }
-    ("update", Some(_update_matches)) => {
+    Some(("update", _update_matches)) => {
       action::default::update::update();
     }
-    ("repository", Some(repository_matches)) => {
+    Some(("repository", repository_matches)) => {
       match repository_matches.subcommand() {
-        ("add", Some(repo_add_matches)) => {
+        Some(("add", repo_add_matches)) => {
           action::repository::add::add(&mut config, repo_add_matches)
         }
-        ("create", Some(repo_create_matches)) => {
+        Some(("create", repo_create_matches)) => {
           action::repository::create::create(&mut config, repo_create_matches)
         }
-        ("list", Some(_list_matches)) => {
+        Some(("list", _list_matches)) => {
           action::repository::list::list(&config);
         }
-        ("remove", Some(repo_delete_matches)) => {
-          action::repository::remove::remove(&mut config, repo_delete_matches)
+        Some(("remove", delete_matches)) => {
+          action::repository::remove::remove(&mut config, delete_matches)
         }
-        ("view", Some(repo_view_matches)) => {
-          action::repository::view::view(&config, repo_view_matches)
+        Some(("view", view_matches)) => {
+          action::repository::view::view(&config, view_matches)
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
     }
-    ("template", Some(repository_matches)) => {
+    Some(("template", repository_matches)) => {
       match repository_matches.subcommand() {
-        ("create", Some(template_create_matches)) => {
+        Some(("create", template_create_matches)) => {
           action::template::create::create(&mut config, template_create_matches)
         }
-        ("view", Some(view_matches)) => {
+        Some(("view", view_matches)) => {
           action::template::view::view(&config, view_matches);
         }
-        ("list", Some(list_matches)) => {
+        Some(("list", list_matches)) => {
           action::template::list::list(&config, list_matches);
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()

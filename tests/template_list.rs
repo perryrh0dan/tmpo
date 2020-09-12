@@ -21,7 +21,7 @@ fn repository_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
   cmd.arg("template");
   cmd.arg("list");
   cmd.arg("-r").arg("test");
-  cmd.assert().success().stdout(predicate::str::contains("Repository: test not found"));
+  cmd.assert().failure().stderr(predicate::str::contains("Unable to load repository! Error: Not found"));
 
   Ok(())
 }
