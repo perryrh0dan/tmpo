@@ -14,6 +14,7 @@ pub struct Meta {
     pub extend: Option<Vec<String>>,
     pub exclude: Option<Vec<String>>,
     pub renderer: Option<Renderer>,
+    pub values: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -61,6 +62,7 @@ pub fn default() -> Meta {
         renderer: Some(Renderer {
             exclude: None,
         }),
+        values: None,
     };
 
     return meta;

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{PathBuf};
 use std::process::exit;
@@ -143,11 +144,28 @@ pub fn init(config: &Config, args: &ArgMatches) {
     Some(username.unwrap().to_owned())
   };
 
+  // Get template specific values
+  let mut values = HashMap::new();
+  if template.meta.values.is_some() {
+    let keys = template.get_custom_values(&repository);
+    for key in keys {
+      let value = match input::text(&format!("Please enter {}", &key), true) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          String::from("")
+        },
+      };
+      values.insert(key, value);
+    }
+  };
+
   let options = template::context::Context {
     name: String::from(&workspace_name),
     repository: Some(String::from(&workspace_repository)),
     username: username,
     email: email,
+    values: values,
   };
 
   // Copy the template

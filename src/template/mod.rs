@@ -180,6 +180,27 @@ impl Template {
     Ok(())
   }
 
+  pub fn get_custom_values(&self, repository: &Repository) -> Vec<String> {
+    // get list of all super templates
+    let super_templates = match &self.meta.extend {
+      None => Vec::new(),
+      Some(x) => x.clone(),
+    };
+
+    let mut values = vec!{};
+    for name in super_templates {
+      let template = repository.get_template_by_name(&name).unwrap();
+      values.extend(template.get_custom_values(repository));
+    }
+
+    match &self.meta.values {
+      Some(x) => values.extend(x.to_owned()),
+      None => (),
+    };
+
+    values
+  }
+
   fn is_excluded_renderer(&self, name: &str) -> bool {
     if self.meta.renderer.is_none() {
       return false;
