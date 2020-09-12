@@ -18,7 +18,7 @@
             // "args": ["update"],
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
             // "args": ["repository", "add"],
-            "args": ["init", "ttttt", "-r", "test"],
+            "args": ["init", "-r", "default", "-t", "golang"],
             "cwd": "${workspaceRoot}",
         }
     ]
