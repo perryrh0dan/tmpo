@@ -38,38 +38,23 @@ fn main() {
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
+    .setting(AppSettings::HelpRequired)
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")
         .visible_alias("i")
         .arg(
           Arg::new("name")
-            .about("The name of the new workspace and initial project.")
+            .about("Name of the new workspace and the project.")
             .required(false)
             .index(1),
-        )
-        .arg(
-          Arg::new("repository")
-            .short('r')
-            .long("repository")
-            .takes_value(true)
-            .about("The repository to use")
-            .required(false),
-        )
-        .arg(
-          Arg::new("template")
-            .short('t')
-            .long("template")
-            .takes_value(true)
-            .about("The name of the template to use for generation")
-            .required(false),
         )
         .arg(
           Arg::new("directory")
             .short('d')
             .long("directory")
             .takes_value(true)
-            .about("The directory name to create the workspace in.")
+            .about("Directory name to create the workspace in.")
             .required(false),
         )
         .arg(
@@ -80,11 +65,35 @@ fn main() {
             .required(false),
         )
         .arg(
-          Arg::new("replace")
-            .long("replace")
-            .about("When true, existing files are replaced")
+          Arg::new("repository")
+            .short('r')
+            .long("repository")
+            .takes_value(true)
+            .about("Repository to use")
             .required(false),
-        ),
+        )
+        .arg(
+          Arg::new("template")
+            .short('t')
+            .long("template")
+            .takes_value(true)
+            .about("Template to use for generation")
+            .required(false),
+        )
+        .arg(
+          Arg::new("username")
+            .long("username")
+            .takes_value(true)
+            .about("Username of the user")
+            .required(false)
+        )
+        .arg(
+          Arg::new("email")
+            .long("email")
+            .takes_value(true)
+            .about("E-Mail of the user")
+            .required(false)
+        )
     )
     .subcommand(App::new("config").about("View configuration"))
     .subcommand(App::new("update").about("Update to the latest release"))
@@ -92,6 +101,7 @@ fn main() {
       App::new("repository")
         .about("Maintain repositories")
         .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::HelpRequired)
         .subcommand(
           App::new("add")
             .about("Add new repository")
@@ -138,7 +148,25 @@ fn main() {
       App::new("template")
         .about("Maintain templates")
         .setting(AppSettings::ArgRequiredElseHelp)
-        .subcommand(App::new("create").about("Create new template"))
+        .setting(AppSettings::HelpRequired)
+        .subcommand(
+          App::new("create").about("Create new template").arg(
+            Arg::new("repository")
+              .short('r')
+              .long("repository")
+              .takes_value(true)
+              .about("Name of the repository")
+              .required(false),
+          )
+          .arg(
+            Arg::new("name")
+              .short('n')
+              .long("name")
+              .takes_value(true)
+              .about("Name of the template")
+              .required(false)
+          )
+        )
         .subcommand(
           App::new("list").about("List all available templates").arg(
             Arg::new("repository")

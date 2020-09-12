@@ -18,6 +18,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
   let template_name = args.value_of("template");
   let workspace_directory = args.value_of("directory");
   let remote_url = args.value_of("remote");
+  let username = args.value_of("username");
+  let email = args.value_of("email");
 
   out::info::initiate_workspace();
 
@@ -121,16 +123,24 @@ pub fn init(config: &Config, args: &ArgMatches) {
     }
   };
 
-  let mut email: Option<String> = None;
-  match git::get_email() {
-    Ok(value) => email = Some(value),
-    Err(_error) => (),
+  // Get email from user input or global git config
+  let email = if email.is_none() {
+    match git::get_email() {
+      Ok(value) => Some(value),
+      Err(_error) => None,
+    }
+  } else {
+    Some(email.unwrap().to_owned())
   };
 
-  let mut username: Option<String> = None;
-  match git::get_username() {
-    Ok(value) => username = Some(value),
-    Err(_error) => (),
+  // Get username from user input or global git config
+  let username = if username.is_none() {
+    match git::get_username() {
+      Ok(value) => Some(value),
+      Err(_error) => None,
+    }
+  } else {
+    Some(username.unwrap().to_owned())
   };
 
   let options = template::context::Context {

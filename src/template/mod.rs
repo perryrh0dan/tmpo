@@ -243,7 +243,6 @@ fn run_script(script: &String, target: &Path) {
 
   log::info!("Run script: {}", script);
 
-  // Run before script if exists
   let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")
       .current_dir(target)
