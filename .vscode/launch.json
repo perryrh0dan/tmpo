@@ -8,7 +8,8 @@
             "program": "${workspaceRoot}/target/debug/tmpo.exe",
             "args": ["update"],
             "cwd": "${workspaceRoot}",
-            "console": "externalTerminal"
+            "console": "externalTerminal",
+            "args": ["init", "-r", "default"],
         },
         {
             "name": "(OSX) Launch",
@@ -17,8 +18,8 @@
             "program": "${workspaceRoot}/target/debug/tmpo",
             // "args": ["update"],
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
-            "args": ["repository", "add"],
-            // "args": ["init", "-r", "test"],
+            // "args": ["repository", "add"],
+            "args": ["init", "-r", "default"],
             "cwd": "${workspaceRoot}",
         }
     ]

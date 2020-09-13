@@ -12,6 +12,7 @@ pub fn run(script: &String, target: &Path) {
   let mut cmd = if cfg!(target_os = "windows") {
     Command::new("cmd")
       .current_dir(target)
+      .arg("/C")
       .arg(script)
       .stdout(Stdio::inherit())
       .stderr(Stdio::inherit())
