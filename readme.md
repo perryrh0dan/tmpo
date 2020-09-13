@@ -106,6 +106,7 @@ The following illustrates all the available options with their respective defaul
       description: this is the default template repository from tpoe
       git_options:
         enabled: true
+        provider: github
         url: "https://github.com/perryrh0dan/templates"
         auth: none
         token: 

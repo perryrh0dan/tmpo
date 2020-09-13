@@ -44,6 +44,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   };
   let mut git_options = git::GitOptions {
     enabled: false,
+    provider: None,
     url: None,
     auth: None,
     token: None,
@@ -56,6 +57,22 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
 
   // Git options
   if git_options.enabled {
+    // Get provider
+    git_options.provider = match input::select(
+      "Provider",
+      &vec![
+        String::from("github"),
+        String::from("gitlab"),
+      ]
+    ) {
+      Ok(value) => Some(value),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
+    };
+
     // Get repository remote url
     git_options.url = match input::text("Please enter the remote repository url", false) {
       Ok(value) => Some(value),
@@ -70,8 +87,8 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     git_options.auth = match input::select(
       "Auth type",
       &vec![
-        String::from("basic"),
         String::from("token"),
+        String::from("basic"),
         String::from("none"),
       ],
     ) {
@@ -84,7 +101,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     };
 
     // Get credentials for different auth types
-    if git_options.auth.clone().unwrap() == "basic" {
+    if git_options.auth.clone().as_ref().unwrap() == "basic" {
       git_options.username = match input::text("Please enter your git username", false) {
         Ok(value) => Some(value),
         Err(error) => {
@@ -101,8 +118,17 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
           exit(1);
         },
       }
-    } else if git_options.auth.clone().unwrap() == "token" {
-      git_options.token = match input::text("Please enter your git token", false) {
+    } else if git_options.auth.as_ref().unwrap() == "ssh" {
+      git_options.token = match input::text("Please enter your git username", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        },
+      }
+    } else if git_options.auth.as_ref().unwrap() == "token" {
+      git_options.token = match input::text("Please enter your access token", false) {
         Ok(value) => Some(value),
         Err(error) => {
           log::error!("{}", error);

@@ -1,16 +1,17 @@
-use std::path::Path;
-use std::str;
 use log;
-
+use std::path::Path;
 // use crate::error::RunError;
 
 extern crate git2;
+extern crate serde_json;
+use serde::{Deserialize, Serialize};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GitOptions {
   pub enabled: bool,
+  pub provider: Option<String>, // github, gitlab
   pub url: Option<String>,
-  pub auth: Option<String>,
+  pub auth: Option<String>, // basic, none, token
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
@@ -104,14 +105,27 @@ fn do_fetch<'a>(
 
   if auth == "ssh" {
     log::info!("[git]: authentication using ssh");
-  // callbacks.credentials(|_url, username_from_url, _allowed_types| {
-  //     git2::Cred::ssh_key(
-  //     username_from_url.unwrap(),
-  //     None,
-  //     std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
-  //     None,
-  //     )
-  // });
+    // username_from_url is only working with an ssh url
+    // problems with encrypted private keys
+    callbacks.credentials(|url, username_from_url, _allowed_types| {
+      if url.contains("git@") {
+        git2::Cred::ssh_key(
+          username_from_url.unwrap(),
+          None,
+          std::path::Path::new(&format!("{}/.ssh/id_rsa", dirs::home_dir().unwrap().to_string_lossy())),
+          // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+          None,
+        )
+      } else {
+        git2::Cred::ssh_key(
+          &opts.username.clone().unwrap(),
+          None,
+          std::path::Path::new(&format!("{}/.ssh/id_rsa", dirs::home_dir().unwrap().to_string_lossy())),
+          // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+          None,
+        )
+      }
+    });
   } else if auth == "token" {
     log::info!("[git]: authentication using token");
     if opts.token.is_none() {
@@ -119,8 +133,16 @@ fn do_fetch<'a>(
       return Err(git2::Error::from_str("missing auth token"));
     }
     token = opts.token.clone().unwrap();
+    // different behavior for github and gitlab
     callbacks.credentials(|_url, _username_from_url, _allowed_types| {
-      git2::Cred::userpass_plaintext(&token, "")
+      if opts.provider.as_ref().unwrap() == "github" {
+        git2::Cred::userpass_plaintext(&token, "")
+      } else if opts.provider.as_ref().unwrap() == "gitlab" {
+        git2::Cred::userpass_plaintext("oauth2", &token)
+      } else {
+        log::error!("provider is not supported");
+        return Err(git2::Error::from_str("provider is not supported"));
+      }
     });
   } else if auth == "basic" {
     log::info!("[git]: authentication using basic");

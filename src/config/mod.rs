@@ -128,13 +128,32 @@ fn load_config() -> Result<Config, RunError> {
 
   // Write to data string
   src.read_to_string(&mut data)?;
-  let config: Config = match serde_yaml::from_str(&data) {
+  let mut config: Config = match serde_yaml::from_str(&data) {
     Ok(data) => data,
     Err(error) => {
       log::error!("{}", error);
       return Err(RunError::Config(String::from("Deserialization")));
     }
   };
+
+  // Need to solve config change when switching from 1.5.1 => 1.5.2
+  let mut changed = false;
+  for rep_option in &mut config.template_repositories {
+    if rep_option.git_options.provider.is_none() {
+      rep_option.git_options.provider = Some(String::from("github"));
+      changed = true;
+    }
+  }
+
+  if changed {
+    match config.save() {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+      }
+    };
+  }
+
   return Ok(config);
 }
 
@@ -145,6 +164,7 @@ fn get_default_config() -> Config {
 
   let git_options = git::GitOptions {
     enabled: true,
+    provider: Some(String::from("github")),
     url: Some(String::from("https://github.com/perryrh0dan/templates")),
     auth: Some(String::from("none")),
     token: None,
