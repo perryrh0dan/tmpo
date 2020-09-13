@@ -85,11 +85,9 @@ impl Meta {
     if self.scripts.is_some() {
       let scripts = self.scripts.as_ref().unwrap();
       if scripts.before_install.is_some() {
-        let script = scripts.before_install
-          .as_ref()
-          .unwrap();
+        let script = scripts.before_install.to_owned().unwrap();
 
-        Some(script);
+        return Some(script);
       }
     }
 
@@ -100,11 +98,9 @@ impl Meta {
     if self.scripts.is_some() {
       let scripts = self.scripts.as_ref().unwrap();
       if scripts.after_install.is_some() {
-        let script = scripts.after_install
-          .as_ref()
-          .unwrap();
+        let script = scripts.after_install.to_owned().unwrap();
 
-        Some(script);
+        return Some(script);
       }
     }
 
