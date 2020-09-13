@@ -20,8 +20,8 @@
    <a href="https://codeclimate.com/github/perryrh0dan/tmpo/maintainability">
       <img src="https://api.codeclimate.com/v1/badges/83561b59422e2492f9db/maintainability" />
    </a>
-   <a href="https://gitter.im/perryrh0dan/tmpo/community">
-      <img alt="Gitter" src="https://badges.gitter.im/taskline/community.svg" />
+   <a href="https://gitter.im/perryrh0dantmpo/community">
+      <img alt="Gitter" src="https://badges.gitter.im/community.svg" />
    </a>
 </div>
 
@@ -35,7 +35,7 @@ Tmpo enables you to effectively create new workspaces based on predefined templa
 
 Visit the [contributing guidelines](https://github.com/perryrh0dan/tmpo/blob/master/contributing.md) to learn more on how help developing tmpo.
 
-Come over to [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
+Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage) or [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
 
 ## Highlights
 - Setup complex workspaces in seconds
