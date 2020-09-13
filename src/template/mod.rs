@@ -1,26 +1,26 @@
+use log;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
-use log;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 
 use crate::error::RunError;
+use crate::meta;
 use crate::repository::Repository;
 use crate::utils;
-use crate::meta;
 
 extern crate serde;
-use serde::{Serialize};
+use serde::Serialize;
 
 pub mod context;
 mod renderer;
+mod script;
 
 #[derive(Serialize, Debug)]
 pub struct Info {
   name: String,
-  version: Option<String>
+  version: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,17 +46,22 @@ impl Template {
       return Err(RunError::Template(String::from("Initialization")));
     }
 
-    let name =  meta.name.to_owned();
+    let name = meta.name.to_owned();
 
     // make all names lowercase
-    return Ok(Template{
+    return Ok(Template {
       name: utils::lowercase(&name),
       path: dir.path(),
       meta: meta,
     });
   }
 
-  pub fn copy(&self, repository: &Repository, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  pub fn copy(
+    &self,
+    repository: &Repository,
+    target: &Path,
+    opts: &context::Context,
+  ) -> Result<(), RunError> {
     // Get list of all super templates
     let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
       Ok(templates) => templates,
@@ -87,7 +92,7 @@ impl Template {
     let mut values = HashSet::new();
     for template in super_templates {
       values.extend(template.meta.get_values());
-    };
+    }
 
     values.extend(self.meta.get_values());
 
@@ -97,7 +102,9 @@ impl Template {
   pub fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Run before install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
-      let script = self.meta.scripts
+      let script = self
+        .meta
+        .scripts
         .as_ref()
         .unwrap()
         .before_install
@@ -105,7 +112,7 @@ impl Template {
         .unwrap();
       let script = renderer::render(script, &opts);
 
-      run_script(&script, target);
+      script::run(&script, target);
     }
 
     // Copy files
@@ -113,21 +120,28 @@ impl Template {
 
     // Run after install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
-      let script = self.meta.scripts
+      let script = self
+        .meta
+        .scripts
         .as_ref()
         .unwrap()
         .after_install
         .as_ref()
         .unwrap();
-      let script = renderer::render(script, &opts);
+      let script = renderer::render(&script, &opts);
 
-      run_script(&script, target);
+      script::run(&script, target);
     }
 
     Ok(())
   }
 
-  fn copy_folder(&self, src: &Path, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  fn copy_folder(
+    &self,
+    src: &Path,
+    target: &Path,
+    opts: &context::Context,
+  ) -> Result<(), RunError> {
     // Loop at selected template directory
     let entries = match fs::read_dir(src) {
       Ok(values) => values,
@@ -196,7 +210,11 @@ impl Template {
   }
 
   /// Get list of all super templates
-  fn get_super_templates(&self, repository: &Repository, seen: &mut std::collections::HashSet<String>) -> Result<Vec<Template>, RunError> {
+  fn get_super_templates(
+    &self,
+    repository: &Repository,
+    seen: &mut std::collections::HashSet<String>,
+  ) -> Result<Vec<Template>, RunError> {
     // get list of all super templates
     let super_templates = match &self.meta.extend {
       None => Vec::new(),
@@ -205,7 +223,7 @@ impl Template {
 
     seen.insert(self.meta.name.to_owned());
 
-    let mut templates = vec!{};
+    let mut templates = vec![];
     for name in super_templates {
       // Avoid circular dependencies;
       if seen.contains(&name) {
@@ -213,11 +231,11 @@ impl Template {
       }
 
       let template = match repository.get_template_by_name(&name) {
-        Ok(template) =>  template,
+        Ok(template) => template,
         Err(error) => {
           log::error!("{}", error);
           return Err(RunError::Template(String::from("Not found")));
-        },
+        }
       };
 
       let t = match template.get_super_templates(repository, seen) {
@@ -242,7 +260,7 @@ impl Template {
       Some(x) => x,
     };
 
-    self.is_excluded(name, items)
+    items.contains(&name.to_owned())
   }
 
   fn is_excluded_copy(&self, name: &str) -> bool {
@@ -255,23 +273,12 @@ impl Template {
       Some(x) => x,
     };
 
-    self.is_excluded(name, items)
-  }
-
-  fn is_excluded(&self, name: &str, items: &Vec<String>) -> bool {
-    // Check if excluded
-    for item in items.iter() {
-      if item == &name {
-        return true;
-      }
-    }
-
-    return false;
+    items.contains(&name.to_owned())
   }
 
   fn create_meta(&self, target: &Path) -> Result<(), std::io::Error> {
     // Create .tmpo.yaml file
-    // Not used yes
+    // Not used yet
     let meta_path = &target.to_path_buf().join(".tmpo.yaml");
     let mut meta_file = fs::File::create(meta_path)?;
 
@@ -287,43 +294,3 @@ impl Template {
     Ok(())
   }
 }
-
-fn run_script(script: &String, target: &Path) {
-  // Check if script is empty
-  if script == "" {
-    return;
-  }
-
-  log::info!("Run script: {}", script);
-
-  let mut cmd = if cfg!(target_os = "windows") {
-    Command::new("cmd")
-      .current_dir(target)
-      .arg(script)
-      .stdout(Stdio::inherit())
-      .stderr(Stdio::inherit())
-      .spawn()
-      .expect("failed to execute process")
-  } else {
-    Command::new("sh")
-      .current_dir(target)
-      .arg("-c")
-      .arg(script)
-      .stdout(Stdio::inherit())
-      .stderr(Stdio::inherit())
-      .spawn()
-      .expect("failed to execute process")
-  };
-
-  let status = match cmd.wait() {
-    Ok(status) => status,
-    Err(error) => {
-      log::error!("Script exited with error: {}", error);
-      return;
-    },
-  };
-
-  log::info!("Script exit status: {}", status);
-}
-
-
