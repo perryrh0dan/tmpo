@@ -105,6 +105,7 @@ fn do_fetch<'a>(
   if auth == "ssh" {
     log::info!("[git]: authentication using ssh");
     // username_from_url is only working with an ssh url
+    // problems with encrypted private keys
     callbacks.credentials(|url, username_from_url, _allowed_types| {
       if url.contains("git@") {
         git2::Cred::ssh_key(

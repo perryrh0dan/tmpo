@@ -71,10 +71,9 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     git_options.auth = match input::select(
       "Auth type",
       &vec![
-        String::from("basic (github/gitlab)"),
-        String::from("none (github/gitlab"),
-        String::from("ssh (github)"),
-        String::from("token (github)"),
+        String::from("token (recommended)"),
+        String::from("basic"),
+        String::from("none"),
       ],
     ) {
       Ok(value) => Some(value),
@@ -86,7 +85,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     };
 
     // Get credentials for different auth types
-    if git_options.auth.clone().as_ref().unwrap() == "basic (github/gitlab)" {
+    if git_options.auth.clone().as_ref().unwrap() == "basic" {
       git_options.username = match input::text("Please enter your git username", false) {
         Ok(value) => Some(value),
         Err(error) => {
@@ -103,7 +102,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
           exit(1);
         },
       }
-    } else if git_options.auth.as_ref().unwrap() == "ssh (github)" {
+    } else if git_options.auth.as_ref().unwrap() == "ssh" {
       git_options.token = match input::text("Please enter your git username", false) {
         Ok(value) => Some(value),
         Err(error) => {
@@ -112,7 +111,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
           exit(1);
         },
       }
-    } else if git_options.auth.as_ref().unwrap() == "token (github)" {
+    } else if git_options.auth.as_ref().unwrap() == "token" {
       git_options.token = match input::text("Please enter your git token", false) {
         Ok(value) => Some(value),
         Err(error) => {
