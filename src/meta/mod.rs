@@ -80,4 +80,34 @@ impl Meta {
       None => return vec!{},
     }
   }
+
+  pub fn get_before_install_script(&self) -> Option<String> {
+    if self.scripts.is_some() {
+      let scripts = self.scripts.as_ref().unwrap();
+      if scripts.before_install.is_some() {
+        let script = scripts.before_install
+          .as_ref()
+          .unwrap();
+
+        Some(script);
+      }
+    }
+
+    return None;
+  }
+
+  pub fn get_after_install_script(&self) -> Option<String> {
+    if self.scripts.is_some() {
+      let scripts = self.scripts.as_ref().unwrap();
+      if scripts.after_install.is_some() {
+        let script = scripts.after_install
+          .as_ref()
+          .unwrap();
+
+        Some(script);
+      }
+    }
+
+    return None;
+  }
 }
