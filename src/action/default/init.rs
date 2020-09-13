@@ -97,6 +97,18 @@ pub fn init(config: &Config, args: &ArgMatches) {
     workspace_directory.unwrap().to_string()
   };
 
+  // Get target directory
+  let dir = PathBuf::from(workspace_directory);
+
+  // Create the workspace directory
+  let target_dir = dir.join(&workspace_name);
+
+  if target_dir.exists() {
+    log::error!("Failed to create workspace!: Error: Already exists");
+    eprintln!("Failed to create workspace!: Error: Already exists");
+    exit(1);
+  }
+
   // Get workspace git repository url from user input
   let workspace_repository = if remote_url.is_none() {
     match input::text("Please enter a git remote url", true) {
@@ -111,11 +123,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     remote_url.unwrap().to_string()
   };
 
-  // Create the workspace directory
-  let mut dir = PathBuf::from(workspace_directory);
-  dir.push(&workspace_name);
-
-  match fs::create_dir(&dir) {
+  match fs::create_dir(&target_dir) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -200,7 +208,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Copy the template
-  match template.copy(&repository, &dir, &options) {
+  match template.copy(&repository, &target_dir, &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -211,7 +219,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Initialize git if repository is given
   if workspace_repository != "" {
-    match git::init(&dir, &workspace_repository) {
+    match git::init(&target_dir, &workspace_repository) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);

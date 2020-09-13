@@ -73,10 +73,38 @@ impl Template {
       Err(error) => return Err(error),
     };
 
+    // Initialize super templates
     for template in super_templates {
-      template.copy(repository, target, opts)?;
+      template.init(target, opts)?;
     }
 
+    // Initialize template
+    self.init(target, opts)?;
+
+    // Create meta file
+    self.create_meta(&target)?;
+
+    Ok(())
+  }
+
+  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
+    // Get list of all super templates
+    let super_templates = match self.get_super_templates(repository) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
+
+    let mut values = HashSet::new();
+    for template in super_templates {
+      values.extend(template.meta.get_values());
+    };
+
+    values.extend(self.meta.get_values());
+
+    Ok(values)
+  }
+
+  pub fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Run before install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
       let script = self.meta.scripts
@@ -92,9 +120,6 @@ impl Template {
 
     // Copy files
     self.copy_folder(&self.path, &target, &opts)?;
-
-    // Create meta file
-    self.create_meta(&target)?;
 
     // Run after install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
@@ -178,23 +203,6 @@ impl Template {
     }
 
     Ok(())
-  }
-
-  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
-    };
-
-    let mut values = HashSet::new();
-    for template in super_templates {
-      values.extend(template.meta.get_values());
-    };
-
-    values.extend(self.meta.get_values());
-
-    Ok(values)
   }
 
   /// Get list of all super templates
