@@ -100,7 +100,13 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Get target directory
   let dir = PathBuf::from(workspace_directory);
 
+  // Create temp dir
+  let tmp_dir = tempfile::Builder::new()
+    .tempdir_in(&dir)
+    .unwrap();
+
   // Create the workspace directory
+  let tmp_dir_path = tmp_dir.path().join(&workspace_name);
   let target_dir = dir.join(&workspace_name);
 
   if target_dir.exists() {
@@ -123,7 +129,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     remote_url.unwrap().to_string()
   };
 
-  match fs::create_dir(&target_dir) {
+  match fs::create_dir(&tmp_dir_path) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -208,7 +214,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Copy the template
-  match template.copy(&repository, &target_dir, &options) {
+  match template.copy(&repository, &tmp_dir_path, &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -219,7 +225,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Initialize git if repository is given
   if workspace_repository != "" {
-    match git::init(&target_dir, &workspace_repository) {
+    match git::init(&tmp_dir_path, &workspace_repository) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
@@ -228,6 +234,16 @@ pub fn init(config: &Config, args: &ArgMatches) {
       }
     }
   }
+
+  // Move workspace from temporary directroy to target directory
+  match std::fs::rename(tmp_dir_path, target_dir) {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    },
+  };
 
   out::success::workspace_created(&workspace_name);
 }
