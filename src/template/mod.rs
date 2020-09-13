@@ -101,16 +101,9 @@ impl Template {
 
   pub fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Run before install script
-    if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
-      let script = self
-        .meta
-        .scripts
-        .as_ref()
-        .unwrap()
-        .before_install
-        .as_ref()
-        .unwrap();
-      let script = renderer::render(script, &opts);
+    let before_install_script = self.meta.get_before_install_script();
+    if before_install_script.is_some() {
+      let script = renderer::render(&before_install_script.unwrap(), &opts);
 
       script::run(&script, target);
     }
@@ -119,16 +112,9 @@ impl Template {
     self.copy_folder(&self.path, &target, &opts)?;
 
     // Run after install script
-    if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
-      let script = self
-        .meta
-        .scripts
-        .as_ref()
-        .unwrap()
-        .after_install
-        .as_ref()
-        .unwrap();
-      let script = renderer::render(&script, &opts);
+    let after_install_script = self.meta.get_after_install_script();
+    if after_install_script.is_some() {
+      let script = renderer::render(&after_install_script.unwrap(), &opts);
 
       script::run(&script, target);
     }
@@ -250,12 +236,12 @@ impl Template {
     Ok(templates)
   }
 
-  fn is_excluded_renderer(&self, name: &str) -> bool {
-    if self.meta.renderer.is_none() {
-      return false;
-    }
+  fn is_excluded_copy(&self, name: &str) -> bool {
+    if name == "meta.json" {
+      return true;
+    };
 
-    let items = match &self.meta.renderer.as_ref().unwrap().exclude {
+    let items = match &self.meta.exclude {
       None => return false,
       Some(x) => x,
     };
@@ -263,12 +249,12 @@ impl Template {
     items.contains(&name.to_owned())
   }
 
-  fn is_excluded_copy(&self, name: &str) -> bool {
-    if name == "meta.json" {
-      return true;
-    };
+  fn is_excluded_renderer(&self, name: &str) -> bool {
+    if self.meta.renderer.is_none() {
+      return false;
+    }
 
-    let items = match &self.meta.exclude {
+    let items = match &self.meta.renderer.as_ref().unwrap().exclude {
       None => return false,
       Some(x) => x,
     };
