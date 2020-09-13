@@ -112,8 +112,8 @@ impl Repository {
 
     // Create meta data
     let mut meta = meta::default();
-    meta.kind = Some(String::from("template"));
-    meta.name = Some(name.to_owned());
+    meta.kind = String::from("template");
+    meta.name = name.to_owned();
     meta.version = Some(String::from("1.0.0"));
 
     let meta_data = serde_json::to_string_pretty(&meta).unwrap();
@@ -204,7 +204,7 @@ impl Repository {
       };
 
       // If type is None or unqual template skip entry
-      if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
+      if meta.kind != String::from("template") {
         continue;
       }
 

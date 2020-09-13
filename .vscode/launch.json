@@ -18,7 +18,7 @@
             // "args": ["update"],
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
             // "args": ["repository", "add"],
-            "args": ["init", "-r", "nflaig"],
+            "args": ["init", "-r", "test"],
             "cwd": "${workspaceRoot}",
         }
     ]
