@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
@@ -41,21 +42,11 @@ impl Template {
     };
 
     // If type is None or unqual template skip entry
-    if meta.kind.is_none() || meta.kind != Some(String::from("template")) {
+    if meta.kind != String::from("template") {
       return Err(RunError::Template(String::from("Initialization")));
     }
 
-    let name;
-    if meta.name.is_none() {
-      name = dir
-        .path()
-        .file_name()
-        .unwrap()
-        .to_string_lossy()
-        .into_owned();
-    } else {
-      name = meta.name.clone().unwrap();
-    }
+    let name =  meta.name.to_owned();
 
     // make all names lowercase
     return Ok(Template{
@@ -67,15 +58,43 @@ impl Template {
 
   pub fn copy(&self, repository: &Repository, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository) {
+    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
       Ok(templates) => templates,
       Err(error) => return Err(error),
     };
 
+    // Initialize super templates
     for template in super_templates {
-      template.copy(repository, target, opts)?;
+      template.init(target, opts)?;
     }
 
+    // Initialize template
+    self.init(target, opts)?;
+
+    // Create meta file
+    self.create_meta(&target)?;
+
+    Ok(())
+  }
+
+  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
+    // Get list of all super templates
+    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
+
+    let mut values = HashSet::new();
+    for template in super_templates {
+      values.extend(template.meta.get_values());
+    };
+
+    values.extend(self.meta.get_values());
+
+    Ok(values)
+  }
+
+  pub fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     // Run before install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().before_install.is_some() {
       let script = self.meta.scripts
@@ -91,9 +110,6 @@ impl Template {
 
     // Copy files
     self.copy_folder(&self.path, &target, &opts)?;
-
-    // Create meta file
-    self.create_meta(&target)?;
 
     // Run after install script
     if self.meta.scripts.is_some() && self.meta.scripts.as_ref().unwrap().after_install.is_some() {
@@ -179,45 +195,23 @@ impl Template {
     Ok(())
   }
 
-  pub fn get_custom_values(&self, repository: &Repository) -> Result<Vec<String>, RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
-    };
-
-    let mut values: Vec<String>  = vec!{};
-    for template in super_templates {
-      let v = match template.get_custom_values(repository) {
-        Ok(values) => values,
-        Err(error) => return Err(error),
-      };
-      values.extend(v);
-    }
-
-    let renderer = match self.meta.renderer.to_owned() {
-      Some(data) => data,
-      None => return Ok(values),
-    };
-
-    match renderer.values {
-      Some(x) => values.extend(x.to_owned()),
-      None => (),
-    };
-
-    Ok(values)
-  }
-
   /// Get list of all super templates
-  fn get_super_templates(&self, repository: &Repository) -> Result<Vec<Template>, RunError> {
+  fn get_super_templates(&self, repository: &Repository, seen: &mut std::collections::HashSet<String>) -> Result<Vec<Template>, RunError> {
     // get list of all super templates
     let super_templates = match &self.meta.extend {
       None => Vec::new(),
       Some(x) => x.clone(),
     };
 
+    seen.insert(self.meta.name.to_owned());
+
     let mut templates = vec!{};
     for name in super_templates {
+      // Avoid circular dependencies;
+      if seen.contains(&name) {
+        continue;
+      }
+
       let template = match repository.get_template_by_name(&name) {
         Ok(template) =>  template,
         Err(error) => {
@@ -226,7 +220,7 @@ impl Template {
         },
       };
 
-      let t = match template.get_super_templates(repository) {
+      let t = match template.get_super_templates(repository, seen) {
         Ok(templates) => templates,
         Err(error) => return Err(error),
       };

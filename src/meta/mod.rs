@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meta {
-    pub kind: Option<String>,
-    pub name: Option<String>,
+    pub kind: String,
+    pub name: String,
     pub version: Option<String>,
     pub description: Option<String>,
     pub scripts: Option<Scripts>,
@@ -49,8 +49,8 @@ pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
 
 pub fn default() -> Meta {
     let meta = Meta {
-        kind: None,
-        name: None,
+        kind: String::from(""),
+        name: String::from(""),
         version: None,
         description: None,
         scripts: Some(Scripts {
@@ -66,4 +66,18 @@ pub fn default() -> Meta {
     };
 
     return meta;
+}
+
+impl Meta {
+  pub fn get_values(&self) -> Vec<String> {
+    let renderer = match self.renderer.to_owned() {
+      Some(data) => data,
+      None => return vec!{},
+    };
+
+    match renderer.values {
+      Some(x) => x,
+      None => return vec!{},
+    }
+  }
 }
