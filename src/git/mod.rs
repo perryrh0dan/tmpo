@@ -1,16 +1,17 @@
 use log;
-use std::env;
 use std::path::Path;
 // use crate::error::RunError;
 
 extern crate git2;
+extern crate serde_json;
+use serde::{Deserialize, Serialize};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GitOptions {
   pub enabled: bool,
-  pub provider: Option<String>,
+  pub provider: Option<String>, // github, gitlab
   pub url: Option<String>,
-  pub auth: Option<String>,
+  pub auth: Option<String>, // basic, none, token
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,

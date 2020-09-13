@@ -57,6 +57,22 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
 
   // Git options
   if git_options.enabled {
+    // Get provider
+    git_options.provider = match input::select(
+      "Provider",
+      &vec![
+        String::from("github"),
+        String::from("gitlab"),
+      ]
+    ) {
+      Ok(value) => Some(value),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
+    };
+
     // Get repository remote url
     git_options.url = match input::text("Please enter the remote repository url", false) {
       Ok(value) => Some(value),
@@ -71,7 +87,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     git_options.auth = match input::select(
       "Auth type",
       &vec![
-        String::from("token (recommended)"),
+        String::from("token"),
         String::from("basic"),
         String::from("none"),
       ],
@@ -112,7 +128,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         },
       }
     } else if git_options.auth.as_ref().unwrap() == "token" {
-      git_options.token = match input::text("Please enter your git token", false) {
+      git_options.token = match input::text("Please enter your access token", false) {
         Ok(value) => Some(value),
         Err(error) => {
           log::error!("{}", error);
