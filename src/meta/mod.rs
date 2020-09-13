@@ -67,3 +67,17 @@ pub fn default() -> Meta {
 
     return meta;
 }
+
+impl Meta {
+  pub fn get_values(&self) -> Vec<String> {
+    let renderer = match self.renderer.to_owned() {
+      Some(data) => data,
+      None => return vec!{},
+    };
+
+    match renderer.values {
+      Some(x) => x,
+      None => return vec!{},
+    }
+  }
+}

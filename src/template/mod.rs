@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
@@ -179,31 +180,19 @@ impl Template {
     Ok(())
   }
 
-  pub fn get_custom_values(&self, repository: &Repository) -> Result<Vec<String>, RunError> {
+  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
     // Get list of all super templates
     let super_templates = match self.get_super_templates(repository) {
       Ok(templates) => templates,
       Err(error) => return Err(error),
     };
 
-    let mut values: Vec<String>  = vec!{};
+    let mut values = HashSet::new();
     for template in super_templates {
-      let v = match template.get_custom_values(repository) {
-        Ok(values) => values,
-        Err(error) => return Err(error),
-      };
-      values.extend(v);
-    }
-
-    let renderer = match self.meta.renderer.to_owned() {
-      Some(data) => data,
-      None => return Ok(values),
+      values.extend(template.meta.get_values());
     };
 
-    match renderer.values {
-      Some(x) => values.extend(x.to_owned()),
-      None => (),
-    };
+    values.extend(self.meta.get_values());
 
     Ok(values)
   }
