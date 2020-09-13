@@ -145,6 +145,7 @@ fn get_default_config() -> Config {
 
   let git_options = git::GitOptions {
     enabled: true,
+    provider: Some(String::from("github")),
     url: Some(String::from("https://github.com/perryrh0dan/templates")),
     auth: Some(String::from("none")),
     token: None,
