@@ -51,7 +51,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 - [Contents](#contents)
 - [Demo](#demo)
 - [Install](#install)
-- [Usage](#usage)
+- [Flight Manual](#flight-manual)
 - [Configuration](#configuration)
 - [Development](#development)
 - [Team](#team)
@@ -67,14 +67,46 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 
 1. Download the latest release for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
-3. Add a repository with `tmpo repository add` and follow the instructions on the screen.
 
-## Usage
+## Flight Manual
+
+### Quick Start
+
+1. Add a [repository](#repositories)
+``` bash
+tmpo repository add
+```
+
+2. Setup your first project
+``` bash
+tmpo init
+```
 
 ### CLI
 
 ``` bash
-tmpo init example --repository default --template typescript --directory . --remote https://github.com/perryrh0dan/2fa
+tmpo init 
+```
+
+``` bash
+tmpo 1.5.3
+Thomas P. <thomaspoehlmann96@googlemail.com>
+Cli to create new workspaces based on templates
+
+USAGE:
+    tmpo [SUBCOMMAND]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    config        View configuration
+    help          Prints this message or the help of the given subcommand(s)
+    init          Initialize new workspace [aliases: i]
+    repository    Maintain repositories
+    template      Maintain templates
+    update        Update to the latest release
 ```
 
 ### Repositories
@@ -126,11 +158,6 @@ Tmpo is using [cross](https://github.com/rust-embedded/cross) to build cross pla
 cross build --target x86_64-pc-windows-gnu
 cross build --release --target x86_64-pc-windows-gnu
 ```
-
-#### Flatpak
-
-tbd
-
 
 ## Team
 
