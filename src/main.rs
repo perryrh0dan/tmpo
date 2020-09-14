@@ -36,9 +36,7 @@ fn main() {
       let current_version = crate_version!();
       println!("New release found! {} --> {}", current_version, available_version);
     },
-    None => {
-      out::info::no_app_update();
-    }
+    None => (),
   };
 
   let matches = App::new("tmpo")
