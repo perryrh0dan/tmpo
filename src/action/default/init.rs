@@ -129,6 +129,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
     remote_url.unwrap().to_string()
   };
 
+  // Create the workspace
   match fs::create_dir(&tmp_dir_path) {
     Ok(()) => (),
     Err(error) => {
@@ -137,6 +138,19 @@ pub fn init(config: &Config, args: &ArgMatches) {
       exit(1);
     }
   };
+
+  // Initialize git if repository is given
+  // Done here so that the repository can be used in the scripts
+  if workspace_repository != "" {
+    match git::init(&tmp_dir_path, &workspace_repository) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
+  }
 
   // Get email from user input or global git config
   let email = if email.is_none() {
@@ -222,18 +236,6 @@ pub fn init(config: &Config, args: &ArgMatches) {
       exit(1);
     }
   };
-
-  // Initialize git if repository is given
-  if workspace_repository != "" {
-    match git::init(&tmp_dir_path, &workspace_repository) {
-      Ok(()) => (),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    }
-  }
 
   // Move workspace from temporary directroy to target directory
   match std::fs::rename(tmp_dir_path, target_dir) {
