@@ -1,5 +1,11 @@
 # What's new in Tmpo
 
+## 1.6.0
+
+### Features
+
+- Sort select options alphabetically
+
 ## 1.5.3
 
 ### Fixes
