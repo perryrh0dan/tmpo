@@ -1,6 +1,6 @@
 use std::collections::HashMap;
+use std::env;
 use std::fs;
-use std::path::{PathBuf};
 use std::process::exit;
 
 use crate::action;
@@ -98,17 +98,25 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Get target directory
-  let dir = PathBuf::from(workspace_directory);
+  let current_dir = match env::current_dir() {
+    Ok(dir) => dir,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
 
-  // Create temp dir
-  let tmp_dir = tempfile::Builder::new()
-    .tempdir_in(&dir)
-    .unwrap();
+  // TODO find better solution
+  // try to avoid . in path
+  let dir = if workspace_directory != "." && workspace_directory != "./" {
+    current_dir.join(workspace_directory)
+  } else {
+    current_dir
+  };
 
-  // Create the workspace directory
-  let tmp_dir_path = tmp_dir.path().join(&workspace_name);
+  // Check if directory already exits
   let target_dir = dir.join(&workspace_name);
-
   if target_dir.exists() {
     log::error!("Failed to create workspace!: Error: Already exists");
     eprintln!("Failed to create workspace!: Error: Already exists");
@@ -139,8 +147,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
       },
     };
 
-    match input::text(&format!("Please enter your email ({}): ", &git_email), true) {
-      Ok(value) => Some(value),
+    match input::text_with_default(&format!("Please enter your email ({}): ", &git_email), git_email) {
+      Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
@@ -148,7 +156,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       },
     }
   } else {
-    Some(email.unwrap().to_owned())
+    email.unwrap().to_owned()
   };
 
   // Get username from user input or global git config
@@ -161,8 +169,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
       },
     };
 
-    match input::text(&format!("Please enter your username ({}): ", &git_username), true) {
-      Ok(value) => Some(value),
+    match input::text_with_default(&format!("Please enter your username ({}): ", &git_username), git_username) {
+      Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
@@ -170,7 +178,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
       },
     }
   } else {
-    Some(username.unwrap().to_owned())
+    username.unwrap().to_owned()
   };
 
   // Get template specific values
@@ -195,8 +203,14 @@ pub fn init(config: &Config, args: &ArgMatches) {
     values.insert(key, value);
   }
 
-  // Create the workspace
-  match fs::create_dir(&tmp_dir_path) {
+  // Create temp dir
+  let tmp_dir = tempfile::Builder::new()
+    .tempdir_in(&dir)
+    .unwrap();
+
+  // Create the temporary workspace
+  let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
+  match fs::create_dir(&tmp_workspace_path) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -208,7 +222,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   // Initialize git if repository is given
   // Done here so that the repository can be used in the scripts
   if workspace_repository != "" {
-    match git::init(&tmp_dir_path, &workspace_repository) {
+    match git::init(&tmp_workspace_path, &workspace_repository) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
@@ -220,7 +234,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   let options = template::context::Context {
     name: String::from(&workspace_name),
-    repository: Some(String::from(&workspace_repository)),
+    repository: String::from(&workspace_repository),
     username: username,
     email: email,
     values: values,
@@ -228,7 +242,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Copy the template
   log::info!("Start processing template: {}", &template.name);
-  match template.copy(&repository, &tmp_dir_path, &options) {
+  match template.copy(&repository, &tmp_workspace_path, &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -238,8 +252,8 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Move workspace from temporary directroy to target directory
-  log::info!("Move workspace from: {} to: {}", tmp_dir_path.to_string_lossy(), target_dir.to_string_lossy());
-  match std::fs::rename(tmp_dir_path, target_dir) {
+  log::info!("Move workspace from: {} to: {}", tmp_workspace_path.to_string_lossy(), target_dir.to_string_lossy());
+  match std::fs::rename(tmp_workspace_path, target_dir) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);

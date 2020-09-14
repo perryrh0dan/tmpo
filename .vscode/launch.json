@@ -6,7 +6,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/tmpo.exe",
-            "args": ["update"],
+            // "args": ["update"],
             "cwd": "${workspaceRoot}",
             "console": "externalTerminal",
             "args": ["init", "-r", "default"],

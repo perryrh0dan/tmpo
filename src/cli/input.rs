@@ -15,6 +15,23 @@ pub fn text(text: &str, allow_empty: bool) -> Result<String, RunError> {
   }
 }
 
+pub fn text_with_default(text: &str, default: String) -> Result<String, RunError> {
+  let input = match Input::<String>::with_theme(&ColorfulTheme::default())
+    .with_prompt(text)
+    .allow_empty(true)
+    .interact()
+  {
+    Ok(value) => value,
+    Err(error) => return Err(RunError::IO(error)),
+  };
+
+  if input == "" {
+    return Ok(default);
+  }
+
+  return Ok(input);
+}
+
 pub fn confirm(text: &str) -> bool {
   let mut question = text.to_owned();
   question.push_str(" [Y/n]");
