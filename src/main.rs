@@ -35,7 +35,6 @@ fn main() {
     Some(data) => data,
     None => {
       out::info::no_app_update();
-      exit(0)
     }
   };
 
