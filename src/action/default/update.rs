@@ -6,8 +6,8 @@ use crate::out;
 use crate::update;
 
 pub fn update() {
-  let asset = match update::check_version(false) {
-    Some(asset) => asset,
+  let (_version, asset) = match update::check_version() {
+    Some(data) => data,
     None => {
       out::info::no_app_update();
       exit(0)
