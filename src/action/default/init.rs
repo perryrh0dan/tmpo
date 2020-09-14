@@ -129,29 +129,6 @@ pub fn init(config: &Config, args: &ArgMatches) {
     remote_url.unwrap().to_string()
   };
 
-  // Create the workspace
-  match fs::create_dir(&tmp_dir_path) {
-    Ok(()) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    }
-  };
-
-  // Initialize git if repository is given
-  // Done here so that the repository can be used in the scripts
-  if workspace_repository != "" {
-    match git::init(&tmp_dir_path, &workspace_repository) {
-      Ok(()) => (),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    }
-  }
-
   // Get email from user input or global git config
   let email = if email.is_none() {
     let git_email = match git::get_email() {
@@ -173,7 +150,6 @@ pub fn init(config: &Config, args: &ArgMatches) {
   } else {
     Some(email.unwrap().to_owned())
   };
-
 
   // Get username from user input or global git config
   let username = if username.is_none() {
@@ -217,6 +193,29 @@ pub fn init(config: &Config, args: &ArgMatches) {
       },
     };
     values.insert(key, value);
+  }
+
+  // Create the workspace
+  match fs::create_dir(&tmp_dir_path) {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
+
+  // Initialize git if repository is given
+  // Done here so that the repository can be used in the scripts
+  if workspace_repository != "" {
+    match git::init(&tmp_dir_path, &workspace_repository) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
   }
 
   let options = template::context::Context {
