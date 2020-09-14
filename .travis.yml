@@ -39,7 +39,7 @@ deploy:
     repo: perryrh0dan/tmpo
     condition: "$TRAVIS_RUST_VERSION = stable"
     tags: true
-  cleanup: false
+  skip_cleanup: true
 cache: cargo
 before_cache:
 - chmod -R a+r $HOME/.cargo
