@@ -16,7 +16,7 @@ const BIN_NAME: &str = "tmpo.exe";
 #[cfg(not(windows))]
 const BIN_NAME: &str = "tmpo";
 
-pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset> {
+pub fn check_version() -> Option<(String, self_update::update::ReleaseAsset)> {
   log::info!("Fetch release list");
   let releases = match self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")
@@ -33,6 +33,7 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
   };
 
   // Check version
+  // TODO better check
   let version = crate_version!();
   if releases[0].version == version {
     return None;
@@ -59,14 +60,7 @@ pub fn check_version(verbose: bool) -> Option<self_update::update::ReleaseAsset>
     &releases[0].version
   );
 
-  if verbose {
-    println!(
-      "New release found! {} --> {}",
-      &version, &releases[0].version
-    );
-  }
-
-  return Some(asset);
+  return Some((releases[0].version.to_owned(), asset));
 }
 
 pub fn update(asset: self_update::update::ReleaseAsset) -> Result<(), RunError> {

@@ -3,7 +3,6 @@ use log;
 use crate::template::context;
 
 extern crate handlebars;
-extern crate serde_json;
 
 use handlebars::{Handlebars, Context};
 
