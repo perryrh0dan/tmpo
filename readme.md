@@ -85,10 +85,6 @@ tmpo init
 ### CLI
 
 ``` bash
-tmpo init 
-```
-
-``` bash
 tmpo 1.5.3
 Thomas P. <thomaspoehlmann96@googlemail.com>
 Cli to create new workspaces based on templates
