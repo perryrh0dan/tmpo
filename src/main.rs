@@ -31,15 +31,13 @@ fn main() {
   };
 
   // Check for an update
-  let (available_version, _asset) = match update::check_version() {
-    Some(data) => data,
-    None => {
-      out::info::no_app_update();
-    }
+  match update::check_version() {
+    Some((available_version, _asset)) => {
+      let current_version = crate_version!();
+      println!("New release found! {} --> {}", current_version, available_version);
+    },
+    None => (),
   };
-
-  let current_version = crate_version!();
-  println!("New release found! {} --> {}", current_version, available_version);
 
   let matches = App::new("tmpo")
     .version(crate_version!())
