@@ -73,6 +73,9 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, RunError> {
     capitalized_options.push(utils::capitalize(value));
   }
 
+  // sort options
+  capitalized_options.sort();
+
   let selection = match Select::with_theme(&ColorfulTheme::default())
     .with_prompt(String::from("Select a ") + name)
     .default(0)
@@ -82,6 +85,7 @@ pub fn select(name: &str, options: &Vec<String>) -> Result<String, RunError> {
     Ok(selection) => selection,
     Err(error) => return Err(RunError::IO(error)),
   };
-  let result = utils::lowercase(&options[selection]);
-  return Ok(result);
+
+  let result = utils::lowercase(&capitalized_options[selection]);
+  Ok(result)
 }
