@@ -1,10 +1,93 @@
 # What's new in Tmpo
 
-## 0.1.4
+## 1.5.3
 
-- Add username and email placeholder
-- Add editorconfig
+### Fixes
+
+- Initialize git before template initialization to use e.g. husky in the scripts
+- Sanitize workspace if only . or ./ was passed
+
+## 1.5.2
+
+### Fixes
+
+- Add skip_cleanup to travis deplyoment
+
+## 1.5.1
+
+## 1.5.0
+
+### Features
+
+- Template specific values
+
+### Fixes
+
+## 1.4.0
+
+## 1.3.6
+
+## 1.3.5
+
+## 1.3.4
+
+## 1.3.3
+
+## 1.3.2
+
+## 1.3.1
+
+## 1.3.0
+
+## 1.2.3
+
+## 1.2.2
+
+## 1.2.1
+
+## 1.2.0
+
+## 1.1.5
+
+## 1.1.4
+
+## 1.1.3
+
+## 1.1.2
+
+## 1.1.1
+
+## 1.1.0
+
+## 1.0.7
+
+## 1.0.6
+
+## 1.0.5
+
+## 1.0.4
+
+## 1.0.3
+
+## 1.0.2
+
+## 1.0.1
+
+## 1.0.0
+
+## 0.4.1
+
+## 0.3.0
 
 ## 0.2.0
 
+### Feature
+
 - placeholders are now working in file and directory names
+
+## 0.1.4
+
+### Features
+
+- Add username and email placeholder
+- Add editorconfig
