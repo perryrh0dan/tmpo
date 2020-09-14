@@ -99,7 +99,9 @@ impl Template {
     Ok(values)
   }
 
-  pub fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+    log::info!("Initialize Template: {}", self.name);
+
     // Run before install script
     let before_install_script = self.meta.get_before_install_script();
     if before_install_script.is_some() {

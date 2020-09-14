@@ -227,6 +227,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Copy the template
+  log::info!("Start processing template: {}", &template.name);
   match template.copy(&repository, &tmp_dir_path, &options) {
     Ok(()) => (),
     Err(error) => {
@@ -237,6 +238,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
   };
 
   // Move workspace from temporary directroy to target directory
+  log::info!("Move workspace from: {} to: {}", tmp_dir_path.to_string_lossy(), target_dir.to_string_lossy());
   match std::fs::rename(tmp_dir_path, target_dir) {
     Ok(()) => (),
     Err(error) => {

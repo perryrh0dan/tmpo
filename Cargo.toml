@@ -1,6 +1,6 @@
 [package]
 name = "tmpo"
-version = "1.5.2"
+version = "1.5.3"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
 
@@ -22,7 +22,7 @@ tar = "0.4.29"
 handlebars = "3.4.0"
 
 [dependencies.self_update]
-version = "0.19"
+version = "0.20"
 features = ["archive-tar"]
 
 [target.'cfg(not(windows))'.dependencies]
