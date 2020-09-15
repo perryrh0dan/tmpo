@@ -12,6 +12,9 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   let repository_name = args.value_of("repository");
   let template_name = args.value_of("template");
 
+  // TODO create template in given directory
+  // Only allow to create template directly in a repository of it has no remote
+
   // Get repository
   let repository = match action::get_repository(&config, repository_name) {
     Ok(repository) => repository,
