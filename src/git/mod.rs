@@ -17,6 +17,20 @@ pub struct GitOptions {
   pub password: Option<String>,
 }
 
+impl GitOptions {
+  pub fn new() -> GitOptions {
+    GitOptions {
+      enabled: false,
+      provider: None,
+      url: None,
+      auth: None,
+      token: None,
+      username: None,
+      password: None,
+    }
+  }
+}
+
 pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   // Initialize git repository
   let repo = match git2::Repository::init(dir) {

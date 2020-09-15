@@ -32,7 +32,7 @@ pub struct Template {
 
 impl Template {
   pub fn new(dir: &std::fs::DirEntry) -> Result<Template, RunError> {
-    let meta = match meta::load_meta(&dir.path()) {
+    let meta = match meta::load(&dir.path()) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);

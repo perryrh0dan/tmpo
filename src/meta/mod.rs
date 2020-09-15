@@ -3,6 +3,7 @@ use std::io::{Error, Read};
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
+use reqwest;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meta {
@@ -28,12 +29,12 @@ pub struct Scripts {
     pub after_install: Option<String>,
 }
 
-pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
+pub fn load(dir: &Path) -> Result<Meta, Error> {
     let meta_path = dir.join("meta.json");
 
     // check if file exists
     if !meta_path.exists() {
-        let meta = default();
+        let meta = Meta::new();
         return Ok(meta);
     }
 
@@ -47,28 +48,37 @@ pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
     Ok(meta)
 }
 
-pub fn default() -> Meta {
-    let meta = Meta {
-        kind: String::from(""),
-        name: String::from(""),
-        version: None,
-        description: None,
-        scripts: Some(Scripts {
-            before_install: None,
-            after_install: None,
-        }),
-        extend: None,
-        exclude: None,
-        renderer: Some(Renderer {
-            exclude: None,
-            values: None,
-        }),
-    };
+// pub fn fetch(remote_url: &str) -> Result<Meta, Error> {
+//   // TODO try to fetch meta data from url
 
-    return meta;
-}
+//   // https://github.com/perryrh0dan/templates/blob/master/meta.json
+//   let meta_url = format!("{}/blob/master/meta.json", remote_url);
+//   let response = reqwest::get()
+
+// }
 
 impl Meta {
+  pub fn new() -> Meta {
+    Meta {
+      kind: String::from(""),
+      name: String::from(""),
+      version: None,
+      description: None,
+      scripts: Some(Scripts {
+          before_install: None,
+          after_install: None,
+      }),
+      extend: None,
+      exclude: None,
+      renderer: Some(
+        Renderer {
+          exclude: None,
+          values: None,
+        }
+      ),
+    }
+  }
+
   pub fn get_values(&self) -> Vec<String> {
     let renderer = match self.renderer.to_owned() {
       Some(data) => data,

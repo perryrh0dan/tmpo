@@ -128,6 +128,25 @@ fn main() {
                 .required(false),
             ),
         )
+        .subcommand(
+          App::new("create").about("Create a new repository")
+            .arg(
+              Arg::new("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("description")
+                .short('d')
+                .long("description")
+                .takes_value(true)
+                .about("Description of the repository")
+                .required(false),
+            ),
+        )
         .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
           App::new("remove").about("Remove a repository").arg(

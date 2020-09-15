@@ -30,7 +30,7 @@ impl Repository {
     let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
 
     // Load meta
-    let meta = match meta::load_meta(&directory) {
+    let meta = match meta::load(&directory) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);
@@ -111,7 +111,7 @@ impl Repository {
     let mut meta_file = File::create(meta_path)?;
 
     // Create meta data
-    let mut meta = meta::default();
+    let mut meta = meta::Meta::new();
     meta.kind = String::from("template");
     meta.name = name.to_owned();
     meta.version = Some(String::from("1.0.0"));
@@ -195,7 +195,7 @@ impl Repository {
         continue;
       }
 
-      let meta = match meta::load_meta(&entry.path()) {
+      let meta = match meta::load(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);
