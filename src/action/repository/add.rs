@@ -173,7 +173,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
 
   config.template_repositories.push(RepositoryOptions {
     name: repository_name.to_owned(),
-    description: repository_description,
+    description: Some(repository_description),
     git_options: git_options,
   });
 

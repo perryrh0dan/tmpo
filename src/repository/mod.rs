@@ -67,6 +67,45 @@ impl Repository {
     return Ok(repository);
   }
 
+  pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunError> {
+    let directory = directory.join(&utils::lowercase(&options.name));
+
+    // Create repository directory
+    fs::create_dir(&directory)?;
+
+    // Create meta data
+    let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
+    meta.name = options.name.to_owned();
+    meta.description = options.description.to_owned();
+
+    // Create meta.json
+    let meta_path = directory.join("meta.json");
+    let mut meta_file = File::create(meta_path)?;
+
+    // Create meta data
+    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
+    match meta_file.write(meta_data.as_bytes()) {
+      Ok(_) => (),
+      Err(error) => return Err(RunError::IO(error)),
+    };
+
+    // Initialize git repository
+    if options.git_options.enabled && options.git_options.url.is_some() {
+      match git::init(
+        &directory,
+        &options.git_options.url.clone().unwrap(),
+      ) {
+        Ok(()) => (),
+        Err(error) => {
+          log::error!("{}", error);
+          return Err(RunError::Git(String::from("Initialization")));
+        },
+      };
+    }
+
+    Ok(())
+  }
+
   pub fn test(self) -> Result<(), RunError> {
     // ensure git setup if enabled
     if self.config.git_options.enabled {
@@ -74,7 +113,7 @@ impl Repository {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
-          return Err(RunError::Repository(String::from("Initialization")))
+          return Err(RunError::Git(String::from("Initialization")))
         },
       };
     }
@@ -155,7 +194,7 @@ impl Repository {
   }
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
-    // check if directory is already a git repository
+    // initialize git repository
     match git::init(
       &self.directory,
       &self.config.git_options.url.clone().unwrap(),

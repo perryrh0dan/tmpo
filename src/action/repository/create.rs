@@ -1,10 +1,9 @@
-use std::io::{Write};
+use std::path::Path;
 use std::process::exit;
 
 use crate::config::{Config, RepositoryOptions};
 use crate::cli::input;
 use crate::git;
-use crate::meta;
 use crate::out;
 use crate::repository::{Repository};
 use crate::utils;
@@ -15,6 +14,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   let name = args.value_of("repository");
   let description = args.value_of("description");
   let directory = args.value_of("directory");
+  let remote = args.value_of("remote");
 
   let repository_type = match input::select("Repository type", &vec!{String::from("remote"), String::from("local")}) {
     Ok(value) => value,
@@ -50,32 +50,34 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   let description = if description.is_none() {
     match input::text("repository description", false) {
       Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          eprintln!("{}", error);
-          exit(1);
-        },
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
   } else {
     utils::lowercase(description.unwrap())
   };
 
+  let mut options = RepositoryOptions{
+    name: name.to_owned(),
+    description: Some(description),
+    git_options: git::Options::new(),
+  };
+
   if repository_type == "remote" {
-    create_remote(&name, &description, directory);
+    create_remote(config, &mut options, directory, remote);
   } else {
-    create_local(config, &name, &description);
+    create_local(config, options);
   }
 }
 
-fn create_local(config: &mut Config, name: &str, description: &str) {
-  config.template_repositories.push(RepositoryOptions {
-    name: name.to_owned(),
-    description: description.to_owned(),
-    git_options: git::Options::new(),
-  });
+fn create_local(config: &mut Config, options: RepositoryOptions) {
+  config.template_repositories.push(options.clone());
 
-  let repository = match Repository::new(config, name) {
-    Ok(repo) => repo,
+  match Repository::create(Path::new(&config.template_dir), &options) {
+    Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
       eprintln!("{}", error);
@@ -92,12 +94,12 @@ fn create_local(config: &mut Config, name: &str, description: &str) {
     }
   }
 
-  out::success::local_repository_created(&name, &repository.directory.to_string_lossy());
+  out::success::local_repository_created(&options.name, &config.template_dir);
 }
 
-fn create_remote(name: &str, description: &str, directory: Option<&str>) {
+fn create_remote(config: &Config, options: &mut RepositoryOptions, directory: Option<&str>, remote: Option<&str>) {
   // Get directory from user input
-  let dir = if directory.is_none() {
+  let directory = if directory.is_none() {
     match input::text("Enter the target diectory", false) {
       Ok(value) => value,
       Err(error) => {
@@ -110,37 +112,25 @@ fn create_remote(name: &str, description: &str, directory: Option<&str>) {
     directory.unwrap().to_string()
   };
 
-  // Create directory
-  let repository_path = std::path::Path::new(&dir).join(name);
-  match std::fs::create_dir(&repository_path) {
-    Ok(_) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
+  // Get remote from user input
+  let remote = if remote.is_none() {
+    match input::text("Enter the target diectory", false) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     }
-  }
-
-  // Create meta
-  let meta_path = repository_path.join("meta.json");
-  let mut meta_file = match std::fs::File::create(meta_path) {
-    Ok(file) => file,
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    },
+  } else {
+    remote.unwrap().to_string()
   };
 
-  // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
-  meta.name = name.to_owned();
-  meta.description = Some(description.to_owned());
-  meta.version = Some(String::from("1.0.0"));
+  options.git_options.url = Some(remote);
 
-  let meta_data = serde_json::to_string_pretty(&meta).unwrap();
-  match meta_file.write(meta_data.as_bytes()) {
-    Ok(file) => file,
+  // Create repository
+  match Repository::create(&Path::new(&directory), options) {
+    Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
       eprintln!("{}", error);
@@ -148,5 +138,5 @@ fn create_remote(name: &str, description: &str, directory: Option<&str>) {
     }
   };
 
-  out::success::remote_repository_created(&name, &repository_path.to_string_lossy());
+  out::success::remote_repository_created(&options.name, &config.template_dir);
 }

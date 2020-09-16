@@ -21,7 +21,7 @@ pub struct Config {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RepositoryOptions {
   pub name: String,
-  pub description: String,
+  pub description: Option<String>,
   pub git_options: git::Options,
 }
 
@@ -174,7 +174,7 @@ fn get_default_config() -> Config {
 
   repo_options.push(RepositoryOptions {
     name: String::from("Default"),
-    description: String::from("Default template repository from tpoe"),
+    description: Some(String::from("Default template repository from tpoe")),
     git_options: git_options,
   });
 
