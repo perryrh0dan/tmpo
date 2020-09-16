@@ -48,7 +48,7 @@ fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError
     return Err(RunError::Meta(String::from("Provider not supported")));
   }
 
-  if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN {
+  if auth != git::AuthType::NONE && auth != git::AuthType::TOKEN {
     return Err(RunError::Meta(String::from("Auth type is not supported for fetching")));
   }
 
@@ -82,6 +82,10 @@ fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError
 pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   // https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json
   let re = Regex::new(".+?://github.com").unwrap();
+  match re.find(repository_url) {
+    Some(_) => (),
+    None => return Err(RunError::Git(String::from("Remote url"))),
+  };
   let partial_url = re.replace(repository_url, "https://raw.githubusercontent.com").to_owned();
   let meta_url = partial_url.to_string().add("/master/meta.json");
 
@@ -89,8 +93,16 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
 }
 
 #[test]
-fn build_meta_url_success() {
+fn build_meta_url_success_default() {
   let repository_url = "https://github.com/perryrh0dan/templates";
+
+  let url = build_meta_url(repository_url);
+  assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
+}
+
+#[test]
+fn build_meta_url_success_http() {
+  let repository_url = "http://github.com/perryrh0dan/templates";
 
   let url = build_meta_url(repository_url);
   assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
@@ -100,8 +112,10 @@ fn build_meta_url_success() {
 fn build_meta_url_failure() {
   let repository_url = "https://github.de/perryrh0dan/templates";
 
-  let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "test");
+  match build_meta_url(repository_url) {
+    Ok(_) => assert!(false),
+    Err(_) => assert!(true),
+  }
 }
 
 #[test]

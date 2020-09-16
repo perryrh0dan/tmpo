@@ -109,7 +109,7 @@ fn fetch(options: &git::Options) -> Result<FileResponse, RunError> {
 pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   // Target: https://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master
   // Extract the domain
-  let re = Regex::new("(http://)?(https://)[^/]+").unwrap();
+  let re = Regex::new("(http://)?(https://)?[^/]+").unwrap();
   let domain: String = match re.find(repository_url) {
     Some(value) => String::from(value.as_str()),
     None => return Err(RunError::Git(String::from("Cant extract domain"))),
@@ -137,7 +137,7 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
 }
 
 #[test]
-fn build_meta_url_test() {
+fn build_meta_url_default() {
   let repository_url = "https://gitlab.com/JohnMcClan3/templates";
 
   let url = build_meta_url(repository_url);
@@ -145,9 +145,45 @@ fn build_meta_url_test() {
 }
 
 #[test]
-fn build_repository_meta_url_test2() {
+fn build_meta_url_http() {
+  let repository_url = "http://gitlab.com/JohnMcClan3/templates";
+
+  let url = build_meta_url(repository_url);
+  assert_eq!(url.unwrap(), "http://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
+}
+
+#[test]
+fn build_meta_url_ce() {
   let repository_url = "https://gitlab1.camelot-idpro.de/developmentgovernance/templates";
 
   let url = build_meta_url(repository_url);
   assert_eq!(url.unwrap(), "https://gitlab1.camelot-idpro.de/api/v4/projects/developmentgovernance%2Ftemplates/repository/files/meta.json?ref=master");
+}
+
+#[test]
+fn fetch_meta_success() {
+  let mut options = git::Options::new();
+  options.enabled = true;
+  options.provider = Some(git::Provider::GITLAB);
+  options.auth = Some(git::AuthType::TOKEN);
+  options.token = Some(String::from("r-6fZ-CXscYu97u4m-mD"));
+  options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
+
+  let meta = fetch_meta(&options).unwrap();
+  assert_eq!(meta.name, "test");
+}
+
+#[test]
+fn fetch_meta_failure() {
+  let mut options = git::Options::new();
+  options.enabled = true;
+  options.provider = Some(git::Provider::GITLAB);
+  options.auth = Some(git::AuthType::TOKEN);
+  options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
+
+  let meta = fetch_meta(&options);
+  match meta {
+    Ok(_) => assert!(false),
+    Err(_) => assert!(true),
+  }
 }
