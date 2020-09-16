@@ -178,6 +178,7 @@ fn get_default_config() -> Config {
     enabled: true,
     provider: Some(git::Provider::GITHUB),
     url: Some(String::from("https://github.com/perryrh0dan/templates")),
+    branch: Some(String::from("master")),
     auth: Some(git::AuthType::NONE),
     token: None,
     username: None,

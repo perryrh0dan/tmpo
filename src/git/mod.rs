@@ -13,9 +13,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Options {
   pub enabled: bool,
-  pub provider: Option<Provider>, // github, gitlab
+  pub provider: Option<Provider>,
   pub url: Option<String>,
-  pub auth: Option<AuthType>, // basic, none, token
+  pub branch: Option<String>,
+  pub auth: Option<AuthType>,
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
@@ -47,6 +48,7 @@ impl Options {
       enabled: false,
       provider: None,
       url: None,
+      branch: None,
       auth: None,
       token: None,
       username: None,
@@ -82,9 +84,16 @@ pub fn update(dir: &Path, opts: &Options) -> Result<(), git2::Error> {
   };
 
   let remote_name = "origin";
-  let remote_branch = "master";
+
+  // Override default branch if given
+  let remote_branch = if opts.branch.is_some() {
+    opts.branch.to_owned().unwrap()
+  } else {
+    String::from("master")
+  };
+
   let mut remote = repo.find_remote(remote_name)?;
-  let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
+  let fetch_commit = do_fetch(&repo, &[&remote_branch], &mut remote, opts)?;
   do_merge(&repo, &remote_branch, fetch_commit)
 }
 
