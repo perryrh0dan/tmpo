@@ -83,3 +83,12 @@ pub fn build_repository_meta_url(repository_url: &str, provider: &str) -> Result
 
   Ok(meta_url)
 }
+
+#[test]
+fn build_repository_meta_url_test() {
+  let repository_url = "https://github.com/perryrh0dan/templates";
+  let provider = "gitlab";
+
+  let url = build_repository_meta_url(repository_url, provider);
+  assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
+}
