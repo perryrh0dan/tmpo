@@ -1,22 +1,63 @@
 use log;
+use std::path::Path;
 use std::process::exit;
 
-use crate::action;
 use crate::cli::input;
 use crate::config::Config;
+use crate::meta;
 use crate::out;
+use crate::repository::Repository;
+use crate::template::Template;
 
 use clap::ArgMatches;
 
 pub fn create(config: &mut Config, args: &ArgMatches) {
   let repository_name = args.value_of("repository");
   let template_name = args.value_of("template");
+  let directory = args.value_of("directory");
 
   // TODO create template in given directory
-  // Only allow to create template directly in a repository of it has no remote
+  let template_type = match input::select(
+    "Template type",
+    &vec![String::from("remote"), String::from("local")],
+  ) {
+    Ok(value) => value,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
 
+  if template_type == "remote" {
+    create_remote(config, template_name, directory);
+  } else {
+    create_local(config, repository_name, template_name);
+  }
+}
+
+fn create_local(config: &Config, repository_name: Option<&str>, template_name: Option<&str>) {
   // Get repository
-  let repository = match action::get_repository(&config, repository_name) {
+  let repositories = config.get_local_repositories();
+  let repository_name = if repository_name.is_none() {
+    match input::select("repository", &repositories) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
+  } else {
+    if repositories.contains(&String::from(repository_name.unwrap())) {
+      String::from(repository_name.unwrap())
+    } else {
+      exit(1);
+    }
+  };
+
+  // Load repository
+  let repository = match Repository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);
@@ -25,15 +66,18 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
     }
   };
 
+  // Create meta data
+  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+
   // Get template name from user input
-  let template_name = if template_name.is_none() {
+  meta.name = if template_name.is_none() {
     match input::text("template name", false) {
       Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          eprintln!("{}", error);
-          exit(1);
-        },
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
     }
   } else {
     String::from(template_name.unwrap())
@@ -41,12 +85,59 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
 
   // validate name
   let templates = repository.get_templates();
-  if templates.contains(&template_name) {
-    out::error::template_exists(&template_name);
+  if templates.contains(&meta.name) {
+    out::error::template_exists(&meta.name);
     exit(1)
   }
 
-  let template_path = match repository.create_template(&template_name) {
+  let repository_directory = repository.directory;
+
+  let template_path = match Template::create(&repository_directory, &meta) {
+    Ok(value) => value,
+    Err(error) => {
+      log::error!("{}", error);
+      println!("{}", error);
+      exit(1)
+    }
+  };
+
+  out::success::template_created(&template_path.to_str().unwrap());
+}
+
+fn create_remote(_config: &Config, template_name: Option<&str>, directory: Option<&str>) {
+  // Create meta data
+  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+
+  // Get template name from user input
+  meta.name = if template_name.is_none() {
+    match input::text("Enter the template name", false) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
+  } else {
+    String::from(template_name.unwrap())
+  };
+
+  // Get template directory from user input
+  let directory: String = if directory.is_none() {
+    match input::text("Enter the target directory", false) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
+  } else {
+    String::from(directory.unwrap())
+  };
+
+  let directory_path = Path::new(&directory);
+  let template_path = match Template::create(&directory_path, &meta) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);

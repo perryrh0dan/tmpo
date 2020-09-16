@@ -41,6 +41,7 @@ fn main() {
 
   let matches = App::new("tmpo")
     .version(crate_version!())
+    .global_setting(AppSettings::VersionlessSubcommands)
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
@@ -128,6 +129,25 @@ fn main() {
                 .required(false),
             ),
         )
+        .subcommand(
+          App::new("create").about("Create a new repository")
+            .arg(
+              Arg::new("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("description")
+                .short('d')
+                .long("description")
+                .takes_value(true)
+                .about("Description of the repository")
+                .required(false),
+            ),
+        )
         .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
           App::new("remove").about("Remove a repository").arg(
@@ -182,6 +202,16 @@ fn main() {
               .about("Name of the repository")
               .required(false),
           ),
+        )
+        .subcommand(
+          App::new("test").about("Test template at given location").arg(
+            Arg::new("directory")
+              .short('d')
+              .long("directory")
+              .takes_value(true)
+              .about("Directory of the template")
+              .required(true),
+          )
         )
         .subcommand(
           App::new("view")
@@ -241,11 +271,14 @@ fn main() {
         Some(("create", template_create_matches)) => {
           action::template::create::create(&mut config, template_create_matches)
         }
-        Some(("view", view_matches)) => {
-          action::template::view::view(&config, view_matches);
-        }
         Some(("list", list_matches)) => {
           action::template::list::list(&config, list_matches);
+        }
+        Some(("test", test_matches)) => {
+          action::template::test::test(&config, test_matches);
+        }
+        Some(("view", view_matches)) => {
+          action::template::view::view(&config, view_matches);
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }

@@ -24,3 +24,22 @@ pub fn repository_removed(name: &str) {
     let text = format!("Removed repository: {}", name).green();
     println!("{}", text);
 }
+
+pub fn remote_repository_created(name: &str, target: &str) {
+  let title = format!("Created remote repository: {} under: {}", name, target).green();
+  let text = "Navigate into the repository and start adding new templates.\nTo use the repository push it to gitlab or github and add it via tmpo repository add.";
+  println!("{}", title);
+  println!("{}", text);
+}
+
+pub fn local_repository_created(name: &str, target: &str) {
+  let title = format!("Created local repository: {} under: {}", name, target).green();
+  let text = "Navigate into the repository and start adding new templates.";
+  println!("{}", title);
+  println!("{}", text)
+}
+
+pub fn template_tested() {
+  let text = format!("Test successful").green();
+  println!("{}", text);
+}
