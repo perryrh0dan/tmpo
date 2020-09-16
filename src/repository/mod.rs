@@ -46,6 +46,7 @@ impl Repository {
       templates: Vec::<template::Template>::new(),
     };
 
+    // Ensure repository diectory
     match repository.ensure_repository_dir() {
       Ok(()) => (),
       Err(error) => {
@@ -54,7 +55,7 @@ impl Repository {
       }
     };
 
-    // ensure git setup if enabled
+    // Ensure git setup if enabled
     if repository.config.git_options.enabled {
       match repository.ensure_repository_git() {
         Ok(()) => (),
@@ -65,6 +66,42 @@ impl Repository {
     repository.load_templates();
 
     return Ok(repository);
+  }
+
+  pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
+    let directory = Path::new(&config.template_dir).join(&utils::lowercase(&options.name));
+
+    let repository = Repository {
+      config: options.clone(),
+      directory: directory,
+      meta: meta::Meta::new(meta::Type::REPOSITORY),
+      templates: Vec::<template::Template>::new(),
+    };
+
+    // Ensure repository diectory
+    match repository.ensure_repository_dir() {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        return Err(RunError::Repository(String::from("Initialization")))
+      }
+    };
+
+    // Ensure git setup if enabled
+    if repository.config.git_options.enabled {
+      match repository.ensure_repository_git() {
+        Ok(()) => (),
+        Err(_) => (),
+      };
+    };
+
+    // Test repository
+    match repository.test() {
+      Ok(()) => (),
+      Err(error) => return Err(error)
+    };
+
+    Ok(())
   }
 
   pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunError> {

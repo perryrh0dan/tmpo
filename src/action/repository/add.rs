@@ -67,6 +67,26 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     }
   };
 
+  // Get repository remote url
+  git_options.url = match input::text("Enter remote repository url", false) {
+    Ok(value) => Some(value),
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
+
+  // Get branch
+  git_options.branch = match input::text_with_default("Enter remote branch (master): ", String::from("master")) {
+    Ok(value) => Some(value),
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
+
   // Get credentials for different auth types
   match git_options.auth.clone().unwrap() {
     git::AuthType::BASIC => {
@@ -111,16 +131,6 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
       log::info!("[git]: no authentication");
     }
   }
-
-  // Get repository remote url
-  git_options.url = match input::text("Enter remote repository url", false) {
-    Ok(value) => Some(value),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    }
-  };
 
   // Try to fetch meta data
   let meta = match meta::fetch(&git_options) {
@@ -171,29 +181,21 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     repository_description.unwrap().to_owned()
   };
 
-  config.template_repositories.push(RepositoryOptions {
+  let options = RepositoryOptions{
     name: repository_name.to_owned(),
     description: Some(repository_description),
     git_options: git_options,
-  });
+  };
 
-  // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  config.template_repositories.push(options.clone());
+
+  // Add repository
+  match Repository::add(config, &options) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);
       eprintln!("{}", error);
       exit(1)
-    }
-  };
-
-  // Test repository
-  match repository.test() {
-    Ok(()) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
     }
   };
 

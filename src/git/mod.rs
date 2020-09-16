@@ -85,7 +85,7 @@ pub fn update(dir: &Path, opts: &Options) -> Result<(), git2::Error> {
 
   let remote_name = "origin";
 
-  // Override default branch if given
+  // Set branch
   let remote_branch = if opts.branch.is_some() {
     opts.branch.to_owned().unwrap()
   } else {
