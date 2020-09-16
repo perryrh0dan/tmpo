@@ -16,7 +16,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   let directory = args.value_of("directory");
   let remote = args.value_of("remote");
 
-  let repository_type = match input::select("Repository type", &vec!{String::from("remote"), String::from("local")}) {
+  let repository_type = match input::select("Select a repository type", &vec!{String::from("remote"), String::from("local")}) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);
@@ -27,7 +27,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
 
   // Get repository name from user input
   let name = if name.is_none() {
-    match input::text("repository name", false) {
+    match input::text("Enter the repository name", false) {
       Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -48,7 +48,7 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
 
   // Get repository name from user input
   let description = if description.is_none() {
-    match input::text("repository description", false) {
+    match input::text("Enter the repository description", false) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
@@ -100,7 +100,7 @@ fn create_local(config: &mut Config, options: RepositoryOptions) {
 fn create_remote(config: &Config, options: &mut RepositoryOptions, directory: Option<&str>, remote: Option<&str>) {
   // Get directory from user input
   let directory = if directory.is_none() {
-    match input::text("Enter the target diectory", false) {
+    match input::text("Enter the target directory", false) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
@@ -114,7 +114,7 @@ fn create_remote(config: &Config, options: &mut RepositoryOptions, directory: Op
 
   // Get remote from user input
   let remote = if remote.is_none() {
-    match input::text("Enter the target diectory", false) {
+    match input::text("Enter the remote url", false) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);

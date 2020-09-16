@@ -137,29 +137,6 @@ impl Repository {
     return Ok(());
   }
 
-  /// Create a new template with given name in the repository directory
-  pub fn create_template(&self, name: &str) -> Result<std::path::PathBuf, Error> {
-    let repository_path = Path::new(&self.directory);
-    let template_path = repository_path.join(&name);
-
-    // Create template directory
-    fs::create_dir(&template_path)?;
-
-    // Create meta.json
-    let meta_path = template_path.join("meta.json");
-    let mut meta_file = File::create(meta_path)?;
-
-    // Create meta data
-    let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
-    meta.name = name.to_owned();
-    meta.version = Some(String::from("1.0.0"));
-
-    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
-    meta_file.write(meta_data.as_bytes())?;
-
-    return Ok(template_path);
-  }
-
   /// Return list of all template names in this repository
   pub fn get_templates(&self) -> Vec<String> {
     let mut templates = Vec::<String>::new();

@@ -36,6 +36,18 @@ impl Config {
     return repositories;
   }
 
+  pub fn get_local_repositories(&self) -> Vec<String> {
+    let mut repositories = Vec::<String>::new();
+
+    for entry in self.template_repositories.iter() {
+      if !entry.git_options.enabled {
+        repositories.push(utils::lowercase(&entry.name))
+      }
+    }
+
+    return repositories;
+  }
+
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self.template_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
