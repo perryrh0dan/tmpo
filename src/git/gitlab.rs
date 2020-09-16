@@ -1,5 +1,3 @@
-use std::ops::Add;
-
 use crate::error::RunError;
 use crate::git;
 use crate::meta::Meta;
@@ -27,7 +25,7 @@ struct FileResponse {
   content: String
 }
 
-pub fn fetch_meta(options: &git::GitOptions) -> Result<Meta, RunError> {
+pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
   let file_response = match fetch(options) {
     Ok(resp) => resp,
     Err(error) => return Err(error),
@@ -46,7 +44,7 @@ pub fn fetch_meta(options: &git::GitOptions) -> Result<Meta, RunError> {
   Ok(meta)
 }
 
-fn fetch(options: &git::GitOptions) -> Result<FileResponse, RunError> {
+fn fetch(options: &git::Options) -> Result<FileResponse, RunError> {
   // URL must bet provided
   let url = if options.url.is_some() {
     options.url.clone().unwrap()
@@ -68,11 +66,15 @@ fn fetch(options: &git::GitOptions) -> Result<FileResponse, RunError> {
     return Err(RunError::Meta(String::from("No Auth type was provided")));
   };
 
-  if auth != "none" && auth != "token" {
-    return Err(RunError::Meta(format!("Auth type is not supported for fetching: {}", &auth)));
+  if provider != git::Provider::GITLAB {
+    return Err(RunError::Meta(String::from("Provider not supported")));
   }
 
-  let meta_url = match build_repository_meta_url(&url, &provider) {
+  if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN {
+    return Err(RunError::Meta(String::from("Auth type is not supported for fetching")));
+  }
+
+  let meta_url = match build_meta_url(&url) {
     Ok(value) => value,
     Err(error) => return Err(error),
   };
@@ -83,7 +85,7 @@ fn fetch(options: &git::GitOptions) -> Result<FileResponse, RunError> {
     "application/json".parse().unwrap(),
   );
 
-  if auth == "token" && options.token.is_some() {
+  if auth == git::AuthType::TOKEN && options.token.is_some() {
     headers.insert(
       "PRIVATE-TOKEN",
       options.token.clone().unwrap().parse().unwrap(),
@@ -104,7 +106,7 @@ fn fetch(options: &git::GitOptions) -> Result<FileResponse, RunError> {
   Ok(file_response)
 }
 
-pub fn build_repository_meta_url(repository_url: &str, provider: &str) -> Result<String, RunError> {
+pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   // Target: https://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master
   // Extract the domain
   let re = Regex::new("(http://)?(https://)[^/]+").unwrap();
@@ -135,19 +137,17 @@ pub fn build_repository_meta_url(repository_url: &str, provider: &str) -> Result
 }
 
 #[test]
-fn build_repository_meta_url_test() {
+fn build_meta_url_test() {
   let repository_url = "https://gitlab.com/JohnMcClan3/templates";
-  let provider = "gitlab";
 
-  let url = build_repository_meta_url(repository_url, provider);
+  let url = build_meta_url(repository_url);
   assert_eq!(url.unwrap(), "https://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
 }
 
 #[test]
 fn build_repository_meta_url_test2() {
   let repository_url = "https://gitlab1.camelot-idpro.de/developmentgovernance/templates";
-  let provider = "gitlab";
 
-  let url = build_repository_meta_url(repository_url, provider);
+  let url = build_meta_url(repository_url);
   assert_eq!(url.unwrap(), "https://gitlab1.camelot-idpro.de/api/v4/projects/developmentgovernance%2Ftemplates/repository/files/meta.json?ref=master");
 }

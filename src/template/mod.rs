@@ -31,8 +31,8 @@ pub struct Template {
 }
 
 impl Template {
-  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, RunError> {
-    let meta = match meta::load(&dir.path()) {
+  pub fn new(dir: &Path) -> Result<Template, RunError> {
+    let meta = match meta::load(&dir) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);
@@ -41,8 +41,8 @@ impl Template {
       }
     };
 
-    // If type is None or unqual template skip entry
-    if meta.kind != String::from("template") {
+    // Check if type is Template
+    if meta.kind != meta::Type::TEMPLATE {
       return Err(RunError::Template(String::from("Initialization")));
     }
 
@@ -51,7 +51,7 @@ impl Template {
     // make all names lowercase
     return Ok(Template {
       name: utils::lowercase(&name),
-      path: dir.path(),
+      path: dir.to_path_buf(),
       meta: meta,
     });
   }

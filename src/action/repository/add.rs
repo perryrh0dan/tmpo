@@ -5,7 +5,7 @@ use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::meta;
 use crate::out;
-use crate::repository::{Repository};
+use crate::repository::Repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -14,7 +14,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   let repository_name = args.value_of("repository");
   let repository_description = args.value_of("description");
 
-  let mut git_options = git::GitOptions::new();
+  let mut git_options = git::Options::new();
 
   // Enable remote
   git_options.enabled = true;
@@ -22,12 +22,17 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
   // Get provider
   git_options.provider = match input::select(
     "Provider",
-    &vec![
-      String::from("github"),
-      String::from("gitlab"),
-    ]
+    &vec![String::from("github"), String::from("gitlab")],
   ) {
-    Ok(value) => Some(value),
+    Ok(value) => {
+      if value == "github" {
+        Some(git::Provider::GITHUB)
+      } else if value == "gitlab" {
+        Some(git::Provider::GITLAB)
+      } else {
+        exit(1);
+      }
+    }
     Err(error) => {
       log::error!("{}", error);
       eprintln!("{}", error);
@@ -44,49 +49,66 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
       String::from("none"),
     ],
   ) {
-    Ok(value) => Some(value),
+    Ok(value) => {
+      if value == "basic" {
+        Some(git::AuthType::BASIC)
+      } else if value == "none" {
+        Some(git::AuthType::NONE)
+      } else if value == "token" {
+        Some(git::AuthType::TOKEN)
+      } else {
+        exit(1)
+      }
+    }
     Err(error) => {
       log::error!("{}", error);
       eprintln!("{}", error);
       exit(1)
-    },
+    }
   };
 
   // Get credentials for different auth types
-  if git_options.auth.clone().as_ref().unwrap() == "basic" {
-    git_options.username = match input::text("Enter your git username", false) {
-      Ok(value) => Some(value),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      },
-    };
-    git_options.password = match input::password("Enter your git password") {
-      Ok(value) => Some(value),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      },
+  match git_options.auth.clone().unwrap() {
+    git::AuthType::BASIC => {
+      git_options.username = match input::text("Enter your git username", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      };
+      git_options.password = match input::password("Enter your git password") {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
     }
-  } else if git_options.auth.as_ref().unwrap() == "ssh" {
-    git_options.token = match input::text("Enter your git username", false) {
-      Ok(value) => Some(value),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      },
+    git::AuthType::SSH => {
+      git_options.token = match input::text("Enter your git username", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
     }
-  } else if git_options.auth.as_ref().unwrap() == "token" {
-    git_options.token = match input::text("Enter your access token", false) {
-      Ok(value) => Some(value),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      },
+    git::AuthType::TOKEN => {
+      git_options.token = match input::text("Enter your access token", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    },
+    git::AuthType::NONE => {
+      log::info!("[git]: no authentication");
     }
   }
 
@@ -97,7 +119,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
       log::error!("{}", error);
       eprintln!("{}", error);
       exit(1);
-    },
+    }
   };
 
   // Try to fetch meta data
@@ -105,19 +127,22 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
     Ok(data) => data,
     Err(error) => {
       log::error!("{}", error);
-      meta::Meta::new()
-    },
+      meta::Meta::new(meta::Type::REPOSITORY)
+    }
   };
 
   // Get repository name from user input
   let repository_name = if repository_name.is_none() {
-    match input::text_with_default(&format!("Enter repository name ({}): ", meta.name), meta.name) {
+    match input::text_with_default(
+      &format!("Enter repository name ({}): ", meta.name),
+      meta.name,
+    ) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
-      },
+      }
     }
   } else {
     utils::lowercase(repository_name.unwrap())
@@ -140,7 +165,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
-      },
+      }
     }
   } else {
     repository_description.unwrap().to_owned()
@@ -178,7 +203,7 @@ pub fn add(config: &mut Config, args: &ArgMatches) {
       log::error!("{}", error);
       eprintln!("{}", error);
       exit(1)
-    },
+    }
   }
 
   out::success::repository_added(&repository_name);

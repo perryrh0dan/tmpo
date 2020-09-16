@@ -8,7 +8,7 @@ extern crate reqwest;
 extern crate regex;
 use regex::Regex;
 
-pub fn fetch_meta(options: &git::GitOptions) -> Result<Meta, RunError> {
+pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
   let response = match fetch(options) {
     Ok(resp) => resp,
     Err(error) => return Err(error),
@@ -22,7 +22,7 @@ pub fn fetch_meta(options: &git::GitOptions) -> Result<Meta, RunError> {
   Ok(meta)
 }
 
-fn fetch(options: &git::GitOptions) -> Result<reqwest::blocking::Response, RunError> {
+fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError> {
   // URL must bet provided
   let url = if options.url.is_some() {
     options.url.clone().unwrap()
@@ -44,11 +44,15 @@ fn fetch(options: &git::GitOptions) -> Result<reqwest::blocking::Response, RunEr
     return Err(RunError::Meta(String::from("No Auth type was provided")));
   };
 
-  if auth != "none" && auth != "token" {
-    return Err(RunError::Meta(format!("Auth type is not supported for fetching: {}", &auth)));
+  if provider != git::Provider::GITHUB {
+    return Err(RunError::Meta(String::from("Provider not supported")));
   }
 
-  let meta_url = match build_repository_meta_url(&url, &provider) {
+  if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN {
+    return Err(RunError::Meta(String::from("Auth type is not supported for fetching")));
+  }
+
+  let meta_url = match build_meta_url(&url) {
     Ok(value) => value,
     Err(error) => return Err(error),
   };
@@ -59,7 +63,7 @@ fn fetch(options: &git::GitOptions) -> Result<reqwest::blocking::Response, RunEr
     "application/json".parse().unwrap(),
   );
 
-  if auth == "token" && options.token.is_some() {
+  if auth == git::AuthType::TOKEN && options.token.is_some() {
     headers.insert(
       "Authorization",
       format!("token {}", options.token.clone().unwrap()).parse().unwrap(),
@@ -75,7 +79,7 @@ fn fetch(options: &git::GitOptions) -> Result<reqwest::blocking::Response, RunEr
   return Ok(response)
 }
 
-pub fn build_repository_meta_url(repository_url: &str, provider: &str) -> Result<String, RunError> {
+pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   // https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json
   let re = Regex::new(".+?://github.com").unwrap();
   let partial_url = re.replace(repository_url, "https://raw.githubusercontent.com").to_owned();
@@ -85,10 +89,29 @@ pub fn build_repository_meta_url(repository_url: &str, provider: &str) -> Result
 }
 
 #[test]
-fn build_repository_meta_url_test() {
+fn build_meta_url_success() {
   let repository_url = "https://github.com/perryrh0dan/templates";
-  let provider = "gitlab";
 
-  let url = build_repository_meta_url(repository_url, provider);
+  let url = build_meta_url(repository_url);
   assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
+}
+
+#[test]
+fn build_meta_url_failure() {
+  let repository_url = "https://github.de/perryrh0dan/templates";
+
+  let url = build_meta_url(repository_url);
+  assert_eq!(url.unwrap(), "test");
+}
+
+#[test]
+fn fetch_meta_success() {
+  let mut options = git::Options::new();
+  options.enabled = true;
+  options.provider = Some(git::Provider::GITHUB);
+  options.auth = Some(git::AuthType::NONE);
+  options.url = Some(String::from("https://github.com/perryrh0dan/templates"));
+
+  let meta = fetch_meta(&options).unwrap();
+  assert_eq!(meta.name, "default");
 }

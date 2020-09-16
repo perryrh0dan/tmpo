@@ -41,6 +41,7 @@ fn main() {
 
   let matches = App::new("tmpo")
     .version(crate_version!())
+    .global_setting(AppSettings::VersionlessSubcommands)
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
@@ -203,6 +204,16 @@ fn main() {
           ),
         )
         .subcommand(
+          App::new("test").about("Test template at given location").arg(
+            Arg::new("directory")
+              .short('d')
+              .long("directory")
+              .takes_value(true)
+              .about("Directory of the template")
+              .required(true),
+          )
+        )
+        .subcommand(
           App::new("view")
             .about("View template details")
             .arg(
@@ -260,11 +271,14 @@ fn main() {
         Some(("create", template_create_matches)) => {
           action::template::create::create(&mut config, template_create_matches)
         }
-        Some(("view", view_matches)) => {
-          action::template::view::view(&config, view_matches);
-        }
         Some(("list", list_matches)) => {
           action::template::list::list(&config, list_matches);
+        }
+        Some(("test", test_matches)) => {
+          action::template::test::test(&config, test_matches);
+        }
+        Some(("view", view_matches)) => {
+          action::template::view::view(&config, view_matches);
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }

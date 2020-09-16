@@ -22,7 +22,7 @@ pub struct Config {
 pub struct RepositoryOptions {
   pub name: String,
   pub description: String,
-  pub git_options: git::GitOptions,
+  pub git_options: git::Options,
 }
 
 impl Config {
@@ -140,7 +140,7 @@ fn load_config() -> Result<Config, RunError> {
   let mut changed = false;
   for rep_option in &mut config.template_repositories {
     if rep_option.git_options.provider.is_none() {
-      rep_option.git_options.provider = Some(String::from("github"));
+      rep_option.git_options.provider = Some(git::Provider::GITHUB);
       changed = true;
     }
   }
@@ -162,11 +162,11 @@ fn get_default_config() -> Config {
   let template_dir = format!("{}{}", dir.to_string_lossy(), "/templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
 
-  let git_options = git::GitOptions {
+  let git_options = git::Options {
     enabled: true,
-    provider: Some(String::from("github")),
+    provider: Some(git::Provider::GITHUB),
     url: Some(String::from("https://github.com/perryrh0dan/templates")),
-    auth: Some(String::from("none")),
+    auth: Some(git::AuthType::NONE),
     token: None,
     username: None,
     password: None,

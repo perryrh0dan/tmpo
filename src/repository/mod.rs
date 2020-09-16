@@ -111,8 +111,7 @@ impl Repository {
     let mut meta_file = File::create(meta_path)?;
 
     // Create meta data
-    let mut meta = meta::Meta::new();
-    meta.kind = String::from("template");
+    let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
     meta.name = name.to_owned();
     meta.version = Some(String::from("1.0.0"));
 
@@ -187,7 +186,7 @@ impl Repository {
       Err(_error) => return,
     };
 
-    // Loop at all entries in templates directory
+    // Loop at all entries in repository directory
     for entry in fs::read_dir(&self.directory).unwrap() {
       let entry = &entry.unwrap();
       // check if entry is file, if yes skip entry
@@ -203,12 +202,12 @@ impl Repository {
         }
       };
 
-      // If type is None or unqual template skip entry
-      if meta.kind != String::from("template") {
+      // Skip if type is not template
+      if meta.kind != meta::Type::TEMPLATE {
         continue;
       }
 
-      let template = match template::Template::new(&entry) {
+      let template = match template::Template::new(&entry.path()) {
         Ok(template) => template,
         Err(_error) => continue,
       };

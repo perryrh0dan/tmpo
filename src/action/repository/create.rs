@@ -1,6 +1,4 @@
-use std::fs;
-use std::fs::File;
-use std::io::{Error, Write};
+use std::io::{Write};
 use std::process::exit;
 
 use crate::config::{Config, RepositoryOptions};
@@ -63,10 +61,27 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
   };
 
   if repository_type == "remote" {
-    create_remote(config, &name, &description, directory);
+    create_remote(&name, &description, directory);
   } else {
     create_local(config, &name, &description);
   }
+}
+
+fn create_local(config: &mut Config, name: &str, description: &str) {
+  config.template_repositories.push(RepositoryOptions {
+    name: name.to_owned(),
+    description: description.to_owned(),
+    git_options: git::Options::new(),
+  });
+
+  let repository = match Repository::new(config, name) {
+    Ok(repo) => repo,
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  };
 
   match config.save() {
     Ok(()) => (),
@@ -76,22 +91,14 @@ pub fn create(config: &mut Config, args: &ArgMatches) {
       exit(1);
     }
   }
+
+  out::success::local_repository_created(&name, &repository.directory.to_string_lossy());
 }
 
-fn create_local(config: &mut Config, name: &str, description: &str) {
-  config.template_repositories.push(RepositoryOptions {
-    name: name.to_owned(),
-    description: description.to_owned(),
-    git_options: git::GitOptions::new(),
-  });
-
-  Repository::new(config, name);
-}
-
-fn create_remote(config: &mut Config, name: &str, description: &str, directory: Option<&str>) {
-  // Get workspace directory from user input
+fn create_remote(name: &str, description: &str, directory: Option<&str>) {
+  // Get directory from user input
   let dir = if directory.is_none() {
-    match input::text("Please enter the target diectory", false) {
+    match input::text("Enter the target diectory", false) {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
@@ -105,7 +112,14 @@ fn create_remote(config: &mut Config, name: &str, description: &str, directory: 
 
   // Create directory
   let repository_path = std::path::Path::new(&dir).join(name);
-  std::fs::create_dir(&repository_path);
+  match std::fs::create_dir(&repository_path) {
+    Ok(_) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      eprintln!("{}", error);
+      exit(1);
+    }
+  }
 
   // Create meta
   let meta_path = repository_path.join("meta.json");
@@ -119,9 +133,9 @@ fn create_remote(config: &mut Config, name: &str, description: &str, directory: 
   };
 
   // Create meta data
-  let mut meta = meta::Meta::new();
-  meta.kind = String::from("repository");
+  let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
   meta.name = name.to_owned();
+  meta.description = Some(description.to_owned());
   meta.version = Some(String::from("1.0.0"));
 
   let meta_data = serde_json::to_string_pretty(&meta).unwrap();
@@ -133,4 +147,6 @@ fn create_remote(config: &mut Config, name: &str, description: &str, directory: 
       exit(1);
     }
   };
+
+  out::success::remote_repository_created(&name, &repository_path.to_string_lossy());
 }
