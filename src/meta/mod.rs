@@ -2,8 +2,10 @@ use std::fs::File;
 use std::io::{Error, Read};
 use std::path::Path;
 
+use crate::error::RunError;
+use crate::git;
+
 use serde::{Deserialize, Serialize};
-use reqwest;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meta {
@@ -48,14 +50,23 @@ pub fn load(dir: &Path) -> Result<Meta, Error> {
     Ok(meta)
 }
 
-// pub fn fetch(remote_url: &str) -> Result<Meta, Error> {
-//   // TODO try to fetch meta data from url
+pub fn fetch(options: &git::GitOptions) -> Result<Meta, RunError> {
+  let provider = if options.provider.is_some() {
+    options.provider.clone().unwrap()
+  } else {
+    return Err(RunError::Meta(String::from("No provider was provided")));
+  };
 
-//   // https://github.com/perryrh0dan/templates/blob/master/meta.json
-//   let meta_url = format!("{}/blob/master/meta.json", remote_url);
-//   let response = reqwest::get()
-
-// }
+  if provider == "gitlab" {
+    let meta = git::gitlab::fetch_meta(options)?;
+    return Ok(meta)
+  } else if provider == "github" {
+    let meta = git::github::fetch_meta(options)?;
+    return Ok(meta)
+  } else {
+    return Err(RunError::Meta(String::from("Invalid Provider")));
+  }
+}
 
 impl Meta {
   pub fn new() -> Meta {

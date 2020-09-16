@@ -2,6 +2,10 @@ use log;
 use std::path::Path;
 // use crate::error::RunError;
 
+pub mod utils;
+pub mod github;
+pub mod gitlab;
+
 extern crate git2;
 extern crate serde_json;
 use serde::{Deserialize, Serialize};
@@ -62,44 +66,6 @@ pub fn update(dir: &Path, opts: &GitOptions) -> Result<(), git2::Error> {
   let mut remote = repo.find_remote(remote_name)?;
   let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
   do_merge(&repo, &remote_branch, fetch_commit)
-}
-
-pub fn get_email() -> Result<String, git2::Error> {
-  let config = get_config()?;
-  let email = config.get_string("user.email")?;
-
-  let mut buf = String::with_capacity(email.len());
-
-  for c in email.chars() {
-    buf.push(c);
-  }
-
-  Ok(buf)
-}
-
-pub fn get_username() -> Result<String, git2::Error> {
-  let config = get_config()?;
-  let username = config.get_string("user.name")?;
-
-  let mut buf = String::with_capacity(username.len());
-
-  for c in username.chars() {
-    buf.push(c);
-  }
-
-  Ok(buf)
-}
-
-// load global git config
-fn get_config() -> Result<git2::Config, git2::Error> {
-  let path = git2::Config::find_global()?;
-  let config = git2::Config::open(&path)?;
-
-  // for entry in &config.entries(None).unwrap() {
-  //     let entry = entry.unwrap();
-  //     println!("{} => {}", entry.name().unwrap(), entry.value().unwrap());
-  // }
-  Ok(config)
 }
 
 fn do_fetch<'a>(
