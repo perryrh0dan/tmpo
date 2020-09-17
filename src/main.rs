@@ -3,6 +3,7 @@ use std::process::exit;
 
 mod action;
 mod cli;
+mod context;
 mod config;
 mod error;
 mod git;
@@ -21,7 +22,7 @@ fn main() {
   logger::init();
 
   // Initiate config
-  let mut config = match config::init() {
+  let config = match config::init() {
     Ok(data) => data,
     Err(error) => {
       log::error!("{}", error);
@@ -99,6 +100,13 @@ fn main() {
             .long("email")
             .takes_value(true)
             .about("E-Mail of the user")
+            .required(false)
+        )
+        .arg(
+          Arg::new("no-script")
+            .long("no-script")
+            .takes_value(false)
+            .about("Dont execute template scripts")
             .required(false)
         )
     )
@@ -236,32 +244,34 @@ fn main() {
     )
     .get_matches();
 
+  let action = action::Action::new(config);
+
   match matches.subcommand() {
     Some(("config", _config_matches)) => {
-      action::default::config::config(&config);
+      action.config();
     }
     Some(("init", init_matches)) => {
-      action::default::init::init(&config, init_matches);
+      action.init(init_matches);
     }
     Some(("update", _update_matches)) => {
-      action::default::update::update();
+      action.update();
     }
     Some(("repository", repository_matches)) => {
       match repository_matches.subcommand() {
         Some(("add", repo_add_matches)) => {
-          action::repository::add::add(&mut config, repo_add_matches)
+          action.repository_add(repo_add_matches)
         }
         Some(("create", repo_create_matches)) => {
-          action::repository::create::create(&mut config, repo_create_matches)
+          action.repository_create(repo_create_matches)
         }
         Some(("list", _list_matches)) => {
-          action::repository::list::list(&config);
+          action.repository_list();
         }
         Some(("remove", delete_matches)) => {
-          action::repository::remove::remove(&mut config, delete_matches)
+          action.repository_remove(delete_matches)
         }
         Some(("view", view_matches)) => {
-          action::repository::view::view(&config, view_matches)
+          action.repository_view(view_matches)
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
@@ -269,16 +279,16 @@ fn main() {
     Some(("template", repository_matches)) => {
       match repository_matches.subcommand() {
         Some(("create", template_create_matches)) => {
-          action::template::create::create(&mut config, template_create_matches)
+          action.template_create(template_create_matches)
         }
         Some(("list", list_matches)) => {
-          action::template::list::list(&config, list_matches);
+          action.template_list(list_matches);
         }
         Some(("test", test_matches)) => {
-          action::template::test::test(&config, test_matches);
+          action.template_test(test_matches);
         }
         Some(("view", view_matches)) => {
-          action::template::view::view(&config, view_matches);
+          action.template_view(view_matches);
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }

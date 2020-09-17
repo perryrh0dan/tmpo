@@ -1,27 +1,42 @@
-pub mod default;
+mod config;
+mod init;
+mod update;
 pub mod repository;
 pub mod template;
 
 use crate::cli::input;
-use crate::config;
+use crate::config::Config;
 use crate::error::RunError;
 use crate::repository::{Repository};
 
-/// Validat given repository name or open a new selection
-pub fn get_repository(
-  config: &config::Config,
-  repository_name: Option<&str>,
-) -> Result<Repository, RunError> {
-  // Get repository name from user input
-  let repository_name = if repository_name.is_none() {
-    let repositories = config.get_repositories();
-    input::select("repository", &repositories)?
-  } else {
-    String::from(repository_name.unwrap())
-  };
+pub struct Action {
+  config: Config,
+}
 
-  // Load repository
-  let repository = Repository::new(config, &repository_name)?;
+impl Action {
+  pub fn new(config: Config) -> Action {
+    let act = Action{
+      config: config,
+    };
 
-  Ok(repository)
+    return act;
+  }
+
+  /// Validat given repository name or open a new selection
+  fn  get_repository(&self,
+    repository_name: Option<&str>,
+  ) -> Result<Repository, RunError> {
+    // Get repository name from user input
+    let repository_name = if repository_name.is_none() {
+      let repositories = self.config.get_repositories();
+      input::select("repository", &repositories)?
+    } else {
+      String::from(repository_name.unwrap())
+    };
+
+    // Load repository
+    let repository = Repository::new(&self.config, &repository_name)?;
+
+    Ok(repository)
+  }
 }

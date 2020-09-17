@@ -10,9 +10,10 @@ use crate::utils;
 
 extern crate dirs;
 extern crate serde;
+use serde::{Serialize, Deserialize};
 extern crate serde_yaml;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
   pub template_dir: String,
   pub template_repositories: Vec<RepositoryOptions>,

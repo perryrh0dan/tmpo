@@ -2,6 +2,7 @@ use log;
 use std::path::Path;
 use std::process::exit;
 
+use crate::action::Action;
 use crate::cli::input;
 use crate::config::Config;
 use crate::meta;
@@ -11,28 +12,30 @@ use crate::template::Template;
 
 use clap::ArgMatches;
 
-pub fn create(config: &mut Config, args: &ArgMatches) {
-  let repository_name = args.value_of("repository");
-  let template_name = args.value_of("template");
-  let directory = args.value_of("directory");
+impl Action {
+  pub fn template_create(&self, args: &ArgMatches) {
+    let repository_name = args.value_of("repository");
+    let template_name = args.value_of("template");
+    let directory = args.value_of("directory");
 
-  // TODO create template in given directory
-  let template_type = match input::select(
-    "Template type",
-    &vec![String::from("remote"), String::from("local")],
-  ) {
-    Ok(value) => value,
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
+    // TODO create template in given directory
+    let template_type = match input::select(
+      "Template type",
+      &vec![String::from("remote"), String::from("local")],
+    ) {
+      Ok(value) => value,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    };
+
+    if template_type == "remote" {
+      create_remote(template_name, directory);
+    } else {
+      create_local(&self.config, repository_name, template_name);
     }
-  };
-
-  if template_type == "remote" {
-    create_remote(config, template_name, directory);
-  } else {
-    create_local(config, repository_name, template_name);
   }
 }
 
@@ -104,7 +107,7 @@ fn create_local(config: &Config, repository_name: Option<&str>, template_name: O
   out::success::template_created(&template_path.to_str().unwrap());
 }
 
-fn create_remote(_config: &Config, template_name: Option<&str>, directory: Option<&str>) {
+fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
   // Create meta data
   let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
 
