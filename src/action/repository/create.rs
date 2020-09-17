@@ -11,7 +11,7 @@ use crate::utils;
 use clap::ArgMatches;
 
 pub fn create(config: &mut Config, args: &ArgMatches) {
-  let name = args.value_of("repository");
+  let name = args.value_of("name");
   let description = args.value_of("description");
   let directory = args.value_of("directory");
   let remote = args.value_of("remote");

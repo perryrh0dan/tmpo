@@ -111,7 +111,7 @@ fn main() {
         .setting(AppSettings::HelpRequired)
         .subcommand(
           App::new("add")
-            .about("Add new repository")
+            .about("Add remote repository")
             .arg(
               Arg::new("name")
                 .short('n')
