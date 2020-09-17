@@ -5,6 +5,16 @@
 ### Features
 
 - Sort select options alphabetically
+- Fetch meta informations from the repository
+- Sort options alphabetically
+- Start to replace master with customizable branch
+- Add command to create new templates
+- Many fixes to repository create command
+
+### Fix
+
+- Improve about texts
+- Small bug fixes
 
 ## 1.5.3
 
