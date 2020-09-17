@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{Error, Write};
@@ -7,6 +8,7 @@ use crate::config::{Config, RepositoryOptions};
 use crate::error::RunError;
 use crate::git;
 use crate::meta;
+use crate::template::{renderer, Template};
 use crate::template;
 use crate::utils;
 
@@ -143,10 +145,74 @@ impl Repository {
     Ok(())
   }
 
-  pub fn copy_template(&self, name: &str) -> Result<(), RunError> {
+  pub fn copy_template(&self, name: &str, target: &std::path::Path, render_context: &renderer::Context) -> Result<(), RunError> {
     let template = self.get_template_by_name(name)?;
 
+    let super_templates = self.get_super_templates(template, &mut std::collections::HashSet::new())?;
 
+    // Initialize super templates
+    for template in super_templates.iter() {
+      template.init(target, render_context)?;
+    }
+
+    // Initialize template
+    template.init(target, render_context)?;
+
+    // Create info file
+    template.create_info(target)?;
+
+    Ok(())
+  }
+
+  /// Get list of all super templates
+  pub fn get_super_templates(
+    &self,
+    template: &template::Template,
+    seen: &mut std::collections::HashSet<String>,
+  ) -> Result<Vec<Template>, RunError> {
+    // get list of all super templates
+    let super_templates = template.get_super_templates()?;
+
+    seen.insert(template.name.to_owned());
+
+    let mut templates = vec![];
+    for name in super_templates {
+      // Avoid circular dependencies;
+      if seen.contains(&name) {
+        continue;
+      }
+
+      let template = self.get_template_by_name(&name)?;
+
+      let t = match self.get_super_templates(template, seen) {
+        Ok(templates) => templates,
+        Err(error) => return Err(error),
+      };
+
+      templates.extend(t);
+      templates.push(template.to_owned());
+    }
+
+    Ok(templates)
+  }
+
+  pub fn get_custom_values(&self, template_name: &str) -> Result<HashSet<String>, RunError> {
+    let template = self.get_template_by_name(&template_name)?;
+
+    // Get list of all super templates
+    let super_templates = match self.get_super_templates(template, &mut HashSet::new()) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
+
+    let mut values = HashSet::new();
+    for template in super_templates {
+      values.extend(template.meta.get_values());
+    }
+
+    values.extend(self.meta.get_values());
+
+    Ok(values)
   }
 
   pub fn test(self) -> Result<(), RunError> {

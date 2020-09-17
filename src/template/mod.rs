@@ -1,5 +1,4 @@
 use log;
-use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
@@ -7,7 +6,6 @@ use std::path::{Path, PathBuf};
 
 use crate::error::RunError;
 use crate::meta;
-use crate::repository::Repository;
 use crate::utils;
 
 extern crate serde;
@@ -72,50 +70,20 @@ impl Template {
     return Ok(template_path);
   }
 
-  pub fn copy(
+  /// Get list of all super templates
+  pub fn get_super_templates(
     &self,
-    repository: &Repository,
-    target: &Path,
-    opts: &renderer::Context,
-  ) -> Result<(), RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
+  ) -> Result<Vec<String>, RunError> {
+    // get list of all super templates
+    let super_templates = match &self.meta.extend {
+      None => Vec::new(),
+      Some(x) => x.clone(),
     };
 
-    // Initialize super templates
-    for template in super_templates {
-      template.init(target, opts)?;
-    }
-
-    // Initialize template
-    self.init(target, opts)?;
-
-    // Create info file
-    self.create_info(&target)?;
-
-    Ok(())
+    Ok(super_templates)
   }
 
-  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
-    };
-
-    let mut values = HashSet::new();
-    for template in super_templates {
-      values.extend(template.meta.get_values());
-    }
-
-    values.extend(self.meta.get_values());
-
-    Ok(values)
-  }
-
-  fn init(&self, target: &Path, opts: &renderer::Context) -> Result<(), RunError> {
+  pub fn init(&self, target: &Path, opts: &renderer::Context) -> Result<(), RunError> {
     log::info!("Initialize Template: {}", self.name);
 
     // Run before install script
@@ -213,47 +181,6 @@ impl Template {
     Ok(())
   }
 
-  /// Get list of all super templates
-  pub fn get_super_templates(
-    &self,
-    repository: &Repository,
-    seen: &mut std::collections::HashSet<String>,
-  ) -> Result<Vec<Template>, RunError> {
-    // get list of all super templates
-    let super_templates = match &self.meta.extend {
-      None => Vec::new(),
-      Some(x) => x.clone(),
-    };
-
-    seen.insert(self.meta.name.to_owned());
-
-    let mut templates = vec![];
-    for name in super_templates {
-      // Avoid circular dependencies;
-      if seen.contains(&name) {
-        continue;
-      }
-
-      let template = match repository.get_template_by_name(&name) {
-        Ok(template) => template,
-        Err(error) => {
-          log::error!("{}", error);
-          return Err(RunError::Template(String::from("Not found")));
-        }
-      };
-
-      let t = match template.get_super_templates(repository, seen) {
-        Ok(templates) => templates,
-        Err(error) => return Err(error),
-      };
-
-      templates.extend(t);
-      templates.push(template.to_owned());
-    }
-
-    Ok(templates)
-  }
-
   fn is_excluded_copy(&self, name: &str) -> bool {
     if name == "meta.json" {
       return true;
@@ -280,7 +207,7 @@ impl Template {
     items.contains(&name.to_owned())
   }
 
-  fn create_info(&self, target: &Path) -> Result<(), std::io::Error> {
+  pub fn create_info(&self, target: &Path) -> Result<(), std::io::Error> {
     // Create .tmpo.yaml file
     // Not used yet
     let info_path = &target.to_path_buf().join(".tmpo.yaml");

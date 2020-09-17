@@ -186,7 +186,7 @@ impl Action {
 
     // Get template specific values
     let mut values = HashMap::new();
-    let keys = match template.get_custom_values(&repository) {
+    let keys = match repository.get_custom_values(&template_name) {
       Ok(keys) => keys,
       Err(error) => {
         log::error!("{}", error);
@@ -245,7 +245,7 @@ impl Action {
 
     // Copy the template
     log::info!("Start processing template: {}", &template.name);
-    match template.copy(&repository, &tmp_workspace_path, &render_context) {
+    match repository.copy_template(&template.name, &tmp_workspace_path, &render_context) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
