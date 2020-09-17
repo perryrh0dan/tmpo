@@ -139,7 +139,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Get email from user input or global git config
   let email = if email.is_none() {
-    let git_email = match git::get_email() {
+    let git_email = match git::utils::get_email() {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
@@ -161,7 +161,7 @@ pub fn init(config: &Config, args: &ArgMatches) {
 
   // Get username from user input or global git config
   let username = if username.is_none() {
-    let git_username = match git::get_username() {
+    let git_username = match git::utils::get_username() {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);

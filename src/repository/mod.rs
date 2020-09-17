@@ -30,7 +30,7 @@ impl Repository {
     let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
 
     // Load meta
-    let meta = match meta::load_meta(&directory) {
+    let meta = match meta::load(&directory) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);
@@ -46,6 +46,7 @@ impl Repository {
       templates: Vec::<template::Template>::new(),
     };
 
+    // Ensure repository diectory
     match repository.ensure_repository_dir() {
       Ok(()) => (),
       Err(error) => {
@@ -54,7 +55,7 @@ impl Repository {
       }
     };
 
-    // ensure git setup if enabled
+    // Ensure git setup if enabled
     if repository.config.git_options.enabled {
       match repository.ensure_repository_git() {
         Ok(()) => (),
@@ -67,6 +68,81 @@ impl Repository {
     return Ok(repository);
   }
 
+  pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
+    let directory = Path::new(&config.template_dir).join(&utils::lowercase(&options.name));
+
+    let repository = Repository {
+      config: options.clone(),
+      directory: directory,
+      meta: meta::Meta::new(meta::Type::REPOSITORY),
+      templates: Vec::<template::Template>::new(),
+    };
+
+    // Ensure repository diectory
+    match repository.ensure_repository_dir() {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        return Err(RunError::Repository(String::from("Initialization")))
+      }
+    };
+
+    // Ensure git setup if enabled
+    if repository.config.git_options.enabled {
+      match repository.ensure_repository_git() {
+        Ok(()) => (),
+        Err(_) => (),
+      };
+    };
+
+    // Test repository
+    match repository.test() {
+      Ok(()) => (),
+      Err(error) => return Err(error)
+    };
+
+    Ok(())
+  }
+
+  pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunError> {
+    let directory = directory.join(&utils::lowercase(&options.name));
+
+    // Create repository directory
+    fs::create_dir(&directory)?;
+
+    // Create meta data
+    let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
+    meta.name = options.name.to_owned();
+    meta.description = options.description.to_owned();
+
+    // Create meta.json
+    let meta_path = directory.join("meta.json");
+    let mut meta_file = File::create(meta_path)?;
+
+    // Create meta data
+    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
+    match meta_file.write(meta_data.as_bytes()) {
+      Ok(_) => (),
+      Err(error) => return Err(RunError::IO(error)),
+    };
+
+    // Initialize git repository
+    if options.git_options.enabled && options.git_options.url.is_some() {
+      match git::init(
+        &directory,
+        &options.git_options.url.clone().unwrap(),
+      ) {
+        Ok(()) => (),
+        Err(error) => {
+          log::error!("{}", error);
+          return Err(RunError::Git(String::from("Initialization")));
+        },
+      };
+    }
+
+    Ok(())
+  }
+
   pub fn test(self) -> Result<(), RunError> {
     // ensure git setup if enabled
     if self.config.git_options.enabled {
@@ -74,7 +150,7 @@ impl Repository {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
-          return Err(RunError::Repository(String::from("Initialization")))
+          return Err(RunError::Git(String::from("Initialization")))
         },
       };
     }
@@ -96,30 +172,6 @@ impl Repository {
     }
 
     return Ok(());
-  }
-
-  /// Create a new template with given name in the repository directory
-  pub fn create_template(&self, name: &str) -> Result<std::path::PathBuf, Error> {
-    let repository_path = Path::new(&self.directory);
-    let template_path = repository_path.join(&name);
-
-    // Create template directory
-    fs::create_dir(&template_path)?;
-
-    // Create meta.json
-    let meta_path = template_path.join("meta.json");
-    let mut meta_file = File::create(meta_path)?;
-
-    // Create meta data
-    let mut meta = meta::default();
-    meta.kind = String::from("template");
-    meta.name = name.to_owned();
-    meta.version = Some(String::from("1.0.0"));
-
-    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
-    meta_file.write(meta_data.as_bytes())?;
-
-    return Ok(template_path);
   }
 
   /// Return list of all template names in this repository
@@ -156,7 +208,7 @@ impl Repository {
   }
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
-    // check if directory is already a git repository
+    // initialize git repository
     match git::init(
       &self.directory,
       &self.config.git_options.url.clone().unwrap(),
@@ -187,7 +239,7 @@ impl Repository {
       Err(_error) => return,
     };
 
-    // Loop at all entries in templates directory
+    // Loop at all entries in repository directory
     for entry in fs::read_dir(&self.directory).unwrap() {
       let entry = &entry.unwrap();
       // check if entry is file, if yes skip entry
@@ -195,7 +247,7 @@ impl Repository {
         continue;
       }
 
-      let meta = match meta::load_meta(&entry.path()) {
+      let meta = match meta::load(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);
@@ -203,12 +255,12 @@ impl Repository {
         }
       };
 
-      // If type is None or unqual template skip entry
-      if meta.kind != String::from("template") {
+      // Skip if type is not template
+      if meta.kind != meta::Type::TEMPLATE {
         continue;
       }
 
-      let template = match template::Template::new(&entry) {
+      let template = match template::Template::new(&entry.path()) {
         Ok(template) => template,
         Err(_error) => continue,
       };

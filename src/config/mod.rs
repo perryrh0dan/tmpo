@@ -21,8 +21,8 @@ pub struct Config {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RepositoryOptions {
   pub name: String,
-  pub description: String,
-  pub git_options: git::GitOptions,
+  pub description: Option<String>,
+  pub git_options: git::Options,
 }
 
 impl Config {
@@ -31,6 +31,18 @@ impl Config {
 
     for entry in self.template_repositories.iter() {
       repositories.push(utils::lowercase(&entry.name));
+    }
+
+    return repositories;
+  }
+
+  pub fn get_local_repositories(&self) -> Vec<String> {
+    let mut repositories = Vec::<String>::new();
+
+    for entry in self.template_repositories.iter() {
+      if !entry.git_options.enabled {
+        repositories.push(utils::lowercase(&entry.name))
+      }
     }
 
     return repositories;
@@ -140,7 +152,7 @@ fn load_config() -> Result<Config, RunError> {
   let mut changed = false;
   for rep_option in &mut config.template_repositories {
     if rep_option.git_options.provider.is_none() {
-      rep_option.git_options.provider = Some(String::from("github"));
+      rep_option.git_options.provider = Some(git::Provider::GITHUB);
       changed = true;
     }
   }
@@ -162,11 +174,12 @@ fn get_default_config() -> Config {
   let template_dir = format!("{}{}", dir.to_string_lossy(), "/templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
 
-  let git_options = git::GitOptions {
+  let git_options = git::Options {
     enabled: true,
-    provider: Some(String::from("github")),
+    provider: Some(git::Provider::GITHUB),
     url: Some(String::from("https://github.com/perryrh0dan/templates")),
-    auth: Some(String::from("none")),
+    branch: Some(String::from("master")),
+    auth: Some(git::AuthType::NONE),
     token: None,
     username: None,
     password: None,
@@ -174,7 +187,7 @@ fn get_default_config() -> Config {
 
   repo_options.push(RepositoryOptions {
     name: String::from("Default"),
-    description: String::from("Default template repository from tpoe"),
+    description: Some(String::from("Default template repository from tpoe")),
     git_options: git_options,
   });
 

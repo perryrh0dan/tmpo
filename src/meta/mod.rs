@@ -2,11 +2,15 @@ use std::fs::File;
 use std::io::{Error, Read};
 use std::path::Path;
 
+use crate::error::RunError;
+use crate::git;
+
+extern crate serde;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meta {
-    pub kind: String,
+    pub kind: Type,
     pub name: String,
     pub version: Option<String>,
     pub description: Option<String>,
@@ -14,6 +18,14 @@ pub struct Meta {
     pub extend: Option<Vec<String>>,
     pub exclude: Option<Vec<String>>,
     pub renderer: Option<Renderer>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub enum Type {
+  #[serde(alias = "repository")]
+  REPOSITORY,
+  #[serde(alias = "template")]
+  TEMPLATE,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -28,14 +40,8 @@ pub struct Scripts {
     pub after_install: Option<String>,
 }
 
-pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
+pub fn load(dir: &Path) -> Result<Meta, Error> {
     let meta_path = dir.join("meta.json");
-
-    // check if file exists
-    if !meta_path.exists() {
-        let meta = default();
-        return Ok(meta);
-    }
 
     // Open file
     let mut src = File::open(Path::new(&meta_path))?;
@@ -47,28 +53,43 @@ pub fn load_meta(dir: &Path) -> Result<Meta, Error> {
     Ok(meta)
 }
 
-pub fn default() -> Meta {
-    let meta = Meta {
-        kind: String::from(""),
-        name: String::from(""),
-        version: None,
-        description: None,
-        scripts: Some(Scripts {
-            before_install: None,
-            after_install: None,
-        }),
-        extend: None,
-        exclude: None,
-        renderer: Some(Renderer {
-            exclude: None,
-            values: None,
-        }),
-    };
+pub fn fetch(options: &git::Options) -> Result<Meta, RunError> {
+  let provider = if options.provider.is_some() {
+    options.provider.clone().unwrap()
+  } else {
+    return Err(RunError::Meta(String::from("No provider was provided")));
+  };
 
-    return meta;
+  let meta = match provider {
+    git::Provider::GITHUB => git::github::fetch_meta(options)?,
+    git::Provider::GITLAB => git::gitlab::fetch_meta(options)?,
+  };
+
+  Ok(meta)
 }
 
 impl Meta {
+  pub fn new(kind: Type) -> Meta {
+    Meta {
+      kind: kind,
+      name: String::from(""),
+      version: None,
+      description: None,
+      scripts: Some(Scripts {
+          before_install: None,
+          after_install: None,
+      }),
+      extend: None,
+      exclude: None,
+      renderer: Some(
+        Renderer {
+          exclude: None,
+          values: None,
+        }
+      ),
+    }
+  }
+
   pub fn get_values(&self) -> Vec<String> {
     let renderer = match self.renderer.to_owned() {
       Some(data) => data,

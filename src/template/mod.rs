@@ -31,8 +31,8 @@ pub struct Template {
 }
 
 impl Template {
-  pub fn new(dir: &std::fs::DirEntry) -> Result<Template, RunError> {
-    let meta = match meta::load_meta(&dir.path()) {
+  pub fn new(dir: &Path) -> Result<Template, RunError> {
+    let meta = match meta::load(&dir) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);
@@ -41,8 +41,8 @@ impl Template {
       }
     };
 
-    // If type is None or unqual template skip entry
-    if meta.kind != String::from("template") {
+    // Check if type is Template
+    if meta.kind != meta::Type::TEMPLATE {
       return Err(RunError::Template(String::from("Initialization")));
     }
 
@@ -51,9 +51,26 @@ impl Template {
     // make all names lowercase
     return Ok(Template {
       name: utils::lowercase(&name),
-      path: dir.path(),
+      path: dir.to_path_buf(),
       meta: meta,
     });
+  }
+
+  /// Create a new template with given name in the repository directory
+  pub fn create(dir: &Path, meta: &meta::Meta)-> Result<std::path::PathBuf, RunError> {
+    let template_path = dir.join(utils::lowercase(&meta.name));
+
+    // Create template directory
+    fs::create_dir(&template_path)?;
+
+    // Create meta.json
+    let meta_path = template_path.join("meta.json");
+    let mut meta_file = File::create(meta_path)?;
+
+    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
+    meta_file.write(meta_data.as_bytes())?;
+
+    return Ok(template_path);
   }
 
   pub fn copy(

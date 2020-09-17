@@ -2,19 +2,59 @@ use log;
 use std::path::Path;
 // use crate::error::RunError;
 
+pub mod github;
+pub mod gitlab;
+pub mod utils;
+
 extern crate git2;
 extern crate serde_json;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct GitOptions {
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct Options {
   pub enabled: bool,
-  pub provider: Option<String>, // github, gitlab
+  pub provider: Option<Provider>,
   pub url: Option<String>,
-  pub auth: Option<String>, // basic, none, token
+  pub branch: Option<String>,
+  pub auth: Option<AuthType>,
   pub token: Option<String>,
   pub username: Option<String>,
   pub password: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Clone, Debug)]
+pub enum Provider {
+  #[serde(alias = "github")]
+  GITHUB,
+  #[serde(alias = "gitlab")]
+  GITLAB,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Clone, Debug)]
+pub enum AuthType {
+  #[serde(alias = "basic")]
+  BASIC,
+  #[serde(alias = "none")]
+  NONE,
+  #[serde(alias = "ssh")]
+  SSH,
+  #[serde(alias = "token")]
+  TOKEN,
+}
+
+impl Options {
+  pub fn new() -> Options {
+    Options {
+      enabled: false,
+      provider: None,
+      url: None,
+      branch: None,
+      auth: None,
+      token: None,
+      username: None,
+      password: None,
+    }
+  }
 }
 
 pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
@@ -23,7 +63,7 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
     Ok(repo) => repo,
     Err(error) => {
       return Err(error);
-    },
+    }
   };
 
   // Set remote
@@ -31,68 +71,37 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
     Ok(()) => (),
     Err(error) => {
       return Err(error);
-    },
+    }
   };
 
   Ok(())
 }
 
-pub fn update(dir: &Path, opts: &GitOptions) -> Result<(), git2::Error> {
+pub fn update(dir: &Path, opts: &Options) -> Result<(), git2::Error> {
   let repo = match git2::Repository::open(dir) {
     Ok(repo) => repo,
     Err(e) => return Err(e),
   };
 
   let remote_name = "origin";
-  let remote_branch = "master";
+
+  // Set branch
+  let remote_branch = if opts.branch.is_some() {
+    opts.branch.to_owned().unwrap()
+  } else {
+    String::from("master")
+  };
+
   let mut remote = repo.find_remote(remote_name)?;
-  let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote, opts)?;
+  let fetch_commit = do_fetch(&repo, &[&remote_branch], &mut remote, opts)?;
   do_merge(&repo, &remote_branch, fetch_commit)
-}
-
-pub fn get_email() -> Result<String, git2::Error> {
-  let config = get_config()?;
-  let email = config.get_string("user.email")?;
-
-  let mut buf = String::with_capacity(email.len());
-
-  for c in email.chars() {
-    buf.push(c);
-  }
-
-  Ok(buf)
-}
-
-pub fn get_username() -> Result<String, git2::Error> {
-  let config = get_config()?;
-  let username = config.get_string("user.name")?;
-
-  let mut buf = String::with_capacity(username.len());
-
-  for c in username.chars() {
-    buf.push(c);
-  }
-
-  Ok(buf)
-}
-
-// load global git config
-fn get_config() -> Result<git2::Config, git2::Error> {
-  let path = git2::Config::find_global()?;
-  let config = git2::Config::open(&path)?;
-
-  // for entry in &config.entries(None).unwrap() {
-  //     let entry = entry.unwrap();
-  //     println!("{} => {}", entry.name().unwrap(), entry.value().unwrap());
-  // }
-  Ok(config)
 }
 
 fn do_fetch<'a>(
   repo: &'a git2::Repository,
   refs: &[&str],
   remote: &'a mut git2::Remote,
-  opts: &GitOptions,
+  opts: &Options,
 ) -> Result<git2::AnnotatedCommit<'a>, git2::Error> {
   // token needs to be declared here to live longer than the fetchOptions
 
@@ -103,58 +112,66 @@ fn do_fetch<'a>(
   let mut callbacks = git2::RemoteCallbacks::new();
   let auth = opts.auth.clone().unwrap();
 
-  if auth == "ssh" {
-    log::info!("[git]: authentication using ssh");
-    // username_from_url is only working with an ssh url
-    // problems with encrypted private keys
-    callbacks.credentials(|url, username_from_url, _allowed_types| {
-      if url.contains("git@") {
-        git2::Cred::ssh_key(
-          username_from_url.unwrap(),
-          None,
-          std::path::Path::new(&format!("{}/.ssh/id_rsa", dirs::home_dir().unwrap().to_string_lossy())),
-          // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
-          None,
-        )
-      } else {
-        git2::Cred::ssh_key(
+  match auth {
+    AuthType::BASIC => {
+      log::info!("[git]: authentication using basic");
+      if opts.username.is_none() || opts.password.is_none() {
+        log::error!("Username or Password is missing");
+        return Err(git2::Error::from_str("missing credentials"));
+      }
+      callbacks.credentials(|_url, _username_from_url, _allowed_types| {
+        git2::Cred::userpass_plaintext(
           &opts.username.clone().unwrap(),
-          None,
-          std::path::Path::new(&format!("{}/.ssh/id_rsa", dirs::home_dir().unwrap().to_string_lossy())),
-          // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
-          None,
+          &opts.password.clone().unwrap(),
         )
-      }
-    });
-  } else if auth == "token" {
-    log::info!("[git]: authentication using token");
-    if opts.token.is_none() {
-      log::error!("No token was provided");
-      return Err(git2::Error::from_str("missing auth token"));
+      });
     }
-    token = opts.token.clone().unwrap();
-    // different behavior for github and gitlab
-    callbacks.credentials(|_url, _username_from_url, _allowed_types| {
-      if opts.provider.as_ref().unwrap() == "github" {
-        git2::Cred::userpass_plaintext(&token, "")
-      } else if opts.provider.as_ref().unwrap() == "gitlab" {
-        git2::Cred::userpass_plaintext("oauth2", &token)
-      } else {
-        log::error!("provider is not supported");
-        return Err(git2::Error::from_str("provider is not supported"));
+    AuthType::TOKEN => {
+      log::info!("[git]: authentication using token");
+      if opts.token.is_none() {
+        log::error!("No token was provided");
+        return Err(git2::Error::from_str("missing auth token"));
       }
-    });
-  } else if auth == "basic" {
-    log::info!("[git]: authentication using basic");
-    if opts.username.is_none() || opts.password.is_none() {
-      log::error!("Username or Password is missing");
-      return Err(git2::Error::from_str("missing credentials"));
+      token = opts.token.clone().unwrap();
+      // different behavior for github and gitlab
+      callbacks.credentials(|_url, _username_from_url, _allowed_types| {
+        match opts.provider.clone().unwrap() {
+          Provider::GITHUB => git2::Cred::userpass_plaintext(&token, ""),
+          Provider::GITLAB => git2::Cred::userpass_plaintext("oauth2", &token),
+        }
+      });
     }
-    callbacks.credentials(|_url, _username_from_url, _allowed_types| {
-      git2::Cred::userpass_plaintext(&opts.username.clone().unwrap(), &opts.password.clone().unwrap())
-    });
-  } else {
-    log::info!("[git]: no authentication");
+    AuthType::SSH => {
+      log::info!("[git]: authentication using ssh");
+      // username_from_url is only working with an ssh url
+      // problems with encrypted private keys
+      callbacks.credentials(|url, username_from_url, _allowed_types| {
+        if url.contains("git@") {
+          git2::Cred::ssh_key(
+            username_from_url.unwrap(),
+            None,
+            std::path::Path::new(&format!(
+              "{}/.ssh/id_rsa",
+              dirs::home_dir().unwrap().to_string_lossy()
+            )),
+            // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+            None,
+          )
+        } else {
+          git2::Cred::ssh_key(
+            &opts.username.clone().unwrap(),
+            None,
+            std::path::Path::new(&format!(
+              "{}/.ssh/id_rsa",
+              dirs::home_dir().unwrap().to_string_lossy()
+            )),
+            // std::path::Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+            None,
+          )
+        }
+      });
+    },
+    AuthType::NONE => {},
   }
 
   // Always fetch all tags.
@@ -166,7 +183,7 @@ fn do_fetch<'a>(
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
-    },
+    }
   };
   let fetch_head = repo.find_reference("FETCH_HEAD")?;
   Ok(repo.reference_to_annotated_commit(&fetch_head)?)
