@@ -1,8 +1,8 @@
 mod config;
 mod init;
 mod update;
-pub mod repository;
-pub mod template;
+mod repository;
+mod template;
 
 use crate::cli::input;
 use crate::config::Config;

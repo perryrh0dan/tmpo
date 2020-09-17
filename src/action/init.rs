@@ -8,7 +8,7 @@ use crate::cli::input;
 use crate::context;
 use crate::git;
 use crate::out;
-use crate::template;
+use crate::template::renderer;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -235,7 +235,7 @@ impl Action {
       }
     }
 
-    let options = template::context::Context {
+    let render_context = renderer::Context {
       name: String::from(&workspace_name),
       repository: String::from(&workspace_repository),
       username: username,
@@ -245,7 +245,7 @@ impl Action {
 
     // Copy the template
     log::info!("Start processing template: {}", &template.name);
-    match template.copy(&repository, &tmp_workspace_path, &options) {
+    match template.copy(&repository, &tmp_workspace_path, &render_context) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);

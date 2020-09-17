@@ -13,8 +13,7 @@ use crate::utils;
 extern crate serde;
 use serde::Serialize;
 
-pub mod context;
-mod renderer;
+pub mod renderer;
 mod script;
 
 #[derive(Serialize, Debug)]
@@ -77,7 +76,7 @@ impl Template {
     &self,
     repository: &Repository,
     target: &Path,
-    opts: &context::Context,
+    opts: &renderer::Context,
   ) -> Result<(), RunError> {
     // Get list of all super templates
     let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
@@ -93,8 +92,8 @@ impl Template {
     // Initialize template
     self.init(target, opts)?;
 
-    // Create meta file
-    self.create_meta(&target)?;
+    // Create info file
+    self.create_info(&target)?;
 
     Ok(())
   }
@@ -116,7 +115,7 @@ impl Template {
     Ok(values)
   }
 
-  fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
+  fn init(&self, target: &Path, opts: &renderer::Context) -> Result<(), RunError> {
     log::info!("Initialize Template: {}", self.name);
 
     // Run before install script
@@ -145,7 +144,7 @@ impl Template {
     &self,
     src: &Path,
     target: &Path,
-    opts: &context::Context,
+    opts: &renderer::Context,
   ) -> Result<(), RunError> {
     // Loop at selected template directory
     let entries = match fs::read_dir(src) {
@@ -215,7 +214,7 @@ impl Template {
   }
 
   /// Get list of all super templates
-  fn get_super_templates(
+  pub fn get_super_templates(
     &self,
     repository: &Repository,
     seen: &mut std::collections::HashSet<String>,
@@ -281,11 +280,11 @@ impl Template {
     items.contains(&name.to_owned())
   }
 
-  fn create_meta(&self, target: &Path) -> Result<(), std::io::Error> {
+  fn create_info(&self, target: &Path) -> Result<(), std::io::Error> {
     // Create .tmpo.yaml file
     // Not used yet
-    let meta_path = &target.to_path_buf().join(".tmpo.yaml");
-    let mut meta_file = fs::File::create(meta_path)?;
+    let info_path = &target.to_path_buf().join(".tmpo.yaml");
+    let mut info_file = fs::File::create(info_path)?;
 
     // Fill meta
     let info = Info {
@@ -293,8 +292,8 @@ impl Template {
       version: self.meta.version.clone(),
     };
 
-    let meta_data = serde_yaml::to_string(&info).unwrap();
-    meta_file.write(meta_data.as_bytes())?;
+    let info_data = serde_yaml::to_string(&info).unwrap();
+    info_file.write(info_data.as_bytes())?;
 
     Ok(())
   }

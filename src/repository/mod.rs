@@ -143,6 +143,12 @@ impl Repository {
     Ok(())
   }
 
+  pub fn copy_template(&self, name: &str) -> Result<(), RunError> {
+    let template = self.get_template_by_name(name)?;
+
+
+  }
+
   pub fn test(self) -> Result<(), RunError> {
     // ensure git setup if enabled
     if self.config.git_options.enabled {
