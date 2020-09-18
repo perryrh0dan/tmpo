@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meta {
-    pub kind: Type,
-    pub name: String,
-    pub version: Option<String>,
-    pub description: Option<String>,
-    pub scripts: Option<Scripts>,
-    pub extend: Option<Vec<String>>,
-    pub exclude: Option<Vec<String>>,
-    pub renderer: Option<Renderer>,
+  pub kind: Type,
+  pub name: String,
+  pub version: Option<String>,
+  pub description: Option<String>,
+  pub scripts: Option<Scripts>,
+  pub extend: Option<Vec<String>>,
+  pub exclude: Option<Vec<String>>,
+  pub renderer: Option<Renderer>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -30,27 +30,27 @@ pub enum Type {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Renderer {
-    pub exclude: Option<Vec<String>>,
-    pub values: Option<Vec<String>>,
+  pub exclude: Option<Vec<String>>,
+  pub values: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Scripts {
-    pub before_install: Option<String>,
-    pub after_install: Option<String>,
+  pub before_install: Option<String>,
+  pub after_install: Option<String>,
 }
 
 pub fn load(dir: &Path) -> Result<Meta, Error> {
-    let meta_path = dir.join("meta.json");
+  let meta_path = dir.join("meta.json");
 
-    // Open file
-    let mut src = File::open(Path::new(&meta_path))?;
-    let mut data = String::new();
+  // Open file
+  let mut src = File::open(Path::new(&meta_path))?;
+  let mut data = String::new();
 
-    // Write to data string
-    src.read_to_string(&mut data)?;
-    let meta: Meta = serde_json::from_str(&data)?;
-    Ok(meta)
+  // Write to data string
+  src.read_to_string(&mut data)?;
+  let meta: Meta = serde_json::from_str(&data)?;
+  Ok(meta)
 }
 
 pub fn fetch(options: &git::Options) -> Result<Meta, RunError> {
@@ -76,29 +76,27 @@ impl Meta {
       version: None,
       description: None,
       scripts: Some(Scripts {
-          before_install: None,
-          after_install: None,
+        before_install: None,
+        after_install: None,
       }),
       extend: None,
       exclude: None,
-      renderer: Some(
-        Renderer {
-          exclude: None,
-          values: None,
-        }
-      ),
+      renderer: Some(Renderer {
+        exclude: None,
+        values: None,
+      }),
     }
   }
 
   pub fn get_values(&self) -> Vec<String> {
     let renderer = match self.renderer.to_owned() {
       Some(data) => data,
-      None => return vec!{},
+      None => return vec![],
     };
 
     match renderer.values {
       Some(x) => x,
-      None => return vec!{},
+      None => return vec![],
     }
   }
 

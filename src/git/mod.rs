@@ -170,8 +170,8 @@ fn do_fetch<'a>(
           )
         }
       });
-    },
-    AuthType::NONE => {},
+    }
+    AuthType::NONE => {}
   }
 
   // Always fetch all tags.

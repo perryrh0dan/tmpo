@@ -1,25 +1,36 @@
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
 
 use crate::config::{Config, RepositoryOptions};
+use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
 use crate::meta;
 use crate::template;
+use crate::template::{renderer, Template};
 use crate::utils;
+
+#[derive(Debug)]
+pub struct CopyOptions {
+  pub template_name: String,
+  pub target: PathBuf,
+  pub render_context: renderer::Context,
+}
 
 #[derive(Debug)]
 pub struct Repository {
   pub config: RepositoryOptions,
   pub directory: PathBuf,
-  pub meta: meta::Meta,
+  pub meta: Option<meta::Meta>,
   pub templates: Vec<template::Template>,
 }
 
 impl Repository {
   pub fn new(config: &Config, name: &str) -> Result<Repository, RunError> {
+    log::info!("Loading repository: {}", name);
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
       Option::None => {
@@ -29,20 +40,10 @@ impl Repository {
 
     let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
 
-    // Load meta
-    let meta = match meta::load(&directory) {
-      Ok(meta) => meta,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        return Err(RunError::Repository(String::from("Unable to load meta")));
-      }
-    };
-
     let mut repository = Repository {
       config: cfg,
       directory: directory,
-      meta: meta,
+      meta: None,
       templates: Vec::<template::Template>::new(),
     };
 
@@ -51,7 +52,7 @@ impl Repository {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
-        return Err(RunError::Repository(String::from("Initialization")))
+        return Err(RunError::Repository(String::from("Initialization")));
       }
     };
 
@@ -63,115 +64,84 @@ impl Repository {
       };
     }
 
-    repository.load_templates();
+    // Load meta
+    repository.load_meta()?;
+
+    // Load templates
+    repository.load_templates()?;
 
     return Ok(repository);
   }
 
-  pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
-    let directory = Path::new(&config.template_dir).join(&utils::lowercase(&options.name));
+  pub fn copy_template(&self, ctx: &Context, opts: &CopyOptions) -> Result<(), RunError> {
+    let template = self.get_template_by_name(&opts.template_name)?;
 
-    let repository = Repository {
-      config: options.clone(),
-      directory: directory,
-      meta: meta::Meta::new(meta::Type::REPOSITORY),
-      templates: Vec::<template::Template>::new(),
-    };
+    let super_templates =
+      self.get_super_templates(template, &mut std::collections::HashSet::new())?;
 
-    // Ensure repository diectory
-    match repository.ensure_repository_dir() {
-      Ok(()) => (),
-      Err(error) => {
-        log::error!("{}", error);
-        return Err(RunError::Repository(String::from("Initialization")))
+    // Initialize super templates
+    for template in super_templates.iter() {
+      template.init(ctx, &opts.target, &opts.render_context)?;
+    }
+
+    // Initialize template
+    template.init(ctx, &opts.target, &opts.render_context)?;
+
+    // Create info file
+    template.create_info(&opts.target)?;
+
+    Ok(())
+  }
+
+  /// Get list of all super templates
+  pub fn get_super_templates(
+    &self,
+    template: &template::Template,
+    seen: &mut std::collections::HashSet<String>,
+  ) -> Result<Vec<Template>, RunError> {
+    // get list of all super templates
+    let super_templates = template.get_super_templates()?;
+
+    seen.insert(template.name.to_owned());
+
+    let mut templates = vec![];
+    for name in super_templates {
+      // Avoid circular dependencies;
+      if seen.contains(&name) {
+        continue;
       }
-    };
 
-    // Ensure git setup if enabled
-    if repository.config.git_options.enabled {
-      match repository.ensure_repository_git() {
-        Ok(()) => (),
-        Err(_) => (),
+      let template = self.get_template_by_name(&name)?;
+
+      let t = match self.get_super_templates(template, seen) {
+        Ok(templates) => templates,
+        Err(error) => return Err(error),
       };
-    };
 
-    // Test repository
-    match repository.test() {
-      Ok(()) => (),
-      Err(error) => return Err(error)
-    };
-
-    Ok(())
-  }
-
-  pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunError> {
-    let directory = directory.join(&utils::lowercase(&options.name));
-
-    // Create repository directory
-    fs::create_dir(&directory)?;
-
-    // Create meta data
-    let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
-    meta.name = options.name.to_owned();
-    meta.description = options.description.to_owned();
-
-    // Create meta.json
-    let meta_path = directory.join("meta.json");
-    let mut meta_file = File::create(meta_path)?;
-
-    // Create meta data
-    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
-    match meta_file.write(meta_data.as_bytes()) {
-      Ok(_) => (),
-      Err(error) => return Err(RunError::IO(error)),
-    };
-
-    // Initialize git repository
-    if options.git_options.enabled && options.git_options.url.is_some() {
-      match git::init(
-        &directory,
-        &options.git_options.url.clone().unwrap(),
-      ) {
-        Ok(()) => (),
-        Err(error) => {
-          log::error!("{}", error);
-          return Err(RunError::Git(String::from("Initialization")));
-        },
-      };
+      templates.extend(t);
+      templates.push(template.to_owned());
     }
 
-    Ok(())
+    Ok(templates)
   }
 
-  pub fn test(self) -> Result<(), RunError> {
-    // ensure git setup if enabled
-    if self.config.git_options.enabled {
-      match self.ensure_repository_git() {
-        Ok(()) => (),
-        Err(error) => {
-          log::error!("{}", error);
-          return Err(RunError::Git(String::from("Initialization")))
-        },
-      };
+  pub fn get_template_values(&self, template_name: &str) -> Result<HashSet<String>, RunError> {
+    let template = self.get_template_by_name(&template_name)?;
+
+    // Get list of all super templates
+    let super_templates = match self.get_super_templates(template, &mut HashSet::new()) {
+      Ok(templates) => templates,
+      Err(error) => return Err(error),
+    };
+
+    let mut values = HashSet::new();
+    for template in super_templates {
+      values.extend(template.meta.get_values());
     }
 
-    Ok(())
-  }
+    values.extend(template.meta.get_values());
 
-  /// delete
-  pub fn delete_repository(&self) -> Result<(), RunError> {
-    log::info!(
-      "Delete repository directory {}",
-      &self.directory.to_owned().to_str().unwrap()
-    );
-    match fs::remove_dir_all(&self.directory) {
-      Ok(()) => (),
-      Err(error) => {
-        return Err(RunError::IO(error));
-      }
-    }
-
-    return Ok(());
+    Ok(values)
   }
 
   /// Return list of all template names in this repository
@@ -196,6 +166,22 @@ impl Repository {
     return Err(RunError::Template(String::from("Not found")));
   }
 
+  /// delete
+  pub fn delete_repository(&self) -> Result<(), RunError> {
+    log::info!(
+      "Delete repository directory {}",
+      &self.directory.to_owned().to_str().unwrap()
+    );
+    match fs::remove_dir_all(&self.directory) {
+      Ok(()) => (),
+      Err(error) => {
+        return Err(RunError::IO(error));
+      }
+    }
+
+    return Ok(());
+  }
+
   fn ensure_repository_dir(&self) -> Result<(), Error> {
     if !self.directory.exists() {
       match fs::create_dir(&self.directory) {
@@ -216,7 +202,7 @@ impl Repository {
       Ok(()) => (),
       Err(error) => {
         return Err(error);
-      },
+      }
     };
 
     // update repository
@@ -230,13 +216,26 @@ impl Repository {
     Ok(())
   }
 
-  fn load_templates(&mut self) {
-    let mut templates = Vec::<template::Template>::new();
+  fn load_meta(&mut self) -> Result<(), RunError> {
+    self.meta = match meta::load(&self.directory) {
+      Ok(meta) => Some(meta),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        return Err(RunError::Repository(String::from("Unable to load meta")));
+      }
+    };
+
+    Ok(())
+  }
+
+  fn load_templates(&mut self) -> Result<(), RunError> {
+    self.templates = Vec::<template::Template>::new();
 
     // check if folder exists
     match fs::read_dir(&self.directory) {
       Ok(fc) => fc,
-      Err(_error) => return,
+      Err(error) => return Err(RunError::IO(error)),
     };
 
     // Loop at all entries in repository directory
@@ -262,11 +261,84 @@ impl Repository {
 
       let template = match template::Template::new(&entry.path()) {
         Ok(template) => template,
-        Err(_error) => continue,
+        Err(error) => {
+          log::error!("{}", error);
+          continue;
+        }
       };
 
-      templates.push(template);
+      self.templates.push(template);
     }
-    self.templates = templates;
+
+    Ok(())
   }
+}
+
+pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
+  let directory = Path::new(&config.template_dir).join(&utils::lowercase(&options.name));
+
+  let repository = Repository {
+    config: options.clone(),
+    directory: directory,
+    meta: None,
+    templates: vec![],
+  };
+
+  // Ensure repository diectory
+  match repository.ensure_repository_dir() {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(RunError::Repository(String::from("Initialization")));
+    }
+  };
+
+  // Ensure git setup if enabled
+  if repository.config.git_options.enabled {
+    match repository.ensure_repository_git() {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        return Err(RunError::Git(String::from("Initialization")));
+      }
+    };
+  };
+
+  Ok(())
+}
+
+pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunError> {
+  let directory = directory.join(&utils::lowercase(&options.name));
+
+  // Create repository directory
+  fs::create_dir(&directory)?;
+
+  // Create meta data
+  let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
+  meta.name = options.name.to_owned();
+  meta.description = options.description.to_owned();
+
+  // Create meta.json
+  let meta_path = directory.join("meta.json");
+  let mut meta_file = File::create(meta_path)?;
+
+  // Create meta data
+  let meta_data = serde_json::to_string_pretty(&meta).unwrap();
+  match meta_file.write(meta_data.as_bytes()) {
+    Ok(_) => (),
+    Err(error) => return Err(RunError::IO(error)),
+  };
+
+  // Initialize git repository
+  if options.git_options.enabled && options.git_options.url.is_some() {
+    match git::init(&directory, &options.git_options.url.clone().unwrap()) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        return Err(RunError::Git(String::from("Initialization")));
+      }
+    };
+  }
+
+  Ok(())
 }
