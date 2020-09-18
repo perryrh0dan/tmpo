@@ -4,8 +4,8 @@ use crate::error::RunError;
 use crate::git;
 use crate::meta::Meta;
 
-extern crate reqwest;
 extern crate regex;
+extern crate reqwest;
 use regex::Regex;
 
 pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
@@ -49,7 +49,9 @@ fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError
   }
 
   if auth != git::AuthType::NONE && auth != git::AuthType::TOKEN {
-    return Err(RunError::Meta(String::from("Auth type is not supported for fetching")));
+    return Err(RunError::Meta(String::from(
+      "Auth type is not supported for fetching",
+    )));
   }
 
   let meta_url = match build_meta_url(&url) {
@@ -58,15 +60,14 @@ fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError
   };
 
   let mut headers = reqwest::header::HeaderMap::new();
-  headers.insert(
-    reqwest::header::ACCEPT,
-    "application/json".parse().unwrap(),
-  );
+  headers.insert(reqwest::header::ACCEPT, "application/json".parse().unwrap());
 
   if auth == git::AuthType::TOKEN && options.token.is_some() {
     headers.insert(
       "Authorization",
-      format!("token {}", options.token.clone().unwrap()).parse().unwrap(),
+      format!("token {}", options.token.clone().unwrap())
+        .parse()
+        .unwrap(),
     );
   }
 
@@ -76,7 +77,7 @@ fn fetch(options: &git::Options) -> Result<reqwest::blocking::Response, RunError
     Err(error) => return Err(RunError::Meta(format!("{}", error))),
   };
 
-  return Ok(response)
+  return Ok(response);
 }
 
 pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
@@ -86,7 +87,9 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
     Some(_) => (),
     None => return Err(RunError::Git(String::from("Remote url"))),
   };
-  let partial_url = re.replace(repository_url, "https://raw.githubusercontent.com").to_owned();
+  let partial_url = re
+    .replace(repository_url, "https://raw.githubusercontent.com")
+    .to_owned();
   let meta_url = partial_url.to_string().add("/master/meta.json");
 
   Ok(meta_url)
@@ -97,7 +100,10 @@ fn build_meta_url_success_default() {
   let repository_url = "https://github.com/perryrh0dan/templates";
 
   let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
+  assert_eq!(
+    url.unwrap(),
+    "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
+  );
 }
 
 #[test]
@@ -105,7 +111,10 @@ fn build_meta_url_success_http() {
   let repository_url = "http://github.com/perryrh0dan/templates";
 
   let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json");
+  assert_eq!(
+    url.unwrap(),
+    "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
+  );
 }
 
 #[test]

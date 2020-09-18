@@ -9,7 +9,7 @@
             // "args": ["update"],
             "cwd": "${workspaceRoot}",
             "console": "externalTerminal",
-            "args": ["init", "-r", "default"],
+            "args": ["init", "test", "-r", "default", "--no-script"],
         },
         {
             "name": "(OSX) Launch",

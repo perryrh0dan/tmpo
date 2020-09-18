@@ -34,7 +34,7 @@ pub fn run(script: &String, target: &Path) {
     Err(error) => {
       log::error!("Script exited with error: {}", error);
       return;
-    },
+    }
   };
 
   log::info!("Script exit status: {}", status);

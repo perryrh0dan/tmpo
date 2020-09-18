@@ -8,6 +8,7 @@ use crate::cli::input;
 use crate::context;
 use crate::git;
 use crate::out;
+use crate::repository::CopyOptions;
 use crate::template::renderer;
 use crate::utils;
 
@@ -27,7 +28,7 @@ impl Action {
 
     out::info::initiate_workspace();
 
-    // check if repositories exist
+    // Check if repositories exist
     if self.config.get_repositories().len() <= 0 {
       out::error::no_repositories();
       exit(1);
@@ -41,7 +42,7 @@ impl Action {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       utils::lowercase(workspace_name.unwrap())
@@ -54,37 +55,33 @@ impl Action {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1)
-      },
+      }
     };
 
     // Check if templates exist
     if repository.get_templates().len() <= 0 {
-      eprintln!("No templates exist in repository: {}", repository.config.name);
+      out::error::no_templates(&repository.config.name);
       exit(1);
     }
 
+    let templates = repository.get_templates();
     let template_name = if template_name.is_none() {
-      let templates = repository.get_templates();
       match input::select("template", &templates) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       String::from(template_name.unwrap())
     };
 
-    // Get the template
-    let template = match repository.get_template_by_name(&template_name) {
-      Ok(template) => template,
-      Err(error) => {
-        eprintln!("{}", error);
-        exit(1);
-      }
-    };
+    // Check if template exist
+    if !templates.contains(&template_name) {
+      out::error::template_not_found(&template_name);
+    }
 
     // Get workspace directory from user input
     let workspace_directory = if workspace_directory.is_none() {
@@ -94,7 +91,7 @@ impl Action {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       workspace_directory.unwrap().to_string()
@@ -134,7 +131,7 @@ impl Action {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       remote_url.unwrap().to_string()
@@ -147,16 +144,19 @@ impl Action {
         Err(error) => {
           log::error!("{}", error);
           String::from("")
-        },
+        }
       };
 
-      match input::text_with_default(&format!("Please enter your email ({}): ", &git_email), git_email) {
+      match input::text_with_default(
+        &format!("Please enter your email ({}): ", &git_email),
+        git_email,
+      ) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       email.unwrap().to_owned()
@@ -169,16 +169,19 @@ impl Action {
         Err(error) => {
           log::error!("{}", error);
           String::from("")
-        },
+        }
       };
 
-      match input::text_with_default(&format!("Please enter your username ({}): ", &git_username), git_username) {
+      match input::text_with_default(
+        &format!("Please enter your username ({}): ", &git_username),
+        git_username,
+      ) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
           eprintln!("{}", error);
           exit(1);
-        },
+        }
       }
     } else {
       username.unwrap().to_owned()
@@ -186,7 +189,7 @@ impl Action {
 
     // Get template specific values
     let mut values = HashMap::new();
-    let keys = match repository.get_custom_values(&template_name) {
+    let keys = match repository.get_template_values(&template_name) {
       Ok(keys) => keys,
       Err(error) => {
         log::error!("{}", error);
@@ -201,15 +204,13 @@ impl Action {
         Err(error) => {
           log::error!("{}", error);
           String::from("")
-        },
+        }
       };
       values.insert(key, value);
     }
 
     // Create temp dir
-    let tmp_dir = tempfile::Builder::new()
-      .tempdir_in(&dir)
-      .unwrap();
+    let tmp_dir = tempfile::Builder::new().tempdir_in(&dir).unwrap();
 
     // Create the temporary workspace
     let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
@@ -235,6 +236,7 @@ impl Action {
       }
     }
 
+    // Create context for renderer with custom values
     let render_context = renderer::Context {
       name: String::from(&workspace_name),
       repository: String::from(&workspace_repository),
@@ -243,9 +245,16 @@ impl Action {
       values: values,
     };
 
+    // Create copy options
+    let copy_options = CopyOptions {
+      template_name: template_name.to_owned(),
+      target: tmp_workspace_path.to_owned(),
+      render_context: render_context,
+    };
+
     // Copy the template
-    log::info!("Start processing template: {}", &template.name);
-    match repository.copy_template(&template.name, &tmp_workspace_path, &render_context) {
+    log::info!("Start processing template: {}", &template_name);
+    match repository.copy_template(&ctx, &copy_options) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
@@ -255,14 +264,18 @@ impl Action {
     };
 
     // Move workspace from temporary directroy to target directory
-    log::info!("Move workspace from: {} to: {}", tmp_workspace_path.to_string_lossy(), target_dir.to_string_lossy());
+    log::info!(
+      "Move workspace from: {} to: {}",
+      tmp_workspace_path.to_string_lossy(),
+      target_dir.to_string_lossy()
+    );
     match std::fs::rename(tmp_workspace_path, target_dir) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
-      },
+      }
     };
 
     out::success::workspace_created(&workspace_name);

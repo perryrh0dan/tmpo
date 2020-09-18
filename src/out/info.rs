@@ -42,7 +42,10 @@ pub fn display_template(template: &Template) {
 pub fn display_repository(repository: &Repository) {
   println!("name: {}", repository.config.name);
   if repository.config.description.is_some() {
-    println!("description: {}", repository.config.description.to_owned().unwrap());
+    println!(
+      "description: {}",
+      repository.config.description.to_owned().unwrap()
+    );
   }
   println!("path: {}", repository.directory.to_str().unwrap());
 }

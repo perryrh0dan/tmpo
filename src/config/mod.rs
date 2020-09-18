@@ -10,7 +10,7 @@ use crate::utils;
 
 extern crate dirs;
 extern crate serde;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 extern crate serde_yaml;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -50,7 +50,10 @@ impl Config {
   }
 
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
-    let config = self.template_repositories.iter().find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
+    let config = self
+      .template_repositories
+      .iter()
+      .find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
     if config.is_some() {
       return Some(config.unwrap().clone());
@@ -59,7 +62,7 @@ impl Config {
     }
   }
 
-  pub fn save(&self) -> Result<(), Error>{
+  pub fn save(&self) -> Result<(), Error> {
     save_config(self)
   }
 }

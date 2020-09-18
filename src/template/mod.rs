@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
 
+use crate::context::Context;
 use crate::error::RunError;
 use crate::meta;
 use crate::utils;
@@ -54,7 +55,7 @@ impl Template {
   }
 
   /// Create a new template with given name in the repository directory
-  pub fn create(dir: &Path, meta: &meta::Meta)-> Result<std::path::PathBuf, RunError> {
+  pub fn create(dir: &Path, meta: &meta::Meta) -> Result<std::path::PathBuf, RunError> {
     let template_path = dir.join(utils::lowercase(&meta.name));
 
     // Create template directory
@@ -71,9 +72,7 @@ impl Template {
   }
 
   /// Get list of all super templates
-  pub fn get_super_templates(
-    &self,
-  ) -> Result<Vec<String>, RunError> {
+  pub fn get_super_templates(&self) -> Result<Vec<String>, RunError> {
     // get list of all super templates
     let super_templates = match &self.meta.extend {
       None => Vec::new(),
@@ -83,26 +82,35 @@ impl Template {
     Ok(super_templates)
   }
 
-  pub fn init(&self, target: &Path, opts: &renderer::Context) -> Result<(), RunError> {
+  pub fn init(
+    &self,
+    ctx: &Context,
+    target: &Path,
+    opts: &renderer::Context,
+  ) -> Result<(), RunError> {
     log::info!("Initialize Template: {}", self.name);
 
-    // Run before install script
-    let before_install_script = self.meta.get_before_install_script();
-    if before_install_script.is_some() {
-      let script = renderer::render(&before_install_script.unwrap(), &opts);
+    // Run before install script if not disabled
+    if !ctx.no_script {
+      let before_install_script = self.meta.get_before_install_script();
+      if before_install_script.is_some() {
+        let script = renderer::render(&before_install_script.unwrap(), &opts);
 
-      script::run(&script, target);
+        script::run(&script, target);
+      }
     }
 
     // Copy files
     self.copy_folder(&self.path, &target, &opts)?;
 
-    // Run after install script
-    let after_install_script = self.meta.get_after_install_script();
-    if after_install_script.is_some() {
-      let script = renderer::render(&after_install_script.unwrap(), &opts);
+    // Run after install script if not disabled
+    if !ctx.no_script {
+      let after_install_script = self.meta.get_after_install_script();
+      if after_install_script.is_some() {
+        let script = renderer::render(&after_install_script.unwrap(), &opts);
 
-      script::run(&script, target);
+        script::run(&script, target);
+      }
     }
 
     Ok(())

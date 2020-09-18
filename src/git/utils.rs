@@ -37,5 +37,3 @@ fn get_config() -> Result<git2::Config, git2::Error> {
   // }
   Ok(config)
 }
-
-

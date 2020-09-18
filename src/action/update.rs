@@ -19,7 +19,7 @@ impl Action {
     // user input
     let update = confirm("The new release will be downloaded/extraced and the existing binary will be replaced.\nDo you want to continue?");
     if !update {
-        exit(0);
+      exit(0);
     }
 
     println!();

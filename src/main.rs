@@ -3,8 +3,8 @@ use std::process::exit;
 
 mod action;
 mod cli;
-mod context;
 mod config;
+mod context;
 mod error;
 mod git;
 mod logger;
@@ -35,10 +35,15 @@ fn main() {
   match update::check_version() {
     Some((available_version, _asset)) => {
       let current_version = crate_version!();
-      println!("New release found! {} --> {}", current_version, available_version);
-    },
+      println!(
+        "New release found! {} --> {}",
+        current_version, available_version
+      );
+    }
     None => (),
   };
+
+  let action = action::Action::new(config);
 
   let matches = App::new("tmpo")
     .version(crate_version!())
@@ -93,22 +98,22 @@ fn main() {
             .long("username")
             .takes_value(true)
             .about("Username of the user")
-            .required(false)
+            .required(false),
         )
         .arg(
           Arg::new("email")
             .long("email")
             .takes_value(true)
             .about("E-Mail of the user")
-            .required(false)
+            .required(false),
         )
         .arg(
           Arg::new("no-script")
             .long("no-script")
             .takes_value(false)
             .about("Dont execute template scripts")
-            .required(false)
-        )
+            .required(false),
+        ),
     )
     .subcommand(App::new("config").about("View configuration"))
     .subcommand(App::new("update").about("Update to the latest release"))
@@ -138,7 +143,8 @@ fn main() {
             ),
         )
         .subcommand(
-          App::new("create").about("Create a new repository")
+          App::new("create")
+            .about("Create a new repository")
             .arg(
               Arg::new("name")
                 .short('n')
@@ -184,22 +190,24 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .setting(AppSettings::HelpRequired)
         .subcommand(
-          App::new("create").about("Create new template").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          )
-          .arg(
-            Arg::new("name")
-              .short('n')
-              .long("name")
-              .takes_value(true)
-              .about("Name of the template")
-              .required(false)
-          )
+          App::new("create")
+            .about("Create new template")
+            .arg(
+              Arg::new("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .about("Name of the template")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("list").about("List all available templates").arg(
@@ -212,14 +220,16 @@ fn main() {
           ),
         )
         .subcommand(
-          App::new("test").about("Test template at given location").arg(
-            Arg::new("directory")
-              .short('d')
-              .long("directory")
-              .takes_value(true)
-              .about("Directory of the template")
-              .required(true),
-          )
+          App::new("test")
+            .about("Test template at given location")
+            .arg(
+              Arg::new("directory")
+                .short('d')
+                .long("directory")
+                .takes_value(true)
+                .about("Directory of the template")
+                .required(true),
+            ),
         )
         .subcommand(
           App::new("view")
@@ -244,51 +254,39 @@ fn main() {
     )
     .get_matches();
 
-  let action = action::Action::new(config);
-
   match matches.subcommand() {
-    Some(("config", _config_matches)) => {
+    Some(("config", _args)) => {
       action.config();
     }
-    Some(("init", init_matches)) => {
-      action.init(init_matches);
+    Some(("init", args)) => {
+      action.init(args);
     }
-    Some(("update", _update_matches)) => {
+    Some(("update", _args)) => {
       action.update();
     }
-    Some(("repository", repository_matches)) => {
-      match repository_matches.subcommand() {
-        Some(("add", repo_add_matches)) => {
-          action.repository_add(repo_add_matches)
-        }
-        Some(("create", repo_create_matches)) => {
-          action.repository_create(repo_create_matches)
-        }
-        Some(("list", _list_matches)) => {
+    Some(("repository", args)) => {
+      match args.subcommand() {
+        Some(("add", args)) => action.repository_add(args),
+        Some(("create", args)) => action.repository_create(args),
+        Some(("list", _args)) => {
           action.repository_list();
         }
-        Some(("remove", delete_matches)) => {
-          action.repository_remove(delete_matches)
-        }
-        Some(("view", view_matches)) => {
-          action.repository_view(view_matches)
-        }
+        Some(("remove", args)) => action.repository_remove(args),
+        Some(("view", args)) => action.repository_view(args),
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
     }
-    Some(("template", repository_matches)) => {
-      match repository_matches.subcommand() {
-        Some(("create", template_create_matches)) => {
-          action.template_create(template_create_matches)
+    Some(("template", args)) => {
+      match args.subcommand() {
+        Some(("create", args)) => action.template_create(args),
+        Some(("list", args)) => {
+          action.template_list(args);
         }
-        Some(("list", list_matches)) => {
-          action.template_list(list_matches);
+        Some(("test", args)) => {
+          action.template_test(args);
         }
-        Some(("test", test_matches)) => {
-          action.template_test(test_matches);
-        }
-        Some(("view", view_matches)) => {
-          action.template_view(view_matches);
+        Some(("view", args)) => {
+          action.template_view(args);
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
       }
