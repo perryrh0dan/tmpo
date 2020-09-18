@@ -1,20 +1,18 @@
 use log;
-use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
 
+use crate::context::Context;
 use crate::error::RunError;
 use crate::meta;
-use crate::repository::Repository;
 use crate::utils;
 
 extern crate serde;
 use serde::Serialize;
 
-pub mod context;
-mod renderer;
+pub mod renderer;
 mod script;
 
 #[derive(Serialize, Debug)]
@@ -57,7 +55,7 @@ impl Template {
   }
 
   /// Create a new template with given name in the repository directory
-  pub fn create(dir: &Path, meta: &meta::Meta)-> Result<std::path::PathBuf, RunError> {
+  pub fn create(dir: &Path, meta: &meta::Meta) -> Result<std::path::PathBuf, RunError> {
     let template_path = dir.join(utils::lowercase(&meta.name));
 
     // Create template directory
@@ -73,69 +71,46 @@ impl Template {
     return Ok(template_path);
   }
 
-  pub fn copy(
+  /// Get list of all super templates
+  pub fn get_super_templates(&self) -> Result<Vec<String>, RunError> {
+    // get list of all super templates
+    let super_templates = match &self.meta.extend {
+      None => Vec::new(),
+      Some(x) => x.clone(),
+    };
+
+    Ok(super_templates)
+  }
+
+  pub fn init(
     &self,
-    repository: &Repository,
+    ctx: &Context,
     target: &Path,
-    opts: &context::Context,
+    opts: &renderer::Context,
   ) -> Result<(), RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
-    };
-
-    // Initialize super templates
-    for template in super_templates {
-      template.init(target, opts)?;
-    }
-
-    // Initialize template
-    self.init(target, opts)?;
-
-    // Create meta file
-    self.create_meta(&target)?;
-
-    Ok(())
-  }
-
-  pub fn get_custom_values(&self, repository: &Repository) -> Result<HashSet<String>, RunError> {
-    // Get list of all super templates
-    let super_templates = match self.get_super_templates(repository, &mut HashSet::new()) {
-      Ok(templates) => templates,
-      Err(error) => return Err(error),
-    };
-
-    let mut values = HashSet::new();
-    for template in super_templates {
-      values.extend(template.meta.get_values());
-    }
-
-    values.extend(self.meta.get_values());
-
-    Ok(values)
-  }
-
-  fn init(&self, target: &Path, opts: &context::Context) -> Result<(), RunError> {
     log::info!("Initialize Template: {}", self.name);
 
-    // Run before install script
-    let before_install_script = self.meta.get_before_install_script();
-    if before_install_script.is_some() {
-      let script = renderer::render(&before_install_script.unwrap(), &opts);
+    // Run before install script if not disabled
+    if !ctx.no_script {
+      let before_install_script = self.meta.get_before_install_script();
+      if before_install_script.is_some() {
+        let script = renderer::render(&before_install_script.unwrap(), &opts);
 
-      script::run(&script, target);
+        script::run(&script, target);
+      }
     }
 
     // Copy files
     self.copy_folder(&self.path, &target, &opts)?;
 
-    // Run after install script
-    let after_install_script = self.meta.get_after_install_script();
-    if after_install_script.is_some() {
-      let script = renderer::render(&after_install_script.unwrap(), &opts);
+    // Run after install script if not disabled
+    if !ctx.no_script {
+      let after_install_script = self.meta.get_after_install_script();
+      if after_install_script.is_some() {
+        let script = renderer::render(&after_install_script.unwrap(), &opts);
 
-      script::run(&script, target);
+        script::run(&script, target);
+      }
     }
 
     Ok(())
@@ -145,7 +120,7 @@ impl Template {
     &self,
     src: &Path,
     target: &Path,
-    opts: &context::Context,
+    opts: &renderer::Context,
   ) -> Result<(), RunError> {
     // Loop at selected template directory
     let entries = match fs::read_dir(src) {
@@ -214,47 +189,6 @@ impl Template {
     Ok(())
   }
 
-  /// Get list of all super templates
-  fn get_super_templates(
-    &self,
-    repository: &Repository,
-    seen: &mut std::collections::HashSet<String>,
-  ) -> Result<Vec<Template>, RunError> {
-    // get list of all super templates
-    let super_templates = match &self.meta.extend {
-      None => Vec::new(),
-      Some(x) => x.clone(),
-    };
-
-    seen.insert(self.meta.name.to_owned());
-
-    let mut templates = vec![];
-    for name in super_templates {
-      // Avoid circular dependencies;
-      if seen.contains(&name) {
-        continue;
-      }
-
-      let template = match repository.get_template_by_name(&name) {
-        Ok(template) => template,
-        Err(error) => {
-          log::error!("{}", error);
-          return Err(RunError::Template(String::from("Not found")));
-        }
-      };
-
-      let t = match template.get_super_templates(repository, seen) {
-        Ok(templates) => templates,
-        Err(error) => return Err(error),
-      };
-
-      templates.extend(t);
-      templates.push(template.to_owned());
-    }
-
-    Ok(templates)
-  }
-
   fn is_excluded_copy(&self, name: &str) -> bool {
     if name == "meta.json" {
       return true;
@@ -281,11 +215,11 @@ impl Template {
     items.contains(&name.to_owned())
   }
 
-  fn create_meta(&self, target: &Path) -> Result<(), std::io::Error> {
+  pub fn create_info(&self, target: &Path) -> Result<(), std::io::Error> {
     // Create .tmpo.yaml file
     // Not used yet
-    let meta_path = &target.to_path_buf().join(".tmpo.yaml");
-    let mut meta_file = fs::File::create(meta_path)?;
+    let info_path = &target.to_path_buf().join(".tmpo.yaml");
+    let mut info_file = fs::File::create(info_path)?;
 
     // Fill meta
     let info = Info {
@@ -293,8 +227,8 @@ impl Template {
       version: self.meta.version.clone(),
     };
 
-    let meta_data = serde_yaml::to_string(&info).unwrap();
-    meta_file.write(meta_data.as_bytes())?;
+    let info_data = serde_yaml::to_string(&info).unwrap();
+    info_file.write(info_data.as_bytes())?;
 
     Ok(())
   }

@@ -1,5 +1,5 @@
 use std::fmt;
-use std::fmt::{Formatter, Display};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum RunError {
@@ -30,6 +30,6 @@ impl Display for RunError {
 
 impl From<std::io::Error> for RunError {
   fn from(e: std::io::Error) -> Self {
-      RunError::IO(e)
+    RunError::IO(e)
   }
 }

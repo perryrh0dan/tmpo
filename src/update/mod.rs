@@ -28,8 +28,8 @@ pub fn check_version() -> Option<(String, self_update::update::ReleaseAsset)> {
     Ok(releases) => releases,
     Err(error) => {
       log::error!("{}", error);
-      return None
-    },
+      return None;
+    }
   };
 
   // Check version

@@ -2,13 +2,13 @@ use crate::error::RunError;
 use crate::git;
 use crate::meta::Meta;
 
-extern crate reqwest;
 extern crate regex;
+extern crate reqwest;
 use regex::Regex;
 extern crate url;
-use url::form_urlencoded::{byte_serialize};
+use url::form_urlencoded::byte_serialize;
 extern crate serde_json;
-use serde::{Deserialize};
+use serde::Deserialize;
 extern crate base64;
 
 #[derive(Deserialize, Debug)]
@@ -22,7 +22,7 @@ struct FileResponse {
   blob_id: String,
   commit_id: String,
   last_commit_id: String,
-  content: String
+  content: String,
 }
 
 pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
@@ -71,7 +71,9 @@ fn fetch(options: &git::Options) -> Result<FileResponse, RunError> {
   }
 
   if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN {
-    return Err(RunError::Meta(String::from("Auth type is not supported for fetching")));
+    return Err(RunError::Meta(String::from(
+      "Auth type is not supported for fetching",
+    )));
   }
 
   let meta_url = match build_meta_url(&url) {
@@ -80,10 +82,7 @@ fn fetch(options: &git::Options) -> Result<FileResponse, RunError> {
   };
 
   let mut headers = reqwest::header::HeaderMap::new();
-  headers.insert(
-    reqwest::header::ACCEPT,
-    "application/json".parse().unwrap(),
-  );
+  headers.insert(reqwest::header::ACCEPT, "application/json".parse().unwrap());
 
   if auth == git::AuthType::TOKEN && options.token.is_some() {
     headers.insert(
@@ -119,19 +118,22 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   let re = Regex::new("http[s]?://[^/]+/(.+)").unwrap();
   let captures = match re.captures(repository_url) {
     Some(value) => value,
-    None => return Err(RunError::Git(String::from("Cant extract path")))
+    None => return Err(RunError::Git(String::from("Cant extract path"))),
   };
 
   let path: String = match captures.get(1) {
     Some(value) => String::from(value.as_str()),
-    None => return Err(RunError::Git(String::from("Cant extract path")))
+    None => return Err(RunError::Git(String::from("Cant extract path"))),
   };
 
   // URLEncode the path
   let urlencoded_path: String = byte_serialize(path.as_bytes()).collect();
 
   // Build the meta_url
-  let meta_url = format!("{}/api/v4/projects/{}/repository/files/meta.json?ref=master", domain, urlencoded_path);
+  let meta_url = format!(
+    "{}/api/v4/projects/{}/repository/files/meta.json?ref=master",
+    domain, urlencoded_path
+  );
 
   Ok(meta_url)
 }

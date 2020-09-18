@@ -1,8 +1,10 @@
-use crate::config::Config;
+use crate::action::Action;
 use crate::out;
 
-pub fn list(config: &Config) {
-    let repositories = config.get_repositories();
+impl Action {
+    pub fn repository_list(self) {
+        let repositories = self.config.get_repositories();
 
-    out::info::list_repositories(&repositories);
+        out::info::list_repositories(&repositories);
+    }
 }
