@@ -14,8 +14,8 @@ pub fn no_templates(repository_name: &str) {
   eprintln!("{}", text);
 }
 
-pub fn template_not_found(template: &str) {
-  let text = format!("Template: {} not found", template);
+pub fn template_not_found() {
+  let text = format!("Unable to load template! Error: Not found");
   eprintln!("{}", text);
 }
 

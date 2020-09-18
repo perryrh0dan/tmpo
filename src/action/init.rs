@@ -80,7 +80,8 @@ impl Action {
 
     // Check if template exist
     if !templates.contains(&template_name) {
-      out::error::template_not_found(&template_name);
+      out::error::template_not_found();
+      exit(1);
     }
 
     // Get workspace directory from user input
