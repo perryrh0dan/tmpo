@@ -59,12 +59,12 @@ impl Action {
     };
 
     // Check if templates exist
-    if repository.get_templates().len() <= 0 {
+    let templates = repository.get_template_names();
+    if templates.len() <= 0 {
       out::error::no_templates(&repository.config.name);
       exit(1);
     }
 
-    let templates = repository.get_templates();
     let template_name = if template_name.is_none() {
       match input::select("template", &templates) {
         Ok(value) => value,

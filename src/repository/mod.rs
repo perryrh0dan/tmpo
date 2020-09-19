@@ -145,7 +145,7 @@ impl Repository {
   }
 
   /// Return list of all template names in this repository
-  pub fn get_templates(&self) -> Vec<String> {
+  pub fn get_template_names(&self) -> Vec<String> {
     let mut templates = Vec::<String>::new();
 
     for template in &self.templates {
