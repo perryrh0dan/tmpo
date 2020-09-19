@@ -1,10 +1,14 @@
 # What's new in Tmpo
 
+## 1.8.0
+
+- Add yes option to skip optional questions at initialization
+
 ## 1.7.0
 
 ### Features
 
-- Add no script method to prevent script execution at initialization
+- Add no script option to prevent script execution at initialization
 
 ### Fix
 
