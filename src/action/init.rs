@@ -125,7 +125,7 @@ impl Action {
     }
 
     // Get workspace git repository url from user input
-    let workspace_repository = if remote_url.is_none() {
+    let workspace_repository = if remote_url.is_none() && !ctx.yes {
       match input::text("Please enter a git remote url", true) {
         Ok(value) => value,
         Err(error) => {
@@ -134,12 +134,14 @@ impl Action {
           exit(1);
         }
       }
-    } else {
+    } else if remote_url.is_some() {
       remote_url.unwrap().to_string()
+    } else {
+      String::from("")
     };
 
     // Get email from user input or global git config
-    let email = if email.is_none() {
+    let email = if email.is_none() && !ctx.yes {
       let git_email = match git::utils::get_email() {
         Ok(value) => value,
         Err(error) => {
@@ -159,12 +161,14 @@ impl Action {
           exit(1);
         }
       }
-    } else {
+    } else if email.is_some() {
       email.unwrap().to_owned()
+    } else {
+      String::from("")
     };
 
     // Get username from user input or global git config
-    let username = if username.is_none() {
+    let username = if username.is_none() && !ctx.yes {
       let git_username = match git::utils::get_username() {
         Ok(value) => value,
         Err(error) => {
@@ -184,30 +188,34 @@ impl Action {
           exit(1);
         }
       }
-    } else {
+    } else if username.is_some() {
       username.unwrap().to_owned()
+    } else {
+      String::from("")
     };
 
-    // Get template specific values
     let mut values = HashMap::new();
-    let keys = match repository.get_template_values(&template_name) {
-      Ok(keys) => keys,
-      Err(error) => {
-        log::error!("{}", error);
-        println!("{}", error);
-        exit(1);
-      }
-    };
-
-    for key in keys {
-      let value = match input::text(&format!("Please enter {}", &key), true) {
-        Ok(value) => value,
+    if !ctx.yes {
+      // Get template specific values
+      let keys = match repository.get_template_values(&template_name) {
+        Ok(keys) => keys,
         Err(error) => {
           log::error!("{}", error);
-          String::from("")
+          println!("{}", error);
+          exit(1);
         }
       };
-      values.insert(key, value);
+
+      for key in keys {
+        let value = match input::text(&format!("Please enter {}", &key), true) {
+          Ok(value) => value,
+          Err(error) => {
+            log::error!("{}", error);
+            String::from("")
+          }
+        };
+        values.insert(key, value);
+      }
     }
 
     // Create temp dir
