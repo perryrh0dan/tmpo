@@ -1,11 +1,22 @@
 # What's new in Tmpo
 
+## 1.7.0
+
+### Features
+
+- Add no script method to prevent script execution at initialization
+
+### Fix
+
+- Bug fixes
+- Unit tests
+
 ## 1.6.0
 
 ### Features
 
 - Sort select options alphabetically
-- Fetch meta informations from the repository
+- Fetch meta informations from the repository to propose name and description 
 - Sort options alphabetically
 - Start to replace master with customizable branch
 - Add command to create new templates
