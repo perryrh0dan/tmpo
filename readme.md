@@ -136,6 +136,7 @@ The following illustrates all the available options with their respective defaul
         enabled: true
         provider: github
         url: "https://github.com/perryrh0dan/templates"
+        branch: master
         auth: none
         token: 
         username: ~
