@@ -12,6 +12,7 @@
 
 ### Fix
 
+- Refactoring
 - Bug fixes
 - Unit tests
 
