@@ -155,6 +155,16 @@ cross build --target x86_64-pc-windows-gnu
 cross build --release --target x86_64-pc-windows-gnu
 ```
 
+### Benchmark
+
+#### Flamegraph
+
+- Follow [this](https://github.com/flamegraph-rs/flamegraph) steps to install flamegraph
+- Run following command
+``` bash
+cargo flamegraph --dev --bin=tmpo init thomas
+```
+
 ## Team
 
 - Thomas Pöhlmann [(@perryrh0dan)](https://github.com/perryrh0dan)

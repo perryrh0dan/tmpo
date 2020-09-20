@@ -1,3 +1,9 @@
 /test
 /target
 **/*.rs.bk
+
+# flamegraph
+
+perf.data
+perf.data.old
+flamegraph.svg
