@@ -60,7 +60,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 ## Demo
 
 <div align="center">
-  <img alt="demo" width="70%" src="./media/demo_v1.0.0.gif">
+  <img alt="demo" width="70%" src="./media/demo_v1.8.0.gif">
 </div>
 
 ## Install
