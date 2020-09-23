@@ -85,8 +85,8 @@ impl Action {
     }
 
     // Get workspace directory from user input
-    let workspace_directory = if workspace_directory.is_none() {
-      match input::text("Please enter the target diectory", false) {
+    let workspace_directory = if workspace_directory.is_none() && !ctx.yes {
+      match input::text_with_default("Please enter the target directory (.): ", ".") {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -94,8 +94,10 @@ impl Action {
           exit(1);
         }
       }
-    } else {
+    } else if workspace_directory.is_some() {
       workspace_directory.unwrap().to_string()
+    } else {
+      String::from(".")
     };
 
     // Get target directory
@@ -152,7 +154,7 @@ impl Action {
 
       match input::text_with_default(
         &format!("Please enter your email ({}): ", &git_email),
-        git_email,
+        &git_email,
       ) {
         Ok(value) => value,
         Err(error) => {
@@ -179,7 +181,7 @@ impl Action {
 
       match input::text_with_default(
         &format!("Please enter your username ({}): ", &git_username),
-        git_username,
+        &git_username,
       ) {
         Ok(value) => value,
         Err(error) => {
