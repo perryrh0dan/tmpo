@@ -1,6 +1,14 @@
 # What's new in Tmpo
 
+## 1.8.1
+
+### Fix
+
+- Use current directory (".") as default directory for initialization. 
+
 ## 1.8.0
+
+## Features
 
 - Add yes option to skip optional questions at initialization
 
