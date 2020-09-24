@@ -3,7 +3,7 @@
 </h1>
 
 <h4 align="center">
-    Command line interface to quickly create new workspaces based on templates
+    Command line utility to quickly create new workspaces based on templates
 </h4>
 
 <div align="center">
@@ -40,7 +40,9 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 ## Highlights
 - Setup complex workspaces in seconds
 - Templates support inheritence and placeholders
-- Lightweight & fast
+- Simple, Lightweight & fast
+- Cross-platform: Linux, Windows and mac are official supported
+- Everything can be a template. Python, Rust, Typescript, latex, markdown,... 
 - Share templates across your team or community with git
 - Configurable through `~/.tmpo/config.yaml`
 
@@ -65,14 +67,14 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 
 ## Install
 
-1. Download the latest release for your platform.
+1. Download the latest [release](https://github.com/perryrh0dan/tmpo/releases) for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
 
 ## Flight Manual
 
 ### Quick Start
 
-1. Add a [repository](#repositories)
+1. Add a [repository](#repositories) or use the [default repository](https://github.com/perryrh0dan/templates)
 ``` bash
 tmpo repository add
 ```
@@ -84,7 +86,7 @@ tmpo init
 
 ### CLI
 
-``` bash
+``` 
 tmpo 1.5.3
 Thomas P. <thomaspoehlmann96@googlemail.com>
 Cli to create new workspaces based on templates
@@ -118,7 +120,7 @@ tmpo repository add
 ### Templates
 
 Templates can be configured with a `meta.json` in the template root. 
-For a detailed description how to create and maintain templates have a look at the instructions and default templates [repository](https://github.com/perryrh0dan/templates)
+For a detailed description how to create and maintain templates have a look at the instructions and the default template repository [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
 The configuration file should only be changed by experienced users.
