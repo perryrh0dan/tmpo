@@ -120,7 +120,7 @@ tmpo repository add
 ### Templates
 
 Templates can be configured with a `meta.json` in the template root. 
-For a detailed description how to create and maintain templates have a look at the instructions and the default template repository [repository](https://github.com/perryrh0dan/templates)
+For a detailed description how to create and maintain templates have a look at the instructions in the default template repository [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
 The configuration file should only be changed by experienced users.
