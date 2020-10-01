@@ -70,6 +70,8 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 1. Download the latest [release](https://github.com/perryrh0dan/tmpo/releases) for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
 
+Detailed description [here](https://github.com/perryrh0dan/tmpo/blob/master/installation.md).
+
 ## Flight Manual
 
 ### Quick Start
@@ -120,7 +122,7 @@ tmpo repository add
 ### Templates
 
 Templates can be configured with a `meta.json` in the template root. 
-For a detailed description how to create and maintain templates have a look at the instructions and the default template repository [repository](https://github.com/perryrh0dan/templates)
+For a detailed description how to create and maintain templates have a look at the instructions in the default template repository [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
 The configuration file should only be changed by experienced users.
