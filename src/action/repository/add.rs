@@ -81,7 +81,7 @@ impl Action {
 
     // Get branch
     git_options.branch =
-      match input::text_with_default("Enter remote branch (master): ", "master") {
+      match input::text_with_default("Enter remote branch", "master") {
         Ok(value) => Some(value),
         Err(error) => {
           log::error!("{}", error);
@@ -147,7 +147,7 @@ impl Action {
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
       match input::text_with_default(
-        &format!("Enter repository name ({}): ", meta.name),
+        "Enter repository name",
         &meta.name,
       ) {
         Ok(value) => value,
@@ -171,8 +171,7 @@ impl Action {
     // Get repository description from user input
     let repository_description = if repository_description.is_none() {
       let description = meta.description.unwrap_or_default();
-      let description_question = format!("Enter repository description ({}): ", &description);
-      match input::text_with_default(&description_question, &description) {
+      match input::text_with_default("Enter repository description", &description) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);

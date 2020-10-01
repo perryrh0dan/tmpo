@@ -16,8 +16,14 @@ pub fn text(text: &str, allow_empty: bool) -> Result<String, RunError> {
 }
 
 pub fn text_with_default(text: &str, default: &str) -> Result<String, RunError> {
+  let question = if default != "" {
+    format!("{} ({}): ", text, default)
+  } else {
+    String::from(text)
+  };
+
   let input = match Input::<String>::with_theme(&ColorfulTheme::default())
-    .with_prompt(text)
+    .with_prompt(question)
     .allow_empty(true)
     .interact()
   {
