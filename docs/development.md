@@ -4,6 +4,7 @@
 
 ### Commit Message Header
 
+``` text
 <type>(<scope>): <short summary>
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
@@ -11,6 +12,7 @@
   │       └─⫸ Commit Scope: file or module
   │
   └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|style|test
+```
 
 ## Build
 
