@@ -112,7 +112,7 @@ fn main() {
             .short('y')
             .long("yes")
             .takes_value(false)
-            .about("Skip all optional questions")
+            .about("Skip all optional questions"),
         )
         .arg(
           Arg::new("no-script")
