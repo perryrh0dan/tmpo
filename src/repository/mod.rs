@@ -205,11 +205,14 @@ impl Repository {
       }
     };
 
-    // update repository
-    match git::update(&self.directory, &self.config.git_options) {
-      Ok(()) => (),
-      Err(error) => {
-        return Err(error);
+    // Check if user has internet connection
+    if !utils::online() {
+      // update repository
+      match git::update(&self.directory, &self.config.git_options) {
+        Ok(()) => (),
+        Err(error) => {
+          return Err(error);
+        }
       }
     }
 

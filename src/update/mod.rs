@@ -17,6 +17,7 @@ const BIN_NAME: &str = "tmpo.exe";
 const BIN_NAME: &str = "tmpo";
 
 pub fn check_version() -> Option<(String, self_update::update::ReleaseAsset)> {
+  // Get release list
   log::info!("Fetch release list");
   let releases = match self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")

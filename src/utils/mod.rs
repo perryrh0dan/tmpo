@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+extern crate online;
+
 pub fn capitalize(text: &str) -> String {
     let mut v: Vec<char> = text.chars().collect();
     v[0] = v[0].to_uppercase().nth(0).unwrap();
@@ -19,4 +23,12 @@ pub fn vec_to_string(vec: &Vec<String>) -> String {
     }
 
     return result;
+}
+
+pub fn online() -> bool {
+  let timeout = Duration::new(6, 0);
+  match online::online(Some(timeout)) {
+    Ok(value) => value,
+    Err(_error) => false,
+  }
 }

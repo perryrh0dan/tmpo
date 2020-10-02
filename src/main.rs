@@ -31,17 +31,20 @@ fn main() {
     }
   };
 
-  // Check for an update
-  match update::check_version() {
-    Some((available_version, _asset)) => {
-      let current_version = crate_version!();
-      println!(
-        "New release found! {} --> {}",
-        current_version, available_version
-      );
-    }
-    None => (),
-  };
+  // Check if user has internet connection
+  if utils::online() {
+    // Check for an update
+    match update::check_version() {
+      Some((available_version, _asset)) => {
+        let current_version = crate_version!();
+        println!(
+          "New release found! {} --> {}",
+          current_version, available_version
+        );
+      }
+      None => (),
+    };
+  }
 
   let action = action::Action::new(config);
 
