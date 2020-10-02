@@ -70,7 +70,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 1. Download the latest [release](https://github.com/perryrh0dan/tmpo/releases) for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
 
-Detailed description [here](https://github.com/perryrh0dan/tmpo/blob/master/installation.md).
+Detailed description [here](https://github.com/perryrh0dan/tmpo/blob/master/docs/installation.md).
 
 ## Flight Manual
 
@@ -149,26 +149,7 @@ The following illustrates all the available options with their respective defaul
 
 ## Development
 
-### Build
-
-#### Binary
-
-Tmpo is using [cross](https://github.com/rust-embedded/cross) to build cross platform.
-
-``` bash
-cross build --target x86_64-pc-windows-gnu
-cross build --release --target x86_64-pc-windows-gnu
-```
-
-### Benchmark
-
-#### Flamegraph
-
-- Follow [this](https://github.com/flamegraph-rs/flamegraph) steps to install flamegraph
-- Run following command
-``` bash
-cargo flamegraph --dev --bin=tmpo init thomas
-```
+More information regarding development and testing can be found [here](https://github.com/perryrh0dan/tmpo/blob/master/docs/development.md).
 
 ## Team
 
