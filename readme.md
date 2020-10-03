@@ -45,6 +45,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 - Everything can be a template. Python, Rust, Typescript, latex, markdown,... 
 - Share templates across your team or community with git
 - Configurable through `~/.tmpo/config.yaml`
+- Self Updater
 
 ## Contents
 
