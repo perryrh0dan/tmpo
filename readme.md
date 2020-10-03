@@ -45,6 +45,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 - Everything can be a template. Python, Rust, Typescript, latex, markdown,... 
 - Share templates across your team or community with git
 - Configurable through `~/.tmpo/config.yaml`
+- Self Updater
 
 ## Contents
 
@@ -70,7 +71,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 1. Download the latest [release](https://github.com/perryrh0dan/tmpo/releases) for your platform.
 2. Copy the binary to your `/bin` folder or point the path variable to it.
 
-Detailed description [here](https://github.com/perryrh0dan/tmpo/blob/master/docs/installation.md).
+A detailed description can be found [here](https://github.com/perryrh0dan/tmpo/blob/master/docs/installation.md).
 
 ## Flight Manual
 
