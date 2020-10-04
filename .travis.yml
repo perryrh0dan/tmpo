@@ -25,7 +25,7 @@ install:
 - sh scripts/install.sh
 - source ~/.cargo/env || true
 script:
-- bash scripts/script.sh
+- bash scripts/test.sh
 after_script: set +e
 before_deploy:
 - sh scripts/before_deploy.sh

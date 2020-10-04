@@ -1,3 +1,5 @@
+# This script can be used for manual building tmpo
+
 echo "Build x86_64-unknown-linux-gnu"
 cross build --release --target x86_64-unknown-linux-gnu
 

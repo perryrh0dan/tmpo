@@ -34,3 +34,7 @@ cross build --release --target x86_64-pc-windows-gnu
 ``` bash
 cargo flamegraph --dev --bin=tmpo init thomas
 ```
+## Codecoverage
+
+- Install [grcov](https://github.com/mozilla/grcov)
+- Run ./scripts/coverage.sh
