@@ -16,6 +16,8 @@ mod update;
 mod utils;
 
 use clap::{crate_version, App, AppSettings, Arg};
+// TODO check for autocompletion for bash/zsh/powershell
+// use clap_generate::{generate, generators::Bash};
 
 fn main() {
   // Initiate logger
