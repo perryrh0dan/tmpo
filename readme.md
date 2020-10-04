@@ -15,9 +15,6 @@
       <img alt="Build Status" src="https://travis-ci.com/perryrh0dan/tmpo.svg?branch=master" />
    </a>
    <img src="https://img.shields.io/badge/coverage-64%2C5%25-yellow" />
-   <a href="https://codeclimate.com/github/perryrh0dan/tmpo/maintainability">
-      <img src="https://api.codeclimate.com/v1/badges/83561b59422e2492f9db/maintainability" />
-   </a>
    <a href="https://gitter.im/perryrh0dantmpo/community">
       <img alt="Gitter" src="https://badges.gitter.im/community.svg" />
    </a>
