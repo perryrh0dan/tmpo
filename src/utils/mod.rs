@@ -16,7 +16,7 @@ pub fn vec_to_string(vec: &Vec<String>) -> String {
   let mut result = String::new();
   let mut index = 0;
   for text in vec {
-    if index == vec.len() - 1{
+    if index == vec.len() - 1 {
       result += text;
     } else {
       result = result + text + ", ";
@@ -27,50 +27,55 @@ pub fn vec_to_string(vec: &Vec<String>) -> String {
   return result;
 }
 
-#[test]
-fn test_capitalize() -> Result<(), Box<dyn std::error::Error>> {
-  let test: &str = "extraterrestrial";
+#[cfg(test)]
+mod tests {
+  use super::*;
 
-  let result = capitalize(test);
+  #[test]
+  fn test_capitalize() -> Result<(), Box<dyn std::error::Error>> {
+    let test: &str = "extraterrestrial";
 
-  assert_eq!(result, "Extraterrestrial");
+    let result = capitalize(test);
 
-  Ok(())
-}
+    assert_eq!(result, "Extraterrestrial");
 
-#[test]
-fn test_capitalize_two() -> Result<(), Box<dyn std::error::Error>> {
-  let test: &str = "Extraterrestrial";
+    Ok(())
+  }
 
-  let result = capitalize(test);
+  #[test]
+  fn test_capitalize_two() -> Result<(), Box<dyn std::error::Error>> {
+    let test: &str = "Extraterrestrial";
 
-  assert_eq!(result, "Extraterrestrial");
+    let result = capitalize(test);
 
-  Ok(())
-}
+    assert_eq!(result, "Extraterrestrial");
 
-#[test]
-fn test_lowercase() -> Result<(), Box<dyn std::error::Error>> {
-  let test: &str = "ExtrateRRestrIAl";
+    Ok(())
+  }
 
-  let result = lowercase(test);
+  #[test]
+  fn test_lowercase() -> Result<(), Box<dyn std::error::Error>> {
+    let test: &str = "ExtrateRRestrIAl";
 
-  assert_eq!(result, "extraterrestrial");
+    let result = lowercase(test);
 
-  Ok(())
-}
+    assert_eq!(result, "extraterrestrial");
 
-#[test]
-fn test_vec_to_string() -> Result<(), Box<dyn std::error::Error>> {
-  let test: Vec<String> = vec!{
-    String::from("proper"),
-    String::from("unlike"),
-    String::from("garlic"),
-  };
+    Ok(())
+  }
 
-  let result = vec_to_string(&test);
+  #[test]
+  fn test_vec_to_string() -> Result<(), Box<dyn std::error::Error>> {
+    let test: Vec<String> = vec![
+      String::from("proper"),
+      String::from("unlike"),
+      String::from("garlic"),
+    ];
 
-  assert_eq!(result, "proper, unlike, garlic");
+    let result = vec_to_string(&test);
 
-  Ok(())
+    assert_eq!(result, "proper, unlike, garlic");
+
+    Ok(())
+  }
 }

@@ -35,62 +35,74 @@ pub fn render(text: &str, content: &Context) -> String {
   return result;
 }
 
-#[test]
-fn test_render_default() -> Result<(), Box<dyn std::error::Error>> {
-  let text = "this is {{name}} an small test to test the basic {{repository}} features of the placeholder logic";
-  let content: Context = Context{
-    name: String::from("Tmpo"),
-    repository: String::from("https://github.com/perryrh0dan/tmpo"),
-    username: String::from("perryrh0dan"),
-    email: String::from("thomaspoehlmann96@googlemail.com"),
-    values: HashMap::new(),
-  };
+#[cfg(test)]
+mod tests {
+  use super::*;
 
-  let result = render(text, &content);
+  #[test]
+  fn test_render_default() -> Result<(), Box<dyn std::error::Error>> {
+    let text = "this is {{name}} an small test to test the basic {{repository}} features of the placeholder logic";
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: HashMap::new(),
+    };
 
-  assert_eq!(result, "this is Tmpo an small test to test the basic https://github.com/perryrh0dan/tmpo features of the placeholder logic");
+    let result = render(text, &content);
 
-  Ok(())
-}
+    assert_eq!(result, "this is Tmpo an small test to test the basic https://github.com/perryrh0dan/tmpo features of the placeholder logic");
 
-#[test]
-fn test_render_values() -> Result<(), Box<dyn std::error::Error>> {
-  let text = "lets add one custom value: {{ values.full_name }} or a second one {{ values.last_name }}";
-  let mut values = HashMap::new();
-  values.insert(String::from("full_name"), String::from("Thomas Pöhlmann"));
-  values.insert(String::from("last_name"), String::from("Pöhlmann"));
-  let content: Context = Context{
-    name: String::from("Tmpo"),
-    repository: String::from("https://github.com/perryrh0dan/tmpo"),
-    username: String::from("perryrh0dan"),
-    email: String::from("thomaspoehlmann96@googlemail.com"),
-    values: values,
-  };
+    Ok(())
+  }
 
-  let result = render(text, &content);
+  #[test]
+  fn test_render_values() -> Result<(), Box<dyn std::error::Error>> {
+    let text =
+      "lets add one custom value: {{ values.full_name }} or a second one {{ values.last_name }}";
+    let mut values = HashMap::new();
+    values.insert(String::from("full_name"), String::from("Thomas Pöhlmann"));
+    values.insert(String::from("last_name"), String::from("Pöhlmann"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
 
-  assert_eq!(result, "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann");
+    let result = render(text, &content);
 
-  Ok(())
-}
+    assert_eq!(
+      result,
+      "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann"
+    );
 
-#[test]
-fn test_render_unknown() -> Result<(), Box<dyn std::error::Error>> {
-  let text = "lets add one custom value: {{ values.full_name }} or a second one {{ values.last_name }} and an unknown: {{ values.first_name }}";
-  let mut values = HashMap::new();
-  values.insert(String::from("full_name"), String::from("Thomas Pöhlmann"));
-  values.insert(String::from("last_name"), String::from("Pöhlmann"));
-  let content: Context = Context{
-    name: String::from("Tmpo"),
-    repository: String::from("https://github.com/perryrh0dan/tmpo"),
-    username: String::from("perryrh0dan"),
-    email: String::from("thomaspoehlmann96@googlemail.com"),
-    values: values,
-  };
+    Ok(())
+  }
 
-  let result = render(text, &content);
+  #[test]
+  fn test_render_unknown() -> Result<(), Box<dyn std::error::Error>> {
+    let text = "lets add one custom value: {{ values.full_name }} or a second one {{ values.last_name }} and an unknown: {{ values.first_name }}";
+    let mut values = HashMap::new();
+    values.insert(String::from("full_name"), String::from("Thomas Pöhlmann"));
+    values.insert(String::from("last_name"), String::from("Pöhlmann"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
 
-  assert_eq!(result, "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann and an unknown: ");
+    let result = render(text, &content);
 
-  Ok(())
+    assert_eq!(
+      result,
+      "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann and an unknown: "
+    );
+
+    Ok(())
+  }
 }

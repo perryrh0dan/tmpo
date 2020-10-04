@@ -138,54 +138,59 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   Ok(meta_url)
 }
 
-#[test]
-fn build_meta_url_default() {
-  let repository_url = "https://gitlab.com/JohnMcClan3/templates";
+#[cfg(test)]
+mod tests {
+  use super::*;
 
-  let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "https://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
-}
+  #[test]
+  fn build_meta_url_default() {
+    let repository_url = "https://gitlab.com/JohnMcClan3/templates";
 
-#[test]
-fn build_meta_url_http() {
-  let repository_url = "http://gitlab.com/JohnMcClan3/templates";
+    let url = build_meta_url(repository_url);
+    assert_eq!(url.unwrap(), "https://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
+  }
 
-  let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "http://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
-}
+  #[test]
+  fn build_meta_url_http() {
+    let repository_url = "http://gitlab.com/JohnMcClan3/templates";
 
-#[test]
-fn build_meta_url_ce() {
-  let repository_url = "https://gitlab1.camelot-idpro.de/developmentgovernance/templates";
+    let url = build_meta_url(repository_url);
+    assert_eq!(url.unwrap(), "http://gitlab.com/api/v4/projects/JohnMcClan3%2Ftemplates/repository/files/meta.json?ref=master");
+  }
 
-  let url = build_meta_url(repository_url);
-  assert_eq!(url.unwrap(), "https://gitlab1.camelot-idpro.de/api/v4/projects/developmentgovernance%2Ftemplates/repository/files/meta.json?ref=master");
-}
+  #[test]
+  fn build_meta_url_ce() {
+    let repository_url = "https://gitlab1.camelot-idpro.de/developmentgovernance/templates";
 
-#[test]
-fn fetch_meta_success() {
-  let mut options = git::Options::new();
-  options.enabled = true;
-  options.provider = Some(git::Provider::GITLAB);
-  options.auth = Some(git::AuthType::TOKEN);
-  options.token = Some(String::from("r-6fZ-CXscYu97u4m-mD"));
-  options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
+    let url = build_meta_url(repository_url);
+    assert_eq!(url.unwrap(), "https://gitlab1.camelot-idpro.de/api/v4/projects/developmentgovernance%2Ftemplates/repository/files/meta.json?ref=master");
+  }
 
-  let meta = fetch_meta(&options).unwrap();
-  assert_eq!(meta.name, "test");
-}
+  #[test]
+  fn fetch_meta_success() {
+    let mut options = git::Options::new();
+    options.enabled = true;
+    options.provider = Some(git::Provider::GITLAB);
+    options.auth = Some(git::AuthType::TOKEN);
+    options.token = Some(String::from("r-6fZ-CXscYu97u4m-mD"));
+    options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
 
-#[test]
-fn fetch_meta_failure() {
-  let mut options = git::Options::new();
-  options.enabled = true;
-  options.provider = Some(git::Provider::GITLAB);
-  options.auth = Some(git::AuthType::TOKEN);
-  options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
+    let meta = fetch_meta(&options).unwrap();
+    assert_eq!(meta.name, "test");
+  }
 
-  let meta = fetch_meta(&options);
-  match meta {
-    Ok(_) => assert!(false),
-    Err(_) => assert!(true),
+  #[test]
+  fn fetch_meta_failure() {
+    let mut options = git::Options::new();
+    options.enabled = true;
+    options.provider = Some(git::Provider::GITLAB);
+    options.auth = Some(git::AuthType::TOKEN);
+    options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
+
+    let meta = fetch_meta(&options);
+    match meta {
+      Ok(_) => assert!(false),
+      Err(_) => assert!(true),
+    }
   }
 }

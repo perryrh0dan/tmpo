@@ -95,46 +95,51 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
   Ok(meta_url)
 }
 
-#[test]
-fn build_meta_url_success_default() {
-  let repository_url = "https://github.com/perryrh0dan/templates";
+#[cfg(test)]
+mod tests {
+  use super::*;
 
-  let url = build_meta_url(repository_url);
-  assert_eq!(
-    url.unwrap(),
-    "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
-  );
-}
+  #[test]
+  fn build_meta_url_success_default() {
+    let repository_url = "https://github.com/perryrh0dan/templates";
 
-#[test]
-fn build_meta_url_success_http() {
-  let repository_url = "http://github.com/perryrh0dan/templates";
-
-  let url = build_meta_url(repository_url);
-  assert_eq!(
-    url.unwrap(),
-    "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
-  );
-}
-
-#[test]
-fn build_meta_url_failure() {
-  let repository_url = "https://github.de/perryrh0dan/templates";
-
-  match build_meta_url(repository_url) {
-    Ok(_) => assert!(false),
-    Err(_) => assert!(true),
+    let url = build_meta_url(repository_url);
+    assert_eq!(
+      url.unwrap(),
+      "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
+    );
   }
-}
 
-#[test]
-fn fetch_meta_success() {
-  let mut options = git::Options::new();
-  options.enabled = true;
-  options.provider = Some(git::Provider::GITHUB);
-  options.auth = Some(git::AuthType::NONE);
-  options.url = Some(String::from("https://github.com/perryrh0dan/templates"));
+  #[test]
+  fn build_meta_url_success_http() {
+    let repository_url = "http://github.com/perryrh0dan/templates";
 
-  let meta = fetch_meta(&options).unwrap();
-  assert_eq!(meta.name, "default");
+    let url = build_meta_url(repository_url);
+    assert_eq!(
+      url.unwrap(),
+      "https://raw.githubusercontent.com/perryrh0dan/templates/master/meta.json"
+    );
+  }
+
+  #[test]
+  fn build_meta_url_failure() {
+    let repository_url = "https://github.de/perryrh0dan/templates";
+
+    match build_meta_url(repository_url) {
+      Ok(_) => assert!(false),
+      Err(_) => assert!(true),
+    }
+  }
+
+  #[test]
+  fn fetch_meta_success() {
+    let mut options = git::Options::new();
+    options.enabled = true;
+    options.provider = Some(git::Provider::GITHUB);
+    options.auth = Some(git::AuthType::NONE);
+    options.url = Some(String::from("https://github.com/perryrh0dan/templates"));
+
+    let meta = fetch_meta(&options).unwrap();
+    assert_eq!(meta.name, "default");
+  }
 }
