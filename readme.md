@@ -14,9 +14,7 @@
    <a href="https://travis-ci.com/perryrh0dan/tmpo">
       <img alt="Build Status" src="https://travis-ci.com/perryrh0dan/tmpo.svg?branch=master" />
    </a>
-   <a href="https://codecov.io/gh/perryrh0dan/tmpo">
-      <img src="https://codecov.io/gh/perryrh0dan/tmpo/branch/master/graph/badge.svg" />
-   </a>
+   <img src="https://img.shields.io/badge/coverage-64%2C5%25-yellow" />
    <a href="https://codeclimate.com/github/perryrh0dan/tmpo/maintainability">
       <img src="https://api.codeclimate.com/v1/badges/83561b59422e2492f9db/maintainability" />
    </a>
@@ -27,7 +25,7 @@
 
 ## Description
 
-Tmpo enables you to effectively create new workspaces based on predefined templates. To share templates across your team tmpo is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients. 
+Tmpo enables you to effectively create new workspaces based on predefined templates. To share templates across your team tmpo is using a git repository to manage your templates. Templates are automaticly fetched and merged on all clients.
 
 <div align="center">
   <img alt="diagram" width="100%" src="./media/diagram.png"/>
@@ -38,11 +36,12 @@ Visit the [contributing guidelines](https://github.com/perryrh0dan/tmpo/blob/mas
 Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage) or [Twitter](https://twitter.com/perryrh0dan1) to share your thoughts on the project.
 
 ## Highlights
+
 - Setup complex workspaces in seconds
 - Templates support inheritence and placeholders
 - Simple, Lightweight & fast
 - Cross-platform: Linux, Windows and mac are official supported
-- Everything can be a template. Python, Rust, Typescript, latex, markdown,... 
+- Everything can be a template. Python, Rust, Typescript, latex, markdown,...
 - Share templates across your team or community with git
 - Configurable through `~/.tmpo/config.yaml`
 - Self Updater
@@ -78,18 +77,20 @@ A detailed description can be found [here](https://github.com/perryrh0dan/tmpo/b
 ### Quick Start
 
 1. Add a [repository](#repositories) or use the [default repository](https://github.com/perryrh0dan/templates)
-``` bash
+
+```bash
 tmpo repository add
 ```
 
 2. Setup your first project
-``` bash
+
+```bash
 tmpo init
 ```
 
 ### CLI
 
-``` 
+```
 tmpo 1.5.3
 Thomas P. <thomaspoehlmann96@googlemail.com>
 Cli to create new workspaces based on templates
@@ -116,36 +117,37 @@ A repository is a folder that contains up to n different templates. A repository
 
 To add a new repository use the `repository subcommand` and follow the instructions on the screen.
 
-``` bash
+```bash
 tmpo repository add
 ```
 
 ### Templates
 
-Templates can be configured with a `meta.json` in the template root. 
+Templates can be configured with a `meta.json` in the template root.
 For a detailed description how to create and maintain templates have a look at the instructions in the default template repository [repository](https://github.com/perryrh0dan/templates)
 
 ## Configuration
+
 The configuration file should only be changed by experienced users.
 
 To configure tmpo navigate to the ~/.tmpo/config.yaml file and modify any of the options to match your own preference. To reset back to the default values, simply delete the config file from your home directory.
 
 The following illustrates all the available options with their respective default values.
 
-``` yaml
-  templates_dir: /home/thomas/.tmpo/templates
-  templates_repositories:
-    - name: default
-      description: this is the default template repository from tpoe
-      git_options:
-        enabled: true
-        provider: github
-        url: "https://github.com/perryrh0dan/templates"
-        branch: master
-        auth: none
-        token: 
-        username: ~
-        password: ~
+```yaml
+templates_dir: /home/thomas/.tmpo/templates
+templates_repositories:
+  - name: default
+    description: this is the default template repository from tpoe
+    git_options:
+      enabled: true
+      provider: github
+      url: "https://github.com/perryrh0dan/templates"
+      branch: master
+      auth: none
+      token:
+      username: ~
+      password: ~
 ```
 
 ## Development
