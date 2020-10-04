@@ -1,8 +1,10 @@
 [package]
 name = "tmpo"
+description = "Command line utility to create new workspaces based on predefined templates"
 version = "1.8.2"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
+license = "MIT"
 
 [dependencies]
 clap = { version = "3.0.0-beta.2" }
