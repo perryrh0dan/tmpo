@@ -28,6 +28,7 @@ base64 = "0.13.0"
 [dependencies.reqwest]
 version = "0.10.8"
 features = ["blocking", "json"]
+default-features = false
 
 [dependencies.self_update]
 version = "0.20"
