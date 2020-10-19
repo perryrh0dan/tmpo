@@ -2,15 +2,15 @@ use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{Error, Write};
-use std::path::{PathBuf};
+use std::path::{Path, PathBuf};
 
-use crate::config::{Config, RepositoryOptions};
+use crate::config::{Config, RepositoryOptions, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
+use crate::meta;
 use crate::template;
-
-use crate::repository::{Repository, CopyOptions};
+use crate::repository::{CopyOptions, Repository};
 use crate::utils;
 
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub struct DefaultRepository {
 
 impl Repository for DefaultRepository {
   fn get_config(&self) -> RepositoryOptions {
-    return RepositoryOptions{
+    return RepositoryOptions {
       name: String::from("Templates"),
       description: Some(String::from("Mono repository templates")),
       git_options: git::Options::new(),
@@ -76,12 +76,17 @@ impl DefaultRepository {
   pub fn new(config: &Config, name: &str) -> Result<DefaultRepository, RunError> {
     log::info!("Loading repository: {}", name);
 
-    let directory = config.templates_dir;
+    let directory = PathBuf::from(&config.templates_dir);
 
     let mut repository = DefaultRepository {
       directory: directory,
       templates: Vec::<template::Template>::new(),
     };
+
+    for template in &config.templates {
+      repository.ensure_template_dir(template);
+      repository.ensure_template_git(template);
+    }
 
     // Load templates
     repository.load_templates()?;
@@ -89,7 +94,7 @@ impl DefaultRepository {
     return Ok(repository);
   }
 
-  fn load_templates(&self) -> Result<(), RunError> {
+  fn load_templates(&mut self) -> Result<(), RunError> {
     self.templates = Vec::<template::Template>::new();
 
     // check if folder exists
@@ -129,5 +134,49 @@ impl DefaultRepository {
 
       self.templates.push(template);
     }
+
+    Ok(())
+  }
+
+  fn ensure_template_dir(&self, template: &TemplateOptions) -> Result<(), Error> {
+    let path = self.directory.join(&template.name);
+
+    if !path.exists() {
+      match fs::create_dir(&self.directory) {
+        Ok(_) => (),
+        Err(error) => return Err(error),
+      }
+    }
+
+    Ok(())
+  }
+
+  fn ensure_template_git(&self, template: &TemplateOptions) -> Result<(), git2::Error> {
+    let path = self.directory.join(&template.name);
+
+    if template.git_options.url.is_none() {
+      return Ok(())
+    }
+
+    // initialize git repository
+    match git::init(
+      &path,
+      &template.git_options.url.clone().unwrap(),
+    ) {
+      Ok(()) => (),
+      Err(error) => {
+        return Err(error);
+      }
+    };
+
+    // update repository
+    match git::update(&path, &template.git_options) {
+      Ok(()) => (),
+      Err(error) => {
+        return Err(error);
+      }
+    }
+
+    Ok(())
   }
 }

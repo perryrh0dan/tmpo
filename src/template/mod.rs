@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use crate::config::{Config, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
+use crate::git;
 use crate::meta;
 use crate::utils;
 
@@ -139,6 +140,11 @@ impl Template {
           },
         };
 
+        // TODO
+        if self.is_excluded_copy(&source_name) {
+          continue;
+        }
+
         self.copy_folder(&source_path, &path, opts)?
       } else {
         if self.is_excluded_copy(&source_name) {
@@ -174,7 +180,7 @@ impl Template {
   }
 
   fn is_excluded_copy(&self, name: &str) -> bool {
-    if name == "meta.json" {
+    if name == "meta.json" || name == ".git" {
       return true;
     };
 

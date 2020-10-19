@@ -70,7 +70,7 @@ fn fetch(options: &git::Options) -> Result<FileResponse, RunError> {
     return Err(RunError::Meta(String::from("Provider not supported")));
   }
 
-  if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN {
+  if auth != git::AuthType::BASIC && auth != git::AuthType::TOKEN && auth != git::AuthType::NONE {
     return Err(RunError::Meta(String::from(
       "Auth type is not supported for fetching",
     )));

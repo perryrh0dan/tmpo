@@ -59,16 +59,17 @@ impl Action {
     };
 
     // Load repository
-    let repository = if repository_name == "template" {
-      DefaultRepository::new(&self.config, &repository_name).unwrap()
+    let repository: Box<dyn Repository>;
+    if repository_name == "templates" {
+      repository = Box::new(DefaultRepository::new(&self.config, &repository_name).unwrap())
     } else {
-      CustomRepository::new(&self.config, &repository_name).unwrap()
+      repository = Box::new(CustomRepository::new(&self.config, &repository_name).unwrap())
     };
 
     // Check if templates exist
     let templates = repository.get_template_names();
     if templates.len() <= 0 {
-      out::error::no_templates(&repository.config.name);
+      out::error::no_templates(&repository.get_config().name);
       exit(1);
     }
 
