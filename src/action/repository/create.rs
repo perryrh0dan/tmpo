@@ -83,7 +83,7 @@ fn create_local(config: &Config, options: RepositoryOptions) {
   let mut new_config = config.clone();
   new_config.template_repositories.push(options.clone());
 
-  match repository::create(Path::new(&new_config.template_dir), &options) {
+  match repository::create(Path::new(&new_config.repositories_dir), &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -101,7 +101,7 @@ fn create_local(config: &Config, options: RepositoryOptions) {
     }
   }
 
-  out::success::local_repository_created(&options.name, &new_config.template_dir);
+  out::success::local_repository_created(&options.name, &new_config.repositories_dir.to_string_lossy());
 }
 
 fn create_remote(
@@ -150,5 +150,5 @@ fn create_remote(
     }
   };
 
-  out::success::remote_repository_created(&options.name, &config.template_dir);
+  out::success::remote_repository_created(&options.name, &config.repositories_dir.to_string_lossy());
 }

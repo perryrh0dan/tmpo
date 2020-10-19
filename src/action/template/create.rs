@@ -8,7 +8,7 @@ use crate::config::Config;
 use crate::meta;
 use crate::out;
 use crate::repository::Repository;
-use crate::template::Template;
+use crate::template;
 
 use clap::ArgMatches;
 
@@ -95,7 +95,7 @@ fn create_local(config: &Config, repository_name: Option<&str>, template_name: O
 
   let repository_directory = repository.directory;
 
-  let template_path = match Template::create(&repository_directory, &meta) {
+  let template_path = match template::create(&repository_directory, &meta) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);
@@ -140,7 +140,7 @@ fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
   };
 
   let directory_path = Path::new(&directory);
-  let template_path = match Template::create(&directory_path, &meta) {
+  let template_path = match template::create(&directory_path, &meta) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);

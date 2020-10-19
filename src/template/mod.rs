@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
 
+use crate::config::{Config, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::meta;
@@ -52,23 +53,6 @@ impl Template {
       path: dir.to_path_buf(),
       meta: meta,
     });
-  }
-
-  /// Create a new template with given name in the repository directory
-  pub fn create(dir: &Path, meta: &meta::Meta) -> Result<std::path::PathBuf, RunError> {
-    let template_path = dir.join(utils::lowercase(&meta.name));
-
-    // Create template directory
-    fs::create_dir(&template_path)?;
-
-    // Create meta.json
-    let meta_path = template_path.join("meta.json");
-    let mut meta_file = File::create(meta_path)?;
-
-    let meta_data = serde_json::to_string_pretty(&meta).unwrap();
-    meta_file.write(meta_data.as_bytes())?;
-
-    return Ok(template_path);
   }
 
   /// Get list of all super templates
@@ -232,4 +216,28 @@ impl Template {
 
     Ok(())
   }
+}
+
+pub fn add(config: &Config, options: TemplateOptions) -> Result<Config, RunError> {
+  let mut new_config = config.clone();
+  new_config.templates.push(options);
+
+  Ok(new_config)
+}
+
+/// Create a new template with given name in the repository directory
+pub fn create(dir: &Path, meta: &meta::Meta) -> Result<std::path::PathBuf, RunError> {
+  let template_path = dir.join(utils::lowercase(&meta.name));
+
+  // Create template directory
+  fs::create_dir(&template_path)?;
+
+  // Create meta.json
+  let meta_path = template_path.join("meta.json");
+  let mut meta_file = File::create(meta_path)?;
+
+  let meta_data = serde_json::to_string_pretty(&meta).unwrap();
+  meta_file.write(meta_data.as_bytes())?;
+
+  return Ok(template_path);
 }

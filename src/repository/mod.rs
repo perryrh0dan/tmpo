@@ -38,7 +38,7 @@ impl Repository {
       }
     };
 
-    let directory = Path::new(&config.template_dir).join(&utils::lowercase(name));
+    let directory = Path::new(&config.repositories_dir).join(&utils::lowercase(name));
 
     let mut repository = Repository {
       config: cfg,
@@ -275,7 +275,7 @@ impl Repository {
 }
 
 pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
-  let directory = Path::new(&config.template_dir).join(&utils::lowercase(&options.name));
+  let directory = Path::new(&config.repositories_dir).join(&utils::lowercase(&options.name));
 
   let repository = Repository {
     config: options.clone(),

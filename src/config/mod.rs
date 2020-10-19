@@ -15,12 +15,21 @@ extern crate serde_yaml;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-  pub template_dir: String,
+  pub repositories_dir: PathBuf,
+  pub templates_dir: PathBuf,
   pub template_repositories: Vec<RepositoryOptions>,
+  pub templates: Vec<TemplateOptions>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RepositoryOptions {
+  pub name: String,
+  pub description: Option<String>,
+  pub git_options: git::Options,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct TemplateOptions {
   pub name: String,
   pub description: Option<String>,
   pub git_options: git::Options,
@@ -33,6 +42,9 @@ impl Config {
     for entry in self.template_repositories.iter() {
       repositories.push(utils::lowercase(&entry.name));
     }
+
+    // Used for single repository templates
+    repositories.push(String::from("templates"));
 
     return repositories;
   }
@@ -83,7 +95,14 @@ pub fn init() -> Result<Config, RunError> {
 
   let config = load_config()?;
 
-  match ensure_template_dir(&config.template_dir) {
+  match ensure_repositories_dir(&config.repositories_dir) {
+    Ok(()) => (),
+    Err(error) => {
+      return Err(RunError::IO(error));
+    }
+  };
+
+  match ensure_templates_dir(&config.repositories_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
@@ -104,12 +123,22 @@ fn ensure_root_dir() -> Result<(), Error> {
   Ok(())
 }
 
-fn ensure_template_dir(dir: &str) -> Result<(), Error> {
-  let r = fs::create_dir_all(Path::new(dir));
+fn ensure_repositories_dir(dir: &PathBuf) -> Result<(), Error> {
+  let r = fs::create_dir_all(dir);
   match r {
     Ok(fc) => fc,
     Err(error) => return Err(error),
   };
+
+  Ok(())
+}
+
+fn ensure_templates_dir(dir: &PathBuf) -> Result<(), Error> {
+  let r = fs::create_dir_all(dir);
+  match r {
+    Ok(fc) => fc,
+    Err(error) => return Err(error),
+  }
 
   Ok(())
 }
@@ -175,8 +204,10 @@ fn load_config() -> Result<Config, RunError> {
 
 fn get_default_config() -> Config {
   let dir = directory();
-  let template_dir = format!("{}{}", dir.to_string_lossy(), "/templates");
+  let repositories_dir = dir.join("/repositories");
+  let templates_dir = dir.join("/templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
+  let template_options = Vec::<TemplateOptions>::new();
 
   let git_options = git::Options {
     enabled: true,
@@ -196,8 +227,10 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
-    template_dir: template_dir,
+    repositories_dir: repositories_dir,
+    templates_dir: templates_dir,
     template_repositories: repo_options,
+    templates: template_options,
   };
 
   return config;

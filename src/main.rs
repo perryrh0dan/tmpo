@@ -199,6 +199,17 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .setting(AppSettings::HelpRequired)
         .subcommand(
+          App::new("add")
+            .about("Add a single template repository")
+            .arg(
+              Arg::new("url")
+                .long("url")
+                .takes_value(true)
+                .about("Url to the template")
+                .required(false),
+            )
+        )
+        .subcommand(
           App::new("create")
             .about("Create new template")
             .arg(
@@ -287,6 +298,7 @@ fn main() {
     }
     Some(("template", args)) => {
       match args.subcommand() {
+        Some(("add", args)) => action.template_add(args),
         Some(("create", args)) => action.template_create(args),
         Some(("list", args)) => {
           action.template_list(args);
