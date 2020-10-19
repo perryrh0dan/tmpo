@@ -6,7 +6,7 @@ use crate::cli::input;
 use crate::config::{Config, RepositoryOptions};
 use crate::git;
 use crate::out;
-use crate::repository;
+use crate::repository::custom_repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -83,7 +83,7 @@ fn create_local(config: &Config, options: RepositoryOptions) {
   let mut new_config = config.clone();
   new_config.template_repositories.push(options.clone());
 
-  match repository::create(Path::new(&new_config.repositories_dir), &options) {
+  match custom_repository::create(Path::new(&new_config.repositories_dir), &options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);
@@ -141,7 +141,7 @@ fn create_remote(
   options.git_options.url = Some(remote);
 
   // Create repository
-  match repository::create(&Path::new(&directory), options) {
+  match custom_repository::create(&Path::new(&directory), options) {
     Ok(()) => (),
     Err(error) => {
       log::error!("{}", error);

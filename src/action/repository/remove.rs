@@ -3,6 +3,7 @@ use std::process::exit;
 use crate::action::Action;
 use crate::cli::input;
 use crate::out;
+use crate::repository::custom_repository::CustomRepository;
 
 use clap::ArgMatches;
 
@@ -11,13 +12,18 @@ impl Action {
     let repository_name = args.value_of("repository");
 
     // Get repository
-    let repository = match self.get_repository(repository_name) {
-      Ok(repository) => repository,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
-      }
+    let repository_name = if repository_name.is_none() {
+      let repositories = self.config.get_custom_repositories();
+      input::select("repository", &repositories).unwrap()
+    } else {
+      String::from(repository_name.unwrap())
+    };
+
+    // Load repository
+    let repository = if repository_name == "template" {
+      CustomRepository::new(&self.config, &repository_name).unwrap()
+    } else {
+      CustomRepository::new(&self.config, &repository_name).unwrap()
     };
 
     // Confirm

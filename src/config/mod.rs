@@ -37,14 +37,20 @@ pub struct TemplateOptions {
 
 impl Config {
   pub fn get_repositories(&self) -> Vec<String> {
+    let mut repositories = self.get_custom_repositories();
+
+    // Used for single repository templates
+    repositories.push(String::from("templates"));
+
+    return repositories;
+  }
+
+  pub fn get_custom_repositories(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
     for entry in self.template_repositories.iter() {
       repositories.push(utils::lowercase(&entry.name));
     }
-
-    // Used for single repository templates
-    repositories.push(String::from("templates"));
 
     return repositories;
   }
@@ -59,6 +65,16 @@ impl Config {
     }
 
     return repositories;
+  }
+
+  pub fn get_templates(&self) -> Vec<String> {
+    let mut templates = Vec::<String>::new();
+
+    for template in self.templates.iter() {
+      templates.push(utils::lowercase(&template.name))
+    }
+
+    return templates;
   }
 
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {

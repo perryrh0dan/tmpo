@@ -7,6 +7,7 @@ use crate::git;
 use crate::meta;
 use crate::out;
 use crate::repository;
+use crate::repository::custom_repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -195,7 +196,7 @@ impl Action {
     new_config.template_repositories.push(options.clone());
 
     // Add repository
-    match repository::add(&new_config, &options) {
+    match custom_repository::add(&new_config, &options) {
       Ok(repository) => repository,
       Err(error) => {
         log::error!("{}", error);

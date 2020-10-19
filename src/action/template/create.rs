@@ -8,6 +8,7 @@ use crate::config::Config;
 use crate::meta;
 use crate::out;
 use crate::repository::Repository;
+use crate::repository::custom_repository::CustomRepository;
 use crate::template;
 
 use clap::ArgMatches;
@@ -60,7 +61,7 @@ fn create_local(config: &Config, repository_name: Option<&str>, template_name: O
   };
 
   // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  let repository = match CustomRepository::new(config, &repository_name) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);

@@ -165,8 +165,8 @@ impl Action {
     };
 
     // Validate name
-    let repositories = self.config.get_repositories();
-    if repositories.contains(&template_name) {
+    let templates = self.config.get_templates();
+    if templates.contains(&template_name) {
       out::error::repository_exists(&template_name);
       exit(1);
     }

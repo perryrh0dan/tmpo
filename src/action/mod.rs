@@ -8,6 +8,7 @@ use crate::cli::input;
 use crate::config::Config;
 use crate::error::RunError;
 use crate::repository::Repository;
+use crate::repository::custom_repository::CustomRepository;
 
 pub struct Action {
   config: Config,
@@ -21,7 +22,7 @@ impl Action {
   }
 
   /// Validat given repository name or open a new selection
-  fn get_repository(&self, repository_name: Option<&str>) -> Result<Repository, RunError> {
+  fn get_repository(&self, repository_name: Option<&str>) -> Result<Box<dyn Repository>, RunError> {
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
       let repositories = self.config.get_repositories();
@@ -31,8 +32,12 @@ impl Action {
     };
 
     // Load repository
-    let repository = Repository::new(&self.config, &repository_name)?;
+    let repository = if repository_name == "template" {
+      CustomRepository::new(&self.config, &repository_name)?
+    } else {
+      CustomRepository::new(&self.config, &repository_name)?
+    };
 
-    Ok(repository)
+    Ok(Box::new(repository))
   }
 }
