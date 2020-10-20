@@ -71,84 +71,49 @@ impl Action {
       git_options: git::Options::new(),
     };
 
-    if repository_type == "remote" {
-      create_remote(&self.config, &mut options, directory, remote);
+    // Get directory from user input
+    let directory = if directory.is_none() {
+      match input::text("Enter the target directory", false) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
     } else {
-      create_local(&self.config, options);
-    }
-  }
-}
+      directory.unwrap().to_string()
+    };
 
-fn create_local(config: &Config, options: RepositoryOptions) {
-  let mut new_config = config.clone();
-  new_config.template_repositories.push(options.clone());
+    // Get remote from user input
+    let remote = if remote.is_none() {
+      match input::text("Enter the remote url", false) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else {
+      remote.unwrap().to_string()
+    };
 
-  match custom_repository::create(Path::new(&new_config.repositories_dir), &options) {
-    Ok(()) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    }
-  };
+    options.git_options.url = Some(remote);
 
-  match new_config.save() {
-    Ok(()) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    }
-  }
-
-  out::success::local_repository_created(&options.name, &new_config.repositories_dir.to_string_lossy());
-}
-
-fn create_remote(
-  config: &Config,
-  options: &mut RepositoryOptions,
-  directory: Option<&str>,
-  remote: Option<&str>,
-) {
-  // Get directory from user input
-  let directory = if directory.is_none() {
-    match input::text("Enter the target directory", false) {
-      Ok(value) => value,
+    // Create repository
+    match custom_repository::create(&Path::new(&directory), &options) {
+      Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
       }
-    }
-  } else {
-    directory.unwrap().to_string()
-  };
+    };
 
-  // Get remote from user input
-  let remote = if remote.is_none() {
-    match input::text("Enter the remote url", false) {
-      Ok(value) => value,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    }
-  } else {
-    remote.unwrap().to_string()
-  };
-
-  options.git_options.url = Some(remote);
-
-  // Create repository
-  match custom_repository::create(&Path::new(&directory), options) {
-    Ok(()) => (),
-    Err(error) => {
-      log::error!("{}", error);
-      eprintln!("{}", error);
-      exit(1);
-    }
-  };
-
-  out::success::remote_repository_created(&options.name, &config.repositories_dir.to_string_lossy());
+    out::success::remote_repository_created(
+      &options.name,
+      &self.config.repositories_dir.to_string_lossy(),
+    );
+  }
 }
