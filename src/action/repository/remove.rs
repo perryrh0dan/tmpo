@@ -28,7 +28,7 @@ impl Action {
 
     // Confirm
     let text = format!(
-      "Are you sure you want to delete this item: {} (y/n): ",
+      "Are you sure you want to delete this repository: {} (y/n): ",
       repository.config.name
     );
     if !input::confirm(&text) {
@@ -46,11 +46,11 @@ impl Action {
     // Update config
     let mut new_config = self.config.clone();
     let index = new_config
-      .template_repositories
+      .repositories
       .iter()
       .position(|x| x.name == repository.config.name)
       .unwrap();
-    new_config.template_repositories.remove(index);
+    new_config.repositories.remove(index);
 
     match new_config.save() {
       Ok(()) => (),

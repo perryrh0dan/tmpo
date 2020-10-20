@@ -6,7 +6,6 @@ use crate::config::RepositoryOptions;
 use crate::git;
 use crate::meta;
 use crate::out;
-use crate::repository;
 use crate::repository::custom_repository;
 use crate::utils;
 
@@ -193,7 +192,7 @@ impl Action {
     };
 
     let mut new_config = self.config.clone();
-    new_config.template_repositories.push(options.clone());
+    new_config.repositories.push(options.clone());
 
     // Add repository
     match custom_repository::add(&new_config, &options) {

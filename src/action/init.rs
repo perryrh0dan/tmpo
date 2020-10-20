@@ -8,9 +8,7 @@ use crate::cli::input;
 use crate::context;
 use crate::git;
 use crate::out;
-use crate::repository::{Repository, CopyOptions};
-use crate::repository::custom_repository::CustomRepository;
-use crate::repository::default_repository::DefaultRepository;
+use crate::repository::{CopyOptions};
 use crate::template::renderer;
 use crate::utils;
 
@@ -51,19 +49,13 @@ impl Action {
     };
 
     // Get repository
-    let repository_name = if repository_name.is_none() {
-      let repositories = self.config.get_repositories();
-      input::select("repository", &repositories).unwrap()
-    } else {
-      String::from(repository_name.unwrap())
-    };
-
-    // Load repository
-    let repository: Box<dyn Repository>;
-    if repository_name == "templates" {
-      repository = Box::new(DefaultRepository::new(&self.config, &repository_name).unwrap())
-    } else {
-      repository = Box::new(CustomRepository::new(&self.config, &repository_name).unwrap())
+    let repository = match self.get_repository(repository_name) {
+      Ok(repository) => repository,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
     };
 
     // Check if templates exist

@@ -11,7 +11,7 @@ use crate::git;
 use crate::meta;
 use crate::repository::{Repository, CopyOptions};
 use crate::template;
-use crate::template::{renderer, Template};
+use crate::template::{Template};
 use crate::utils;
 
 #[derive(Debug)]

@@ -9,6 +9,7 @@ use crate::config::Config;
 use crate::error::RunError;
 use crate::repository::Repository;
 use crate::repository::custom_repository::CustomRepository;
+use crate::repository::default_repository::DefaultRepository;
 
 pub struct Action {
   config: Config,
@@ -32,12 +33,14 @@ impl Action {
     };
 
     // Load repository
-    let repository = if repository_name == "template" {
-      CustomRepository::new(&self.config, &repository_name)?
+    let repository: Box<dyn Repository> = if repository_name == "templates" {
+      let repository = DefaultRepository::new(&self.config)?;
+      Box::new(repository)
     } else {
-      CustomRepository::new(&self.config, &repository_name)?
+      let repository = CustomRepository::new(&self.config, &repository_name)?;
+      Box::new(repository)
     };
 
-    Ok(Box::new(repository))
+    Ok(repository)
   }
 }

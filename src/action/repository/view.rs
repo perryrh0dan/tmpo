@@ -10,15 +10,15 @@ impl Action {
     let repository_name = args.value_of("repository");
 
     // Get repository
-    // let repository = match self.get_repository(repository_name) {
-    //   Ok(repository) => repository,
-    //   Err(error) => {
-    //     log::error!("{}", error);
-    //     eprintln!("{}", error);
-    //     exit(1)
-    //   }
-    // };
+    let repository = match self.get_repository(repository_name) {
+      Ok(repository) => repository,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
+    };
 
-    // out::info::display_repository(&repository);
+    out::info::display_repository(repository);
   }
 }

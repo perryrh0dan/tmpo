@@ -39,7 +39,7 @@ pub fn display_template(template: &Template) {
   }
 }
 
-pub fn display_repository(repository: &Repository) {
+pub fn display_repository(repository: Box<dyn Repository>) {
   println!("name: {}", repository.get_config().name);
   if repository.get_config().description.is_some() {
     println!(

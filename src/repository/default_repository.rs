@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 use std::fs;
-use std::fs::File;
-use std::io::{Error, Write};
-use std::path::{Path, PathBuf};
+use log;
+use std::io::{Error};
+use std::path::{PathBuf};
 
 use crate::config::{Config, RepositoryOptions, TemplateOptions};
 use crate::context::Context;
@@ -73,8 +73,8 @@ impl Repository for DefaultRepository {
 }
 
 impl DefaultRepository {
-  pub fn new(config: &Config, name: &str) -> Result<DefaultRepository, RunError> {
-    log::info!("Loading repository: {}", name);
+  pub fn new(config: &Config) -> Result<DefaultRepository, RunError> {
+    log::info!("Loading repository: Templates");
 
     let directory = PathBuf::from(&config.templates_dir);
 
@@ -84,8 +84,18 @@ impl DefaultRepository {
     };
 
     for template in &config.templates {
-      repository.ensure_template_dir(template);
-      repository.ensure_template_git(template);
+      match repository.ensure_template_dir(template) {
+        Ok(()) => (),
+        Err(error) => {
+          log::error!("{}", error);
+        }
+      };
+      match repository.ensure_template_git(template) {
+        Ok(()) => (),
+        Err(error) => {
+          log::error!("{}", error);
+        }
+      };
     }
 
     // Load templates
@@ -179,4 +189,11 @@ impl DefaultRepository {
 
     Ok(())
   }
+}
+
+pub fn add(config: &Config, options: TemplateOptions) -> Result<Config, RunError> {
+  let mut new_config = config.clone();
+  new_config.templates.push(options);
+
+  Ok(new_config)
 }

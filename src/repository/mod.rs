@@ -1,17 +1,11 @@
 use std::collections::HashSet;
-use std::fs;
-use std::fs::File;
-use std::io::{Error, Write};
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
-use crate::config::{Config, RepositoryOptions};
+use crate::config::{RepositoryOptions};
 use crate::context::Context;
 use crate::error::RunError;
-use crate::git;
-use crate::meta;
 use crate::template;
-use crate::template::{renderer, Template};
-use crate::utils;
+use crate::template::{renderer};
 
 pub mod custom_repository;
 pub mod default_repository;

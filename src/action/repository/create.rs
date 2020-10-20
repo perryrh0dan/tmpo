@@ -3,7 +3,7 @@ use std::process::exit;
 
 use crate::action::Action;
 use crate::cli::input;
-use crate::config::{Config, RepositoryOptions};
+use crate::config::{RepositoryOptions};
 use crate::git;
 use crate::out;
 use crate::repository::custom_repository;
@@ -17,18 +17,6 @@ impl Action {
     let description = args.value_of("description");
     let directory = args.value_of("directory");
     let remote = args.value_of("remote");
-
-    let repository_type = match input::select(
-      "Select a repository type",
-      &vec![String::from("remote"), String::from("local")],
-    ) {
-      Ok(value) => value,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    };
 
     // Get repository name from user input
     let name = if name.is_none() {

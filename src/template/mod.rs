@@ -4,10 +4,8 @@ use std::fs::File;
 use std::io::{ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
 
-use crate::config::{Config, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
-use crate::git;
 use crate::meta;
 use crate::utils;
 
@@ -222,13 +220,6 @@ impl Template {
 
     Ok(())
   }
-}
-
-pub fn add(config: &Config, options: TemplateOptions) -> Result<Config, RunError> {
-  let mut new_config = config.clone();
-  new_config.templates.push(options);
-
-  Ok(new_config)
 }
 
 /// Create a new template with given name in the repository directory

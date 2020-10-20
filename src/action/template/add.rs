@@ -6,7 +6,7 @@ use crate::cli::input;
 use crate::git;
 use crate::meta;
 use crate::out;
-use crate::template;
+use crate::repository::default_repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -193,7 +193,7 @@ impl Action {
     };
 
     // Add repository
-    let new_config = match template::add(&self.config, options) {
+    let new_config = match default_repository::add(&self.config, options) {
       Ok(config) => config,
       Err(error) => {
         log::error!("{}", error);

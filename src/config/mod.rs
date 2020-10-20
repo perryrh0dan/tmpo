@@ -17,7 +17,9 @@ extern crate serde_yaml;
 pub struct Config {
   pub repositories_dir: PathBuf,
   pub templates_dir: PathBuf,
-  pub template_repositories: Vec<RepositoryOptions>,
+  #[serde(alias = "repositories", alias = "template_repositories")]
+  pub repositories: Vec<RepositoryOptions>,
+  #[serde(skip_serializing_if = "Vec::is_empty")]
   pub templates: Vec<TemplateOptions>,
 }
 
@@ -48,20 +50,8 @@ impl Config {
   pub fn get_custom_repositories(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
-    for entry in self.template_repositories.iter() {
+    for entry in self.repositories.iter() {
       repositories.push(utils::lowercase(&entry.name));
-    }
-
-    return repositories;
-  }
-
-  pub fn get_local_repositories(&self) -> Vec<String> {
-    let mut repositories = Vec::<String>::new();
-
-    for entry in self.template_repositories.iter() {
-      if !entry.git_options.enabled {
-        repositories.push(utils::lowercase(&entry.name))
-      }
     }
 
     return repositories;
@@ -79,7 +69,7 @@ impl Config {
 
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self
-      .template_repositories
+      .repositories
       .iter()
       .find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
@@ -199,7 +189,7 @@ fn load_config() -> Result<Config, RunError> {
 
   // Need to solve config change when switching from 1.5.1 => 1.5.2
   let mut changed = false;
-  for rep_option in &mut config.template_repositories {
+  for rep_option in &mut config.repositories {
     if rep_option.git_options.provider.is_none() {
       rep_option.git_options.provider = Some(git::Provider::GITHUB);
       changed = true;
@@ -245,7 +235,7 @@ fn get_default_config() -> Config {
   let config = Config {
     repositories_dir: repositories_dir,
     templates_dir: templates_dir,
-    template_repositories: repo_options,
+    repositories: repo_options,
     templates: template_options,
   };
 
