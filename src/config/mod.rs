@@ -291,7 +291,7 @@ pub fn version() -> Result<Version, RunError> {
     let version = Version::parse(&config.version.unwrap()).unwrap();
     Ok(version)
   } else {
-    let version = Version::parse("1.8.2").unwrap();
+    let version = Version::parse("1.8.3").unwrap();
     Ok(version)
   }
 }
