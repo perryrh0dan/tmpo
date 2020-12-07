@@ -6,9 +6,11 @@ use crate::error::RunError;
 extern crate flate2;
 extern crate self_update;
 extern crate tar;
+extern crate semver;
 use clap::crate_version;
 use flate2::read::GzDecoder;
 use tar::Archive;
+use semver::Version;
 
 #[cfg(windows)]
 const BIN_NAME: &str = "tmpo.exe";
@@ -16,7 +18,7 @@ const BIN_NAME: &str = "tmpo.exe";
 #[cfg(not(windows))]
 const BIN_NAME: &str = "tmpo";
 
-pub fn check_version() -> Option<(String, self_update::update::ReleaseAsset)> {
+pub fn check_version() -> Option<(Version, self_update::update::ReleaseAsset)> {
   log::info!("Fetch release list");
   let releases = match self_update::backends::github::ReleaseList::configure()
     .repo_owner("perryrh0dan")
@@ -60,7 +62,9 @@ pub fn check_version() -> Option<(String, self_update::update::ReleaseAsset)> {
     &releases[0].version
   );
 
-  return Some((releases[0].version.to_owned(), asset));
+  let target_version = Version::parse(&releases[0].version).unwrap();
+
+  return Some((target_version, asset));
 }
 
 pub fn update(asset: self_update::update::ReleaseAsset) -> Result<(), RunError> {

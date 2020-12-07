@@ -12,14 +12,19 @@ extern crate dirs;
 extern crate serde;
 use serde::{Deserialize, Serialize};
 extern crate serde_yaml;
+extern crate clap;
+use clap::crate_version;
+extern crate semver;
+use semver::Version;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
+  pub version: String,
   pub repositories_dir: PathBuf,
   pub templates_dir: PathBuf,
-  #[serde(alias = "repositories", alias = "template_repositories")]
+  #[serde(alias = "repositories", alias = "template_repositories", skip_serializing_if = "Vec::is_empty")]
   pub repositories: Vec<RepositoryOptions>,
-  #[serde(skip_serializing_if = "Vec::is_empty")]
+  #[serde(skip_serializing_if = "Vec::is_empty", default)]
   pub templates: Vec<TemplateOptions>,
 }
 
@@ -35,6 +40,11 @@ pub struct TemplateOptions {
   pub name: String,
   pub description: Option<String>,
   pub git_options: git::Options,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ConfigVersion {
+  pub version: Option<String>,
 }
 
 impl Config {
@@ -208,10 +218,10 @@ fn load_config() -> Result<Config, RunError> {
   return Ok(config);
 }
 
-fn get_default_config() -> Config {
+pub fn get_default_config() -> Config {
   let dir = directory();
-  let repositories_dir = dir.join("/repositories");
-  let templates_dir = dir.join("/templates");
+  let repositories_dir = dir.join("repositories");
+  let templates_dir = dir.join("templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
   let template_options = Vec::<TemplateOptions>::new();
 
@@ -233,6 +243,7 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
+    version: String::from(crate_version!()),
     repositories_dir: repositories_dir,
     templates_dir: templates_dir,
     repositories: repo_options,
@@ -258,4 +269,29 @@ pub fn directory() -> PathBuf {
   path.pop();
 
   return path;
+}
+
+pub fn version() -> Result<Version, RunError> {
+  let path = config_location();
+  // Open file
+  let mut src = File::open(path)?;
+  let mut data = String::new();
+
+  // Write to data string
+  src.read_to_string(&mut data)?;
+  let config: ConfigVersion = match serde_yaml::from_str(&data) {
+    Ok(data) => data,
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(RunError::Config(String::from("Deserialization")));
+    }
+  };
+
+  if config.version.is_some() {
+    let version = Version::parse(&config.version.unwrap()).unwrap();
+    Ok(version)
+  } else {
+    let version = Version::parse("1.8.2").unwrap();
+    Ok(version)
+  }
 }

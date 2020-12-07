@@ -9,6 +9,7 @@ mod error;
 mod git;
 mod logger;
 mod meta;
+mod migration;
 mod out;
 mod repository;
 mod template;
@@ -22,6 +23,14 @@ use clap::{crate_version, App, AppSettings, Arg};
 fn main() {
   // Initiate logger
   logger::init();
+
+  // migration
+  match migration::check() {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+    }
+  };
 
   // Initiate config
   let config = match config::init() {
