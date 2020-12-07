@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fs::File;
 use std::io::{Error, Read};
 use std::path::Path;
@@ -26,6 +27,15 @@ pub enum Type {
   REPOSITORY,
   #[serde(alias = "template")]
   TEMPLATE,
+}
+
+impl fmt::Display for Type {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match *self {
+      Type::REPOSITORY => write!(f, "Repository"),
+      Type::TEMPLATE => write!(f, "Template"),
+    }
+  }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

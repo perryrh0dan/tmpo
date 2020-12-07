@@ -4,7 +4,7 @@ use crate::action::Action;
 use crate::config::TemplateOptions;
 use crate::cli::input;
 use crate::git;
-use crate::meta;
+use crate::{meta, meta::Type};
 use crate::out;
 use crate::repository::default_repository;
 use crate::utils;
@@ -148,7 +148,12 @@ impl Action {
       }
     };
 
-    // TODO validate meta kind
+    // Check for meta type template
+    if meta.kind != Type::TEMPLATE {
+      log::error!("{}", format!("Wrong type: {}", meta.kind));
+      eprintln!("{}", format!("Wrong type: {}", meta.kind));
+      exit(1)
+    }
 
     // Get repository name from user input
     let template_name = if template_name.is_none() {

@@ -5,6 +5,7 @@ use crate::cli::input;
 use crate::config::RepositoryOptions;
 use crate::git;
 use crate::meta;
+use crate::meta::Type;
 use crate::out;
 use crate::repository::custom_repository;
 use crate::utils;
@@ -144,7 +145,12 @@ impl Action {
       }
     };
 
-    // TODO chek for meta type repository
+    // Check for meta type repository
+    if meta.kind != Type::REPOSITORY {
+      log::error!("{}", format!("Wrong type: {}", meta.kind));
+      eprintln!("{}", format!("Wrong type: {}", meta.kind));
+      exit(1)
+    }
 
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
