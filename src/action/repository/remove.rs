@@ -19,12 +19,12 @@ impl Action {
       String::from(repository_name.unwrap())
     };
 
+    if repository_name == "template" {
+      eprintln!("Cant remove template repository")
+    }
+
     // Load repository
-    let repository = if repository_name == "template" {
-      CustomRepository::new(&self.config, &repository_name).unwrap()
-    } else {
-      CustomRepository::new(&self.config, &repository_name).unwrap()
-    };
+    let repository = CustomRepository::new(&self.config, &repository_name).unwrap();
 
     // Confirm
     let text = format!(
@@ -35,7 +35,7 @@ impl Action {
       exit(0);
     }
 
-    // Remove template folder
+    // Remove repository folder
     match repository.delete_repository() {
       Ok(()) => (),
       Err(error) => {

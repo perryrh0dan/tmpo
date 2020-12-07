@@ -84,13 +84,13 @@ impl DefaultRepository {
     };
 
     for template in &config.templates {
-      match repository.ensure_template_dir(template) {
+      match repository.ensure_template_dir(&template.name) {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
         }
       };
-      match repository.ensure_template_git(template) {
+      match repository.ensure_template_git(&template) {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
@@ -102,6 +102,24 @@ impl DefaultRepository {
     repository.load_templates()?;
 
     return Ok(repository);
+  }
+
+  pub fn remove_template(&self, template_name: &str) -> Result<(), RunError> {
+    let template = self.get_template_by_name(template_name)?;
+
+    log::info!(
+      "Delete template directory {}",
+      template.path.to_owned().to_str().unwrap()
+    );
+
+    match fs::remove_dir_all(&template.path) {
+      Ok(()) => (),
+      Err(error) => {
+        return Err(RunError::IO(error));
+      }
+    }
+
+    Ok(())
   }
 
   fn load_templates(&mut self) -> Result<(), RunError> {
@@ -148,8 +166,8 @@ impl DefaultRepository {
     Ok(())
   }
 
-  fn ensure_template_dir(&self, template: &TemplateOptions) -> Result<(), Error> {
-    let path = self.directory.join(&template.name);
+  fn ensure_template_dir(&self, template: &str) -> Result<(), Error> {
+    let path = self.directory.join(&template);
 
     if !path.exists() {
       match fs::create_dir(&self.directory) {

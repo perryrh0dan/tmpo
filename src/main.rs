@@ -216,7 +216,7 @@ fn main() {
                 .takes_value(true)
                 .about("Url to the template")
                 .required(false),
-            )
+            ),
         )
         .subcommand(
           App::new("create")
@@ -247,6 +247,19 @@ fn main() {
               .about("Name of the repository")
               .required(false),
           ),
+        )
+        .subcommand(
+          App::new("remove")
+            .about("Remove a template")
+            .alias("rm")
+            .arg(
+              Arg::new("template")
+                .short('t')
+                .long("template")
+                .takes_value(true)
+                .about("Template name")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("test")
@@ -311,6 +324,9 @@ fn main() {
         Some(("create", args)) => action.template_create(args),
         Some(("list", args)) => {
           action.template_list(args);
+        }
+        Some(("remove", args)) => {
+          action.template_remove(args);
         }
         Some(("test", args)) => {
           action.template_test(args);

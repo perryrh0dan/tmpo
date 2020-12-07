@@ -6,7 +6,7 @@ use crate::cli::input;
 use crate::git;
 use crate::{meta, meta::Type};
 use crate::out;
-use crate::repository::default_repository;
+use crate::repository::{Repository, default_repository, default_repository::DefaultRepository};
 use crate::utils;
 
 use clap::ArgMatches;
@@ -155,7 +155,7 @@ impl Action {
       exit(1)
     }
 
-    // Get repository name from user input
+    // Get template name from user input
     let template_name = if template_name.is_none() {
       match input::text_with_default("Enter repository name", &meta.name) {
         Ok(value) => value,
@@ -169,9 +169,11 @@ impl Action {
       utils::lowercase(template_name.unwrap())
     };
 
+    // Load repository
+    let repository = DefaultRepository::new(&self.config).unwrap();
+
     // Validate name
-    let templates = self.config.get_templates();
-    if templates.contains(&template_name) {
+    if !repository.get_template_names().contains(&template_name) {
       out::error::repository_exists(&template_name);
       exit(1);
     }
@@ -197,7 +199,7 @@ impl Action {
       git_options: git_options,
     };
 
-    // Add repository
+    // Add template
     let new_config = match default_repository::add(&self.config, options) {
       Ok(config) => config,
       Err(error) => {
