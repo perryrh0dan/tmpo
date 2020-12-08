@@ -19,6 +19,6 @@ impl Action {
       }
     };
 
-    out::info::display_repository(&repository);
+    out::info::display_repository(repository);
   }
 }

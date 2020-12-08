@@ -32,13 +32,6 @@ pub fn remote_repository_created(name: &str, target: &str) {
   println!("{}", text);
 }
 
-pub fn local_repository_created(name: &str, target: &str) {
-  let title = format!("Created local repository: {} under: {}", name, target).green();
-  let text = "Navigate into the repository and start adding new templates.";
-  println!("{}", title);
-  println!("{}", text)
-}
-
 pub fn template_tested() {
   let text = format!("Test successful").green();
   println!("{}", text);

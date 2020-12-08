@@ -12,11 +12,20 @@ extern crate dirs;
 extern crate serde;
 use serde::{Deserialize, Serialize};
 extern crate serde_yaml;
+extern crate clap;
+use clap::crate_version;
+extern crate semver;
+use semver::Version;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-  pub template_dir: String,
-  pub template_repositories: Vec<RepositoryOptions>,
+  pub version: String,
+  pub repositories_dir: PathBuf,
+  pub templates_dir: PathBuf,
+  #[serde(alias = "repositories", alias = "template_repositories", skip_serializing_if = "Vec::is_empty")]
+  pub repositories: Vec<RepositoryOptions>,
+  #[serde(skip_serializing_if = "Vec::is_empty", default)]
+  pub templates: Vec<TemplateOptions>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -26,32 +35,51 @@ pub struct RepositoryOptions {
   pub git_options: git::Options,
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct TemplateOptions {
+  pub name: String,
+  pub description: Option<String>,
+  pub git_options: git::Options,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ConfigVersion {
+  pub version: Option<String>,
+}
+
 impl Config {
-  pub fn get_repositories(&self) -> Vec<String> {
+  pub fn get_repository_names(&self) -> Vec<String> {
+    let mut repositories = self.get_custom_repository_names();
+
+    // Used for single repository templates
+    repositories.push(String::from("templates"));
+
+    return repositories;
+  }
+
+  pub fn get_custom_repository_names(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
-    for entry in self.template_repositories.iter() {
+    for entry in self.repositories.iter() {
       repositories.push(utils::lowercase(&entry.name));
     }
 
     return repositories;
   }
 
-  pub fn get_local_repositories(&self) -> Vec<String> {
-    let mut repositories = Vec::<String>::new();
+  pub fn get_templates(&self) -> Vec<String> {
+    let mut templates = Vec::<String>::new();
 
-    for entry in self.template_repositories.iter() {
-      if !entry.git_options.enabled {
-        repositories.push(utils::lowercase(&entry.name))
-      }
+    for template in self.templates.iter() {
+      templates.push(utils::lowercase(&template.name))
     }
 
-    return repositories;
+    return templates;
   }
 
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self
-      .template_repositories
+      .repositories
       .iter()
       .find(|&x| utils::lowercase(&x.name) == utils::lowercase(&name));
 
@@ -83,7 +111,14 @@ pub fn init() -> Result<Config, RunError> {
 
   let config = load_config()?;
 
-  match ensure_template_dir(&config.template_dir) {
+  match ensure_repositories_dir(&config.repositories_dir) {
+    Ok(()) => (),
+    Err(error) => {
+      return Err(RunError::IO(error));
+    }
+  };
+
+  match ensure_templates_dir(&config.repositories_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
@@ -104,12 +139,22 @@ fn ensure_root_dir() -> Result<(), Error> {
   Ok(())
 }
 
-fn ensure_template_dir(dir: &str) -> Result<(), Error> {
-  let r = fs::create_dir_all(Path::new(dir));
+fn ensure_repositories_dir(dir: &PathBuf) -> Result<(), Error> {
+  let r = fs::create_dir_all(dir);
   match r {
     Ok(fc) => fc,
     Err(error) => return Err(error),
   };
+
+  Ok(())
+}
+
+fn ensure_templates_dir(dir: &PathBuf) -> Result<(), Error> {
+  let r = fs::create_dir_all(dir);
+  match r {
+    Ok(fc) => fc,
+    Err(error) => return Err(error),
+  }
 
   Ok(())
 }
@@ -154,7 +199,7 @@ fn load_config() -> Result<Config, RunError> {
 
   // Need to solve config change when switching from 1.5.1 => 1.5.2
   let mut changed = false;
-  for rep_option in &mut config.template_repositories {
+  for rep_option in &mut config.repositories {
     if rep_option.git_options.provider.is_none() {
       rep_option.git_options.provider = Some(git::Provider::GITHUB);
       changed = true;
@@ -173,10 +218,12 @@ fn load_config() -> Result<Config, RunError> {
   return Ok(config);
 }
 
-fn get_default_config() -> Config {
+pub fn get_default_config() -> Config {
   let dir = directory();
-  let template_dir = format!("{}{}", dir.to_string_lossy(), "/templates");
+  let repositories_dir = dir.join("repositories");
+  let templates_dir = dir.join("templates");
   let mut repo_options = Vec::<RepositoryOptions>::new();
+  let template_options = Vec::<TemplateOptions>::new();
 
   let git_options = git::Options {
     enabled: true,
@@ -196,8 +243,11 @@ fn get_default_config() -> Config {
   });
 
   let config = Config {
-    template_dir: template_dir,
-    template_repositories: repo_options,
+    version: String::from(crate_version!()),
+    repositories_dir: repositories_dir,
+    templates_dir: templates_dir,
+    repositories: repo_options,
+    templates: template_options,
   };
 
   return config;
@@ -219,4 +269,29 @@ pub fn directory() -> PathBuf {
   path.pop();
 
   return path;
+}
+
+pub fn version() -> Result<Version, RunError> {
+  let path = config_location();
+  // Open file
+  let mut src = File::open(path)?;
+  let mut data = String::new();
+
+  // Write to data string
+  src.read_to_string(&mut data)?;
+  let config: ConfigVersion = match serde_yaml::from_str(&data) {
+    Ok(data) => data,
+    Err(error) => {
+      log::error!("{}", error);
+      return Err(RunError::Config(String::from("Deserialization")));
+    }
+  };
+
+  if config.version.is_some() {
+    let version = Version::parse(&config.version.unwrap()).unwrap();
+    Ok(version)
+  } else {
+    let version = Version::parse("1.8.3").unwrap();
+    Ok(version)
+  }
 }

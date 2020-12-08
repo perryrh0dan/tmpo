@@ -39,15 +39,15 @@ pub fn display_template(template: &Template) {
   }
 }
 
-pub fn display_repository(repository: &Repository) {
-  println!("name: {}", repository.config.name);
-  if repository.config.description.is_some() {
+pub fn display_repository(repository: Box<dyn Repository>) {
+  println!("name: {}", repository.get_config().name);
+  if repository.get_config().description.is_some() {
     println!(
       "description: {}",
-      repository.config.description.to_owned().unwrap()
+      repository.get_config().description.to_owned().unwrap()
     );
   }
-  println!("path: {}", repository.directory.to_str().unwrap());
+  // println!("path: {}", repository.directory.to_str().unwrap());
 }
 
 pub fn display_config(_config: &Config, config_path: &str) {

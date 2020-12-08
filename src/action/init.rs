@@ -8,7 +8,7 @@ use crate::cli::input;
 use crate::context;
 use crate::git;
 use crate::out;
-use crate::repository::CopyOptions;
+use crate::repository::{CopyOptions};
 use crate::template::renderer;
 use crate::utils;
 
@@ -29,7 +29,7 @@ impl Action {
     out::info::initiate_workspace();
 
     // Check if repositories exist
-    if self.config.get_repositories().len() <= 0 {
+    if self.config.get_repository_names().len() <= 0 {
       out::error::no_repositories();
       exit(1);
     }
@@ -61,7 +61,7 @@ impl Action {
     // Check if templates exist
     let templates = repository.get_template_names();
     if templates.len() <= 0 {
-      out::error::no_templates(&repository.config.name);
+      out::error::no_templates(&repository.get_config().name);
       exit(1);
     }
 

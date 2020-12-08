@@ -27,7 +27,7 @@ impl Action {
     if templates.len() <= 0 {
       eprintln!(
         "No templates exist in repository: {}",
-        repository.config.name
+        repository.get_config().name
       );
       exit(1);
     }

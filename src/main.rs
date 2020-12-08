@@ -9,6 +9,7 @@ mod error;
 mod git;
 mod logger;
 mod meta;
+mod migration;
 mod out;
 mod repository;
 mod template;
@@ -22,6 +23,14 @@ use clap::{crate_version, App, AppSettings, Arg};
 fn main() {
   // Initiate logger
   logger::init();
+
+  // migration
+  match migration::check() {
+    Ok(()) => (),
+    Err(error) => {
+      log::error!("{}", error);
+    }
+  };
 
   // Initiate config
   let config = match config::init() {
@@ -149,6 +158,34 @@ fn main() {
                 .takes_value(true)
                 .about("Description of the repository")
                 .required(false),
+            )
+            .arg(
+              Arg::new("provider")
+                .long("provider")
+                .takes_value(true)
+                .about("Remote provider")
+                .required(false),
+            )
+            .arg(
+              Arg::new("authentication")
+                .long("authentication")
+                .takes_value(true)
+                .about("Authentication type")
+                .required(false),
+            )
+            .arg(
+              Arg::new("url")
+                .long("url")
+                .takes_value(true)
+                .about("Remote url of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("branch")
+                .long("branch")
+                .takes_value(true)
+                .about("Remote repository branch")
+                .required(false),
             ),
         )
         .subcommand(
@@ -171,16 +208,23 @@ fn main() {
                 .required(false),
             ),
         )
-        .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
-          App::new("remove").about("Remove a repository").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          ),
+          App::new("list")
+            .about("List all available repository")
+            .alias("ls"),
+        )
+        .subcommand(
+          App::new("remove")
+            .about("Remove a repository")
+            .alias("rm")
+            .arg(
+              Arg::new("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("view").about("View repository details").arg(
@@ -198,6 +242,17 @@ fn main() {
         .about("Maintain templates")
         .setting(AppSettings::ArgRequiredElseHelp)
         .setting(AppSettings::HelpRequired)
+        .subcommand(
+          App::new("add")
+            .about("Add a single template repository")
+            .arg(
+              Arg::new("url")
+                .long("url")
+                .takes_value(true)
+                .about("Remote url of the template")
+                .required(false),
+            ),
+        )
         .subcommand(
           App::new("create")
             .about("Create new template")
@@ -219,18 +274,34 @@ fn main() {
             ),
         )
         .subcommand(
-          App::new("list").about("List all available templates").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          ),
+          App::new("list")
+            .about("List all available templates")
+            .alias("ls")
+            .arg(
+              Arg::new("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            ),
+        )
+        .subcommand(
+          App::new("remove")
+            .about("Remove a template")
+            .alias("rm")
+            .arg(
+              Arg::new("template")
+                .short('t')
+                .long("template")
+                .takes_value(true)
+                .about("Template name")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("test")
-            .about("Test template at given location")
+            .about("Test template at a given location")
             .arg(
               Arg::new("directory")
                 .short('d')
@@ -287,9 +358,13 @@ fn main() {
     }
     Some(("template", args)) => {
       match args.subcommand() {
+        Some(("add", args)) => action.template_add(args),
         Some(("create", args)) => action.template_create(args),
         Some(("list", args)) => {
           action.template_list(args);
+        }
+        Some(("remove", args)) => {
+          action.template_remove(args);
         }
         Some(("test", args)) => {
           action.template_test(args);

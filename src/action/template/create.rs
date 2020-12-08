@@ -8,13 +8,13 @@ use crate::config::Config;
 use crate::meta;
 use crate::out;
 use crate::repository::Repository;
-use crate::template::Template;
+use crate::repository::default_repository::DefaultRepository;
+use crate::template;
 
 use clap::ArgMatches;
 
 impl Action {
   pub fn template_create(&self, args: &ArgMatches) {
-    let repository_name = args.value_of("repository");
     let template_name = args.value_of("template");
     let directory = args.value_of("directory");
 
@@ -34,33 +34,14 @@ impl Action {
     if template_type == "remote" {
       create_remote(template_name, directory);
     } else {
-      create_local(&self.config, repository_name, template_name);
+      create_local(&self.config, template_name);
     }
   }
 }
 
-fn create_local(config: &Config, repository_name: Option<&str>, template_name: Option<&str>) {
-  // Get repository
-  let repositories = config.get_local_repositories();
-  let repository_name = if repository_name.is_none() {
-    match input::select("repository", &repositories) {
-      Ok(value) => value,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    }
-  } else {
-    if repositories.contains(&String::from(repository_name.unwrap())) {
-      String::from(repository_name.unwrap())
-    } else {
-      exit(1);
-    }
-  };
-
+fn create_local(config: &Config, template_name: Option<&str>) {
   // Load repository
-  let repository = match Repository::new(config, &repository_name) {
+  let repository = match DefaultRepository::new(config) {
     Ok(repository) => repository,
     Err(error) => {
       log::error!("{}", error);
@@ -87,15 +68,14 @@ fn create_local(config: &Config, repository_name: Option<&str>, template_name: O
   };
 
   // validate name
-  let templates = repository.get_template_names();
-  if templates.contains(&meta.name) {
+  if repository.get_template_names().contains(&meta.name) {
     out::error::template_exists(&meta.name);
     exit(1)
   }
 
   let repository_directory = repository.directory;
 
-  let template_path = match Template::create(&repository_directory, &meta) {
+  let template_path = match template::create(&repository_directory, &meta) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);
@@ -140,7 +120,7 @@ fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
   };
 
   let directory_path = Path::new(&directory);
-  let template_path = match Template::create(&directory_path, &meta) {
+  let template_path = match template::create(&directory_path, &meta) {
     Ok(value) => value,
     Err(error) => {
       log::error!("{}", error);
