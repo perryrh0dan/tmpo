@@ -158,6 +158,34 @@ fn main() {
                 .takes_value(true)
                 .about("Description of the repository")
                 .required(false),
+            )
+            .arg(
+              Arg::new("provider")
+                .long("provider")
+                .takes_value(true)
+                .about("Remote provider")
+                .required(false),
+            )
+            .arg(
+              Arg::new("authentication")
+                .long("authentication")
+                .takes_value(true)
+                .about("Authentication type")
+                .required(false),
+            )
+            .arg(
+              Arg::new("url")
+                .long("url")
+                .takes_value(true)
+                .about("Remote url of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("branch")
+                .long("branch")
+                .takes_value(true)
+                .about("Remote repository branch")
+                .required(false),
             ),
         )
         .subcommand(
@@ -180,16 +208,23 @@ fn main() {
                 .required(false),
             ),
         )
-        .subcommand(App::new("list").about("List all available repository"))
         .subcommand(
-          App::new("remove").about("Remove a repository").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          ),
+          App::new("list")
+            .about("List all available repository")
+            .alias("ls"),
+        )
+        .subcommand(
+          App::new("remove")
+            .about("Remove a repository")
+            .alias("rm")
+            .arg(
+              Arg::new("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("view").about("View repository details").arg(
@@ -214,7 +249,7 @@ fn main() {
               Arg::new("url")
                 .long("url")
                 .takes_value(true)
-                .about("Url to the template")
+                .about("Remote url of the template")
                 .required(false),
             ),
         )
@@ -239,14 +274,17 @@ fn main() {
             ),
         )
         .subcommand(
-          App::new("list").about("List all available templates").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          ),
+          App::new("list")
+            .about("List all available templates")
+            .alias("ls")
+            .arg(
+              Arg::new("repository")
+                .short('r')
+                .long("repository")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            ),
         )
         .subcommand(
           App::new("remove")
@@ -263,7 +301,7 @@ fn main() {
         )
         .subcommand(
           App::new("test")
-            .about("Test template at given location")
+            .about("Test template at a given location")
             .arg(
               Arg::new("directory")
                 .short('d')

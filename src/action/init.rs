@@ -29,7 +29,7 @@ impl Action {
     out::info::initiate_workspace();
 
     // Check if repositories exist
-    if self.config.get_repositories().len() <= 0 {
+    if self.config.get_repository_names().len() <= 0 {
       out::error::no_repositories();
       exit(1);
     }

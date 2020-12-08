@@ -173,7 +173,7 @@ impl Action {
     let repository = DefaultRepository::new(&self.config).unwrap();
 
     // Validate name
-    if !repository.get_template_names().contains(&template_name) {
+    if repository.get_template_names().contains(&template_name) {
       out::error::repository_exists(&template_name);
       exit(1);
     }

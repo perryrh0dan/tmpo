@@ -20,7 +20,8 @@
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
             // "args": ["repository", "add"],
             // "args": ["template", "add"],
-            "args": ["init", "test"],
+            // "args": ["init", "test"],
+            "args": ["template", "create"],
             "cwd": "${workspaceRoot}",
         }
     ]

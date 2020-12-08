@@ -13,13 +13,13 @@ impl Action {
 
     // Get repository
     let repository_name = if repository_name.is_none() {
-      let repositories = self.config.get_custom_repositories();
+      let repositories = self.config.get_custom_repository_names();
       input::select("repository", &repositories).unwrap()
     } else {
       String::from(repository_name.unwrap())
     };
 
-    if repository_name == "template" {
+    if repository_name == String::from("template") {
       eprintln!("Cant remove template repository")
     }
 

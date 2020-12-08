@@ -33,7 +33,7 @@ impl Action {
     };
 
     // validate name
-    let repositories = self.config.get_repositories();
+    let repositories = self.config.get_repository_names();
     if repositories.contains(&name) {
       out::error::repository_exists(&name);
       exit(1);

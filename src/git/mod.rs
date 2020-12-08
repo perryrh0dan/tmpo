@@ -1,6 +1,7 @@
 use log;
 use std::path::Path;
-// use crate::error::RunError;
+
+use crate::error::RunError;
 
 pub mod github;
 pub mod gitlab;
@@ -30,6 +31,18 @@ pub enum Provider {
   GITLAB,
 }
 
+impl Provider {
+  pub fn from(value: &str) -> Result<Provider, RunError> {
+    if value == "github" {
+      Ok(Provider::GITHUB)
+    } else if value == "gitlab" {
+      Ok(Provider::GITLAB)
+    } else {
+      Err(RunError::Input(String::from("Invalid provider")))
+    }
+  }
+}
+
 #[derive(Deserialize, Serialize, PartialEq, Clone, Debug)]
 pub enum AuthType {
   #[serde(alias = "basic")]
@@ -40,6 +53,20 @@ pub enum AuthType {
   SSH,
   #[serde(alias = "token")]
   TOKEN,
+}
+
+impl AuthType {
+  pub fn from(value: &str) -> Result<AuthType, RunError> {
+    if value == "basic" {
+      Ok(AuthType::BASIC)
+    } else if value == "none" {
+      Ok(AuthType::NONE)
+    } else if value == "token" {
+      Ok(AuthType::TOKEN)
+    } else {
+      Err(RunError::Input(String::from("Invalid authentication type")))
+    }
+  }
 }
 
 impl Options {

@@ -26,7 +26,7 @@ impl Action {
   fn get_repository(&self, repository_name: Option<&str>) -> Result<Box<dyn Repository>, RunError> {
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
-      let repositories = self.config.get_repositories();
+      let repositories = self.config.get_repository_names();
       input::select("repository", &repositories)?
     } else {
       String::from(repository_name.unwrap())

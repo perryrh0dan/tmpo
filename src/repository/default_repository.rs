@@ -90,6 +90,7 @@ impl DefaultRepository {
           log::error!("{}", error);
         }
       };
+
       match repository.ensure_template_git(&template) {
         Ok(()) => (),
         Err(error) => {

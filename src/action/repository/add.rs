@@ -14,8 +14,12 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn repository_add(&self, args: &ArgMatches) {
-    let repository_name = args.value_of("repository");
+    let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
+    let repository_provider = args.value_of("provider");
+    let repository_authentication = args.value_of("authentication");
+    let repository_url = args.value_of("url");
+    let repository_branch = args.value_of("branch");
 
     let mut git_options = git::Options::new();
 
@@ -23,65 +27,86 @@ impl Action {
     git_options.enabled = true;
 
     // Get provider
-    git_options.provider = match input::select(
-      "Provider",
-      &vec![String::from("github"), String::from("gitlab")],
-    ) {
-      Ok(value) => {
-        if value == "github" {
-          Some(git::Provider::GITHUB)
-        } else if value == "gitlab" {
-          Some(git::Provider::GITLAB)
-        } else {
-          exit(1);
+    git_options.provider = if repository_provider.is_none() {
+      match input::select(
+        "Provider",
+        &vec![String::from("github"), String::from("gitlab")],
+      ) {
+        Ok(value) => match git::Provider::from(&value) {
+          Ok(provider) => Some(provider),
+          Err(error) => {
+            log::error!("{}", error);
+            eprintln!("{}", error);
+            exit(1)
+          }
+        },
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1)
         }
       }
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
+    } else {
+      match git::Provider::from(&repository_provider.unwrap()) {
+        Ok(provider) => Some(provider),
+        Err(error) => {
+          eprintln!("{}", error);
+          exit(1)
+        }
       }
     };
 
     // Get authentication type
-    git_options.auth = match input::select(
-      "Auth type",
-      &vec![
-        String::from("token"),
-        String::from("basic"),
-        String::from("none"),
-      ],
-    ) {
-      Ok(value) => {
-        if value == "basic" {
-          Some(git::AuthType::BASIC)
-        } else if value == "none" {
-          Some(git::AuthType::NONE)
-        } else if value == "token" {
-          Some(git::AuthType::TOKEN)
-        } else {
+    git_options.auth = if repository_authentication.is_none() {
+      match input::select(
+        "Auth type",
+        &vec![
+          String::from("token"),
+          String::from("basic"),
+          String::from("none"),
+        ],
+      ) {
+        Ok(value) => match git::AuthType::from(&value) {
+          Ok(auth_type) => Some(auth_type),
+          Err(error) => {
+            log::error!("{}", error);
+            eprintln!("{}", error);
+            exit(1)
+          }
+        },
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
           exit(1)
         }
       }
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
+    } else {
+      match git::AuthType::from(&repository_authentication.unwrap()) {
+        Ok(auth_type) => Some(auth_type),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1)
+        }
       }
     };
 
     // Get repository remote url
-    git_options.url = match input::text("Enter remote repository url", false) {
-      Ok(value) => Some(value),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
+    git_options.url = if repository_url.is_none() {
+      match input::text("Enter remote repository url", false) {
+        Ok(value) => Some(value),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
       }
+    } else {
+      Some(String::from(repository_url.unwrap()))
     };
 
     // Get branch
-    git_options.branch =
+    git_options.branch = if repository_branch.is_none() {
       match input::text_with_default("Enter remote branch", "master") {
         Ok(value) => Some(value),
         Err(error) => {
@@ -89,7 +114,10 @@ impl Action {
           eprintln!("{}", error);
           exit(1);
         }
-      };
+      }
+    } else {
+      Some(String::from(repository_branch.unwrap()))
+    };
 
     // Get credentials for different auth types
     match git_options.auth.clone().unwrap() {
@@ -154,10 +182,7 @@ impl Action {
 
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
-      match input::text_with_default(
-        "Enter repository name",
-        &meta.name,
-      ) {
+      match input::text_with_default("Enter repository name", &meta.name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -170,7 +195,7 @@ impl Action {
     };
 
     // Validate name
-    let repositories = self.config.get_repositories();
+    let repositories = self.config.get_repository_names();
     if repositories.contains(&repository_name) {
       out::error::repository_exists(&repository_name);
       exit(1);

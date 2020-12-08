@@ -68,7 +68,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
   };
 
   // validate name
-  if !repository.get_template_names().contains(&meta.name) {
+  if repository.get_template_names().contains(&meta.name) {
     out::error::template_exists(&meta.name);
     exit(1)
   }

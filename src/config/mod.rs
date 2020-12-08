@@ -48,8 +48,8 @@ pub struct ConfigVersion {
 }
 
 impl Config {
-  pub fn get_repositories(&self) -> Vec<String> {
-    let mut repositories = self.get_custom_repositories();
+  pub fn get_repository_names(&self) -> Vec<String> {
+    let mut repositories = self.get_custom_repository_names();
 
     // Used for single repository templates
     repositories.push(String::from("templates"));
@@ -57,7 +57,7 @@ impl Config {
     return repositories;
   }
 
-  pub fn get_custom_repositories(&self) -> Vec<String> {
+  pub fn get_custom_repository_names(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
     for entry in self.repositories.iter() {
