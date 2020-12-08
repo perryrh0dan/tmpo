@@ -19,7 +19,7 @@ fn configuration() {
     eprintln!("Couldn't write to file: {}", e);
   }
 
-  if let Err(e) = writeln!(file, "version: 2.0.0") {
+  if let Err(e) = writeln!(file, "version: 2.0.2") {
     eprintln!("Couldn't write to file: {}", e);
   }
 

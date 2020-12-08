@@ -19,7 +19,7 @@ pub fn check() -> Result<(), RunError> {
 }
 
 fn migrate(current_version: Version, target_version: Version) {
-  if current_version <= Version::parse("2.0.0").unwrap() && target_version >= Version::parse("2.0.0").unwrap() {
+  if current_version < Version::parse("2.0.0").unwrap() && target_version >= Version::parse("2.0.0").unwrap() {
     two::migrate()
   }
 }
