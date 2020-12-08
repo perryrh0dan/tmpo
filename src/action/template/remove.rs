@@ -40,8 +40,8 @@ impl Action {
     };
 
     // Validate name
-    if repository.get_template_names().contains(&template_name) {
-      out::error::template_exists(&template_name);
+    if !repository.get_template_names().contains(&template_name) {
+      out::error::template_not_found();
       exit(1);
     }
 

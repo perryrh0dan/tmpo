@@ -3,6 +3,9 @@ use std::io::prelude::*;
 
 use crate::config;
 
+extern crate clap;
+use clap::crate_version;
+
 pub fn migrate() {
   configuration();
 }
@@ -19,7 +22,7 @@ fn configuration() {
     eprintln!("Couldn't write to file: {}", e);
   }
 
-  if let Err(e) = writeln!(file, "version: 2.0.2") {
+  if let Err(e) = writeln!(file, crate_version!()) {
     eprintln!("Couldn't write to file: {}", e);
   }
 
