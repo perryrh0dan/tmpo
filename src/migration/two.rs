@@ -15,6 +15,10 @@ fn configuration() {
 
   let config = config::get_default_config();
 
+  if let Err(e) = writeln!(file, "") {
+    eprintln!("Couldn't write to file: {}", e);
+  }
+
   if let Err(e) = writeln!(file, "version: 2.0.0") {
     eprintln!("Couldn't write to file: {}", e);
   }
