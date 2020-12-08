@@ -67,16 +67,18 @@ impl Action {
     let index = new_config
       .templates
       .iter()
-      .position(|x| x.name == template_name)
-      .unwrap();
-    new_config.repositories.remove(index);
+      .position(|x| x.name == template_name);
 
-    match new_config.save() {
-      Ok(()) => (),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
+    if index.is_some() {
+      new_config.repositories.remove(index.unwrap());
+
+      match new_config.save() {
+        Ok(()) => (),
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1)
+        }
       }
     }
   }
