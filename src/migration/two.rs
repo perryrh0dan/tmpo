@@ -22,7 +22,7 @@ fn configuration() {
     eprintln!("Couldn't write to file: {}", e);
   }
 
-  if let Err(e) = writeln!(file, crate_version!()) {
+  if let Err(e) = writeln!(file, "version: {}", crate_version!()) {
     eprintln!("Couldn't write to file: {}", e);
   }
 
