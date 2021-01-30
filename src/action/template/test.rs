@@ -27,8 +27,8 @@ impl Action {
 
     let directory_path = std::path::Path::new(&directory);
 
-    match template::Template::new(directory_path) {
-      Ok(_) => (),
+    let template = match template::Template::new(directory_path) {
+      Ok(template) => template,
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);
@@ -36,6 +36,8 @@ impl Action {
       }
     };
 
-    out::success::template_tested()
+    out::info::display_template(&template);
+
+    out::success::template_tested();
   }
 }
