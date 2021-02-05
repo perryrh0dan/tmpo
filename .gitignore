@@ -3,8 +3,8 @@
 **/*.rs.bk
 
 # build
-out/
-stage
+/out
+/stage
 
 # flamegraph
 perf.data
