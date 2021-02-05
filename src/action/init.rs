@@ -86,7 +86,7 @@ impl Action {
 
     // Get workspace directory from user input
     let workspace_directory = if workspace_directory.is_none() && !ctx.yes {
-      match input::text_with_default("Please enter the target directory", ".") {
+      match input::text_with_default("Please enter the target directory", &workspace_name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -112,14 +112,13 @@ impl Action {
 
     // TODO find better solution
     // try to avoid . in path
-    let dir = if workspace_directory != "." && workspace_directory != "./" {
+    let target_dir = if workspace_directory != "." && workspace_directory != "./" {
       current_dir.join(workspace_directory)
     } else {
       current_dir
     };
 
     // Check if directory already exits
-    let target_dir = dir.join(&workspace_name);
     if target_dir.exists() {
       log::error!("Failed to create workspace!: Error: Already exists");
       eprintln!("Failed to create workspace!: Error: Already exists");
@@ -221,6 +220,8 @@ impl Action {
     }
 
     // Create temp dir
+    let mut dir = target_dir.to_owned();
+    dir.pop();
     let tmp_dir = tempfile::Builder::new().tempdir_in(&dir).unwrap();
 
     // Create the temporary workspace
