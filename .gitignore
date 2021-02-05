@@ -2,8 +2,11 @@
 /target
 **/*.rs.bk
 
-# flamegraph
+# build
+out
+stage
 
+# flamegraph
 perf.data
 perf.data.old
 flamegraph.svg
