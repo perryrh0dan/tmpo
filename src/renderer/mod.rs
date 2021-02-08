@@ -4,6 +4,8 @@ use std::collections::HashMap;
 extern crate handlebars;
 use handlebars::Handlebars;
 
+mod helpers;
+
 #[derive(Clone, serde::Serialize, Debug)]
 pub struct Context {
   pub name: String,
@@ -15,7 +17,9 @@ pub struct Context {
 
 pub fn render(text: &str, content: &Context) -> String {
   // create the handlebars registry
-  let handlebars = Handlebars::new();
+  let mut handlebars = Handlebars::new();
+  handlebars.register_helper("uppercase", Box::new(helpers::uppercase_helper));
+
   let context = match handlebars::Context::wraps(content) {
     Ok(context) => context,
     Err(error) => {

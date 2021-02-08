@@ -10,7 +10,7 @@ use crate::context;
 use crate::git;
 use crate::out;
 use crate::repository::{CopyOptions};
-use crate::template::renderer;
+use crate::renderer;
 use crate::utils;
 
 use clap::ArgMatches;

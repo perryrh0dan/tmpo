@@ -13,6 +13,7 @@ mod migration;
 mod out;
 mod repository;
 mod template;
+mod renderer;
 mod update;
 mod utils;
 

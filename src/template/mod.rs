@@ -7,12 +7,12 @@ use std::path::{Path, PathBuf};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::meta;
+use crate::renderer;
 use crate::utils;
 
 extern crate serde;
 use serde::Serialize;
 
-pub mod renderer;
 mod script;
 
 #[derive(Serialize, Debug)]
