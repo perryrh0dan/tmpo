@@ -2,8 +2,15 @@
 
 ## 2.2.0
 
+### Feature
+
 - Add template helper methods:
   camelCase, CONSTANT_CASE, kebab-case, lowercaser, PascalCase, snake_case, UPPERCASE
+
+### Fix
+
+- git remote creation
+- deep target directoy
 
 ## 2.1.0
 
