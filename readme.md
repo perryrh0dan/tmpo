@@ -35,7 +35,7 @@ Come over to [Gitter](https://gitter.im/perryrh0dantmpo/community?source=orgpage
 ## Highlights
 
 - Setup complex workspaces in seconds
-- Templates support inheritence and placeholders
+- Templates support inheritence, placeholders and transformation methods
 - Simple, Lightweight & fast
 - Cross-platform: Linux, Windows and mac are official supported
 - Everything can be a template. Python, Rust, Typescript, latex, markdown,...
