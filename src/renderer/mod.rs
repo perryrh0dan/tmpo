@@ -18,8 +18,17 @@ pub struct Context {
 pub fn render(text: &str, content: &Context) -> String {
   // create the handlebars registry
   let mut handlebars = Handlebars::new();
-  handlebars.register_helper("uppercase", Box::new(helpers::uppercase_helper));
 
+  // register helper methods
+  handlebars.register_helper("uppercase", Box::new(helpers::uppercase_helper));
+  handlebars.register_helper("lowercase", Box::new(helpers::lowercase_helper));
+  handlebars.register_helper("camelcase", Box::new(helpers::camelcase_helper));
+  handlebars.register_helper("pascalcase", Box::new(helpers::pascalcase_helper));
+  handlebars.register_helper("snakecase", Box::new(helpers::snakecase_helper));
+  handlebars.register_helper("kebabcase", Box::new(helpers::kebabcase_helper));
+  handlebars.register_helper("constantcase", Box::new(helpers::constantcase_helper));
+
+  // create the render context with the provided variables
   let context = match handlebars::Context::wraps(content) {
     Ok(context) => context,
     Err(error) => {
@@ -28,6 +37,7 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
+  // render the template
   let result = match handlebars.render_template_with_context(text, &context) {
     Ok(result) => result,
     Err(error) => {

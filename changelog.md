@@ -1,5 +1,10 @@
 # What's new in Tmpo
 
+## 2.2.0
+
+- Add template helper methods
+  uppercase, lowercaser, camelcase, pascalcase, snakecase, kebabcase, constantcase
+
 ## 2.1.0
 
 ### Feature

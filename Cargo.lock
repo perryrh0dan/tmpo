@@ -243,6 +243,11 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "convert_case"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "core-foundation"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1599,6 +1604,7 @@ dependencies = [
  "base64 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 3.0.0-beta.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "convert_case 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dialoguer 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 3.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2015,6 +2021,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum console 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a50aab2529019abfabfa93f1e6c41ef392f91fbf179b347a7e96abb524884a08"
 "checksum console_error_panic_hook 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "b8d976903543e0c48546a91908f21588a680a8c8f984df9a5d69feccb2b2a211"
 "checksum constant_time_eq 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
+"checksum convert_case 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 "checksum core-foundation 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "57d24c7a13c43e870e37c1556b74555437870a04514f7685f5b354e090567171"
 "checksum core-foundation-sys 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b3a71ab494c0b5b860bdc8407ae08978052417070c2ced38573a9157ad75b8ac"
 "checksum crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
