@@ -2,8 +2,8 @@
 
 ## 2.2.0
 
-- Add template helper methods
-  uppercase, lowercaser, camelcase, pascalcase, snakecase, kebabcase, constantcase
+- Add template helper methods:
+  camelCase, CONSTANT_CASE, kebab-case, lowercaser, PascalCase, snake_case, UPPERCASE
 
 ## 2.1.0
 

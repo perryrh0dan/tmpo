@@ -97,6 +97,30 @@ mod tests {
   }
 
   #[test]
+  fn test_render_transformation_values() -> Result<(), Box<dyn std::error::Error>> {
+    let text =
+      "{{ camelcase values.full_name }},{{ constantcase values.full_name }},{{ kebabcase values.full_name }},{{ lowercase values.full_name }},{{ pascalcase values.full_name }},{{ snakecase values.full_name }},{{ uppercase values.full_name }}";
+    let mut values = HashMap::new();
+    values.insert(String::from("full_name"), String::from("ThomasPöhlmann"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
+
+    let result = render(text, &content);
+
+    assert_eq!(
+      result,
+      "thomasPöhlmann,THOMAS_PÖHLMANN,thomas-pöhlmann,thomaspöhlmann,thomasPöhlmann,thomas_pöhlmann,THOMASPÖHLMANN"
+    );
+
+    Ok(())
+  }
+
+  #[test]
   fn test_render_unknown() -> Result<(), Box<dyn std::error::Error>> {
     let text = "lets add one custom value: {{ values.full_name }} or a second one {{ values.last_name }} and an unknown: {{ values.first_name }}";
     let mut values = HashMap::new();
