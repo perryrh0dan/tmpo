@@ -94,8 +94,8 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   };
 
   // Set remote
-  match repo.remote_set_url("origin", repository) {
-    Ok(()) => (),
+  match repo.remote("origin", repository) {
+    Ok(_) => (),
     Err(error) => {
       return Err(error);
     }

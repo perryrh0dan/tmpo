@@ -4,6 +4,8 @@ use std::collections::HashMap;
 extern crate handlebars;
 use handlebars::Handlebars;
 
+mod helpers;
+
 #[derive(Clone, serde::Serialize, Debug)]
 pub struct Context {
   pub name: String,
@@ -15,7 +17,18 @@ pub struct Context {
 
 pub fn render(text: &str, content: &Context) -> String {
   // create the handlebars registry
-  let handlebars = Handlebars::new();
+  let mut handlebars = Handlebars::new();
+
+  // register helper methods
+  handlebars.register_helper("uppercase", Box::new(helpers::uppercase_helper));
+  handlebars.register_helper("lowercase", Box::new(helpers::lowercase_helper));
+  handlebars.register_helper("camelcase", Box::new(helpers::camelcase_helper));
+  handlebars.register_helper("pascalcase", Box::new(helpers::pascalcase_helper));
+  handlebars.register_helper("snakecase", Box::new(helpers::snakecase_helper));
+  handlebars.register_helper("kebabcase", Box::new(helpers::kebabcase_helper));
+  handlebars.register_helper("constantcase", Box::new(helpers::constantcase_helper));
+
+  // create the render context with the provided variables
   let context = match handlebars::Context::wraps(content) {
     Ok(context) => context,
     Err(error) => {
@@ -24,6 +37,7 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
+  // render the template
   let result = match handlebars.render_template_with_context(text, &context) {
     Ok(result) => result,
     Err(error) => {
@@ -77,6 +91,30 @@ mod tests {
     assert_eq!(
       result,
       "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann"
+    );
+
+    Ok(())
+  }
+
+  #[test]
+  fn test_render_transformation_values() -> Result<(), Box<dyn std::error::Error>> {
+    let text =
+      "{{ camelcase values.full_name }},{{ constantcase values.full_name }},{{ kebabcase values.full_name }},{{ lowercase values.full_name }},{{ pascalcase values.full_name }},{{ snakecase values.full_name }},{{ uppercase values.full_name }}";
+    let mut values = HashMap::new();
+    values.insert(String::from("full_name"), String::from("ThomasPöhlmann"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
+
+    let result = render(text, &content);
+
+    assert_eq!(
+      result,
+      "thomasPöhlmann,THOMAS_PÖHLMANN,thomas-pöhlmann,thomaspöhlmann,thomasPöhlmann,thomas_pöhlmann,THOMASPÖHLMANN"
     );
 
     Ok(())

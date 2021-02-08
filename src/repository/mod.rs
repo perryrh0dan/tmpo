@@ -5,7 +5,7 @@ use crate::config::{RepositoryOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::template;
-use crate::template::{renderer};
+use crate::renderer;
 
 pub mod custom_repository;
 pub mod default_repository;

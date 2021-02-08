@@ -1,7 +1,7 @@
 [package]
 name = "tmpo"
 description = "Command line utility to create new workspaces based on predefined templates"
-version = "2.0.5"
+version = "2.2.0"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
 license = "MIT"
@@ -25,6 +25,7 @@ regex = "1.4.2"
 url = "2.2.0"
 base64 = "0.13.0"
 semver = "0.11.0"
+convert_case = "0.4.0"
 
 [dependencies.reqwest]
 version = "0.10.9"

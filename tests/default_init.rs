@@ -32,7 +32,8 @@ fn success() -> Result<(), Box<dyn std::error::Error>> {
     .tempdir_in(::std::env::current_dir().unwrap())
     .unwrap();
 
-  let tmp_dir_path = tmp_dir.path().to_str().unwrap();
+  let target_dir = tmp_dir.path().to_owned().join("name");
+  let tmp_dir_path = target_dir.to_str().unwrap();
 
   let mut cmd = Command::cargo_bin("tmpo")?;
 

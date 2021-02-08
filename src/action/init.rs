@@ -5,11 +5,12 @@ use std::process::exit;
 
 use crate::action::Action;
 use crate::cli::input;
+use crate::config;
 use crate::context;
 use crate::git;
 use crate::out;
 use crate::repository::{CopyOptions};
-use crate::template::renderer;
+use crate::renderer;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -86,7 +87,7 @@ impl Action {
 
     // Get workspace directory from user input
     let workspace_directory = if workspace_directory.is_none() && !ctx.yes {
-      match input::text_with_default("Please enter the target directory", ".") {
+      match input::text_with_default("Please enter the target directory", &workspace_name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -112,14 +113,13 @@ impl Action {
 
     // TODO find better solution
     // try to avoid . in path
-    let dir = if workspace_directory != "." && workspace_directory != "./" {
+    let target_dir = if workspace_directory != "." && workspace_directory != "./" {
       current_dir.join(workspace_directory)
     } else {
       current_dir
     };
 
     // Check if directory already exits
-    let target_dir = dir.join(&workspace_name);
     if target_dir.exists() {
       log::error!("Failed to create workspace!: Error: Already exists");
       eprintln!("Failed to create workspace!: Error: Already exists");
@@ -220,8 +220,7 @@ impl Action {
       }
     }
 
-    // Create temp dir
-    let tmp_dir = tempfile::Builder::new().tempdir_in(&dir).unwrap();
+    let tmp_dir = tempfile::Builder::new().tempdir_in(&config::temp_dir()).unwrap();
 
     // Create the temporary workspace
     let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
@@ -272,6 +271,16 @@ impl Action {
         eprintln!("{}", error);
         exit(1);
       }
+    };
+
+    // Create parent directories if they dont´t exist
+    match fs::create_dir_all(&target_dir) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     };
 
     // Move workspace from temporary directroy to target directory
