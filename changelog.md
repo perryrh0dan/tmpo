@@ -1,5 +1,21 @@
 # What's new in Tmpo
 
+## 2.1.0
+
+### Feature
+
+- Folder name can now be changed with the target-directory flag or input
+
+## 2.0.0
+
+### Feature
+
+- Add the possibility to share single templates via git repository with other users.
+
+### Breaking
+
+- Update format of configuration file.
+
 ## 1.8.1
 
 ### Fix

@@ -111,19 +111,28 @@ pub fn init() -> Result<Config, RunError> {
 
   let config = load_config()?;
 
-  match ensure_repositories_dir(&config.repositories_dir) {
+  // Ensure repository directory
+  match ensure_dir(&config.repositories_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
     }
   };
 
-  match ensure_templates_dir(&config.repositories_dir) {
+  // Ensure template directory
+  match ensure_dir(&config.repositories_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
     }
   };
+
+  match ensure_dir(&temp_dir()) {
+    Ok(()) => (),
+    Err(error) => {
+      return Err(RunError::IO(error));
+    }
+  }
 
   Ok(config)
 }
@@ -139,17 +148,7 @@ fn ensure_root_dir() -> Result<(), Error> {
   Ok(())
 }
 
-fn ensure_repositories_dir(dir: &PathBuf) -> Result<(), Error> {
-  let r = fs::create_dir_all(dir);
-  match r {
-    Ok(fc) => fc,
-    Err(error) => return Err(error),
-  };
-
-  Ok(())
-}
-
-fn ensure_templates_dir(dir: &PathBuf) -> Result<(), Error> {
+fn ensure_dir(dir: &PathBuf) -> Result<(), Error> {
   let r = fs::create_dir_all(dir);
   match r {
     Ok(fc) => fc,
@@ -267,6 +266,12 @@ pub fn config_location() -> PathBuf {
 pub fn directory() -> PathBuf {
   let mut path = config_location();
   path.pop();
+
+  return path;
+}
+
+pub fn temp_dir() -> PathBuf {
+  let path = directory().join("temp");
 
   return path;
 }

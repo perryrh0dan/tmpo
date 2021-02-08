@@ -5,6 +5,7 @@ use std::process::exit;
 
 use crate::action::Action;
 use crate::cli::input;
+use crate::config;
 use crate::context;
 use crate::git;
 use crate::out;
@@ -219,10 +220,7 @@ impl Action {
       }
     }
 
-    // Create temp dir
-    let mut dir = target_dir.to_owned();
-    dir.pop();
-    let tmp_dir = tempfile::Builder::new().tempdir_in(&dir).unwrap();
+    let tmp_dir = tempfile::Builder::new().tempdir_in(&config::temp_dir()).unwrap();
 
     // Create the temporary workspace
     let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
@@ -273,6 +271,16 @@ impl Action {
         eprintln!("{}", error);
         exit(1);
       }
+    };
+
+    // Create parent directories if they dont´t exist
+    match fs::create_dir_all(&target_dir) {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      },
     };
 
     // Move workspace from temporary directroy to target directory
