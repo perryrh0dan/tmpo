@@ -1,5 +1,11 @@
 # What's new in Tmpo
 
+## 2.2.1
+
+### Fix
+
+- (windows) fix init error (permission denied, os error 5)
+
 ## 2.2.0
 
 ### Feature
