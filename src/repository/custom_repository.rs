@@ -9,9 +9,9 @@ use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
 use crate::meta;
-use crate::repository::{Repository, CopyOptions};
+use crate::repository::{CopyOptions, Repository};
 use crate::template;
-use crate::template::{Template};
+use crate::template::Template;
 use crate::utils;
 
 #[derive(Debug)]
@@ -195,15 +195,22 @@ impl CustomRepository {
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // initialize git repository
-    match git::init(
+    let valid = git::check(
       &self.directory,
       &self.config.git_options.url.clone().unwrap(),
-    ) {
-      Ok(()) => (),
-      Err(error) => {
-        return Err(error);
-      }
-    };
+    );
+
+    if !valid {
+      match git::init(
+        &self.directory,
+        &self.config.git_options.url.clone().unwrap(),
+      ) {
+        Ok(()) => (),
+        Err(error) => {
+          return Err(error);
+        }
+      };
+    }
 
     // update repository
     match git::update(&self.directory, &self.config.git_options) {

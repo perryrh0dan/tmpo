@@ -84,7 +84,30 @@ impl Options {
   }
 }
 
-pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
+pub fn check(dir: &Path, repository_url: &str) -> bool {
+  let repo = match git2::Repository::open(dir) {
+    Ok(repo) => repo,
+    Err(_error) => {
+      return false
+    }
+  };
+
+  let remote = match repo.find_remote("origin") {
+    Ok(remote) => remote,
+    Err(_error) => {
+      return false
+    }
+  };
+
+  let remote_url = remote.url();
+  if remote_url.unwrap() != repository_url {
+    return false
+  }
+
+  return true
+}
+
+pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
   // Initialize git repository
   let repo = match git2::Repository::init(dir) {
     Ok(repo) => repo,
@@ -94,7 +117,7 @@ pub fn init(dir: &Path, repository: &str) -> Result<(), git2::Error> {
   };
 
   // Set remote
-  match repo.remote("origin", repository) {
+  match repo.remote("origin", repository_url) {
     Ok(_) => (),
     Err(error) => {
       return Err(error);
