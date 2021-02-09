@@ -274,7 +274,9 @@ impl Action {
     };
 
     // Create parent directories if they dont´t exist
-    match fs::create_dir_all(&target_dir) {
+    let mut parent_dir = target_dir.to_owned();
+    parent_dir.pop();
+    match fs::create_dir_all(&parent_dir) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
