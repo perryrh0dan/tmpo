@@ -2,19 +2,20 @@ use std::ops::Add;
 
 use crate::error::RunError;
 use crate::git;
-use crate::meta::Meta;
 
 extern crate regex;
-extern crate reqwest;
 use regex::Regex;
+extern crate reqwest;
+extern crate serde;
+use serde::de;
 
-pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
+pub fn fetch_meta<T: de::DeserializeOwned>(options: &git::Options) -> Result<T, RunError> {
   let response = match fetch(options) {
     Ok(resp) => resp,
     Err(error) => return Err(error),
   };
 
-  let meta: Meta = match response.json() {
+  let meta: T = match response.json() {
     Ok(data) => data,
     Err(error) => return Err(RunError::Meta(format!("{}", error))),
   };
@@ -99,6 +100,8 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
 mod tests {
   use super::*;
 
+  use crate::meta::RepositoryMeta;
+
   #[test]
   fn build_meta_url_success_default() {
     let repository_url = "https://github.com/perryrh0dan/templates";
@@ -139,7 +142,7 @@ mod tests {
     options.auth = Some(git::AuthType::NONE);
     options.url = Some(String::from("https://github.com/perryrh0dan/templates"));
 
-    let meta = fetch_meta(&options).unwrap();
+    let meta = fetch_meta::<RepositoryMeta>(&options).unwrap();
     assert_eq!(meta.name, "default");
   }
 }

@@ -1,6 +1,5 @@
 use crate::error::RunError;
 use crate::git;
-use crate::meta::Meta;
 
 extern crate regex;
 extern crate reqwest;
@@ -8,7 +7,7 @@ use regex::Regex;
 extern crate url;
 use url::form_urlencoded::byte_serialize;
 extern crate serde_json;
-use serde::Deserialize;
+use serde::{Deserialize,de};
 extern crate base64;
 
 #[derive(Deserialize, Debug)]
@@ -25,7 +24,7 @@ struct FileResponse {
   content: String,
 }
 
-pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
+pub fn fetch_meta<T: de::DeserializeOwned>(options: &git::Options) -> Result<T, RunError> {
   let file_response = match fetch(options) {
     Ok(resp) => resp,
     Err(error) => return Err(error),
@@ -36,7 +35,7 @@ pub fn fetch_meta(options: &git::Options) -> Result<Meta, RunError> {
     Err(error) => return Err(RunError::Meta(format!("{}", error))),
   };
 
-  let meta: Meta = match serde_json::from_slice(&decoded_content) {
+  let meta: T = match serde_json::from_slice(&decoded_content) {
     Ok(meta) => meta,
     Err(error) => return Err(RunError::Meta(format!("{}", error))),
   };
@@ -142,6 +141,8 @@ pub fn build_meta_url(repository_url: &str) -> Result<String, RunError> {
 mod tests {
   use super::*;
 
+  use crate::meta::RepositoryMeta;
+
   #[test]
   fn build_meta_url_default() {
     let repository_url = "https://gitlab.com/JohnMcClan3/templates";
@@ -175,7 +176,7 @@ mod tests {
     options.token = Some(String::from("r-6fZ-CXscYu97u4m-mD"));
     options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
 
-    let meta = fetch_meta(&options).unwrap();
+    let meta = fetch_meta::<RepositoryMeta>(&options).unwrap();
     assert_eq!(meta.name, "test");
   }
 
@@ -187,7 +188,7 @@ mod tests {
     options.auth = Some(git::AuthType::TOKEN);
     options.url = Some(String::from("https://gitlab.com/JohnMcClan3/templates"));
 
-    let meta = fetch_meta(&options);
+    let meta = fetch_meta::<RepositoryMeta>(&options);
     match meta {
       Ok(_) => assert!(false),
       Err(_) => assert!(true),

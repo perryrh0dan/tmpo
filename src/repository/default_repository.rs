@@ -8,7 +8,7 @@ use crate::config::{Config, RepositoryOptions, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
-use crate::meta;
+use crate::{meta, {meta::TemplateMeta}};
 use crate::template;
 use crate::repository::{CopyOptions, Repository};
 use crate::utils;
@@ -140,7 +140,7 @@ impl DefaultRepository {
         continue;
       }
 
-      let meta = match meta::load(&entry.path()) {
+      let meta = match meta::load::<TemplateMeta>(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);

@@ -8,7 +8,7 @@ use crate::config::{Config, RepositoryOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
-use crate::meta;
+use crate::{meta, {meta::TemplateMeta, meta::RepositoryMeta}};
 use crate::repository::{CopyOptions, Repository};
 use crate::template;
 use crate::template::Template;
@@ -18,7 +18,7 @@ use crate::utils;
 pub struct CustomRepository {
   pub config: RepositoryOptions,
   pub directory: PathBuf,
-  pub meta: Option<meta::Meta>,
+  pub meta: Option<RepositoryMeta>,
   pub templates: Vec<template::Template>,
 }
 
@@ -71,6 +71,10 @@ impl Repository for CustomRepository {
     let mut templates = Vec::<String>::new();
 
     for template in &self.templates {
+      if template.meta.visible.is_some() && template.meta.visible.unwrap() == false {
+        continue;
+      }
+
       templates.push(utils::lowercase(&template.name));
     }
 
@@ -253,7 +257,7 @@ impl CustomRepository {
         continue;
       }
 
-      let meta = match meta::load(&entry.path()) {
+      let meta = match meta::load::<TemplateMeta>(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);
@@ -321,7 +325,7 @@ pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunEr
   fs::create_dir(&directory)?;
 
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
+  let mut meta = meta::RepositoryMeta::new(meta::Type::REPOSITORY);
   meta.name = options.name.to_owned();
   meta.description = options.description.to_owned();
 

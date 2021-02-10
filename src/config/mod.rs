@@ -67,16 +67,6 @@ impl Config {
     return repositories;
   }
 
-  pub fn get_templates(&self) -> Vec<String> {
-    let mut templates = Vec::<String>::new();
-
-    for template in self.templates.iter() {
-      templates.push(utils::lowercase(&template.name))
-    }
-
-    return templates;
-  }
-
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self
       .repositories

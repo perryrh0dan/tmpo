@@ -7,14 +7,23 @@ use crate::error::RunError;
 use crate::git;
 
 extern crate serde;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Meta {
+pub struct RepositoryMeta {
   pub kind: Type,
   pub name: String,
   pub version: Option<String>,
   pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TemplateMeta {
+  pub kind: Type,
+  pub name: String,
+  pub version: Option<String>,
+  pub description: Option<String>,
+  pub visible: Option<bool>,
   pub scripts: Option<Scripts>,
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
@@ -50,7 +59,7 @@ pub struct Scripts {
   pub after_install: Option<String>,
 }
 
-pub fn load(dir: &Path) -> Result<Meta, Error> {
+pub fn load<T: de::DeserializeOwned>(dir: &Path) -> Result<T, Error> {
   let meta_path = dir.join("meta.json");
 
   // Open file
@@ -59,11 +68,27 @@ pub fn load(dir: &Path) -> Result<Meta, Error> {
 
   // Write to data string
   src.read_to_string(&mut data)?;
-  let meta: Meta = serde_json::from_str(&data)?;
+  let meta: T = serde_json::from_str(&data)?;
+
   Ok(meta)
 }
 
-pub fn fetch(options: &git::Options) -> Result<Meta, RunError> {
+// pub fn fetch(options: &git::Options) -> Result<GenericMeta, RunError> {
+//   let provider = if options.provider.is_some() {
+//     options.provider.clone().unwrap()
+//   } else {
+//     return Err(RunError::Meta(String::from("No provider was provided")));
+//   };
+
+//   let meta = match provider {
+//     git::Provider::GITHUB => git::github::fetch_meta(options)?,
+//     git::Provider::GITLAB => git::gitlab::fetch_meta(options)?,
+//   };
+
+//   Ok(meta)
+// }
+
+pub fn fetch<T: de::DeserializeOwned>(options: &git::Options) -> Result<T, RunError> {
   let provider = if options.provider.is_some() {
     options.provider.clone().unwrap()
   } else {
@@ -71,20 +96,32 @@ pub fn fetch(options: &git::Options) -> Result<Meta, RunError> {
   };
 
   let meta = match provider {
-    git::Provider::GITHUB => git::github::fetch_meta(options)?,
-    git::Provider::GITLAB => git::gitlab::fetch_meta(options)?,
+    git::Provider::GITHUB => git::github::fetch_meta::<T>(options)?,
+    git::Provider::GITLAB => git::gitlab::fetch_meta::<T>(options)?,
   };
 
   Ok(meta)
 }
 
-impl Meta {
-  pub fn new(kind: Type) -> Meta {
-    Meta {
+impl RepositoryMeta {
+  pub fn new(kind: Type) -> RepositoryMeta {
+    RepositoryMeta {
       kind: kind,
       name: String::from(""),
       version: None,
       description: None,
+    }
+  }
+}
+
+impl TemplateMeta {
+  pub fn new(kind: Type) -> TemplateMeta {
+    TemplateMeta {
+      kind: kind,
+      name: String::from(""),
+      version: None,
+      description: None,
+      visible: Some(true),
       scripts: Some(Scripts {
         before_install: None,
         after_install: None,

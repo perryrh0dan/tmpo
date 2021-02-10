@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use crate::context::Context;
 use crate::error::RunError;
-use crate::meta;
+use crate::{meta, {meta::TemplateMeta}};
 use crate::renderer;
 use crate::utils;
 
@@ -25,12 +25,12 @@ pub struct Info {
 pub struct Template {
   pub name: String,
   pub path: PathBuf,
-  pub meta: meta::Meta,
+  pub meta: meta::TemplateMeta,
 }
 
 impl Template {
   pub fn new(dir: &Path) -> Result<Template, RunError> {
-    let meta = match meta::load(&dir) {
+    let meta = match meta::load::<TemplateMeta>(&dir) {
       Ok(meta) => meta,
       Err(error) => {
         log::error!("{}", error);
@@ -223,7 +223,7 @@ impl Template {
 }
 
 /// Create a new template with given name in the repository directory
-pub fn create(dir: &Path, meta: &meta::Meta) -> Result<std::path::PathBuf, RunError> {
+pub fn create(dir: &Path, meta: &meta::TemplateMeta) -> Result<std::path::PathBuf, RunError> {
   let template_path = dir.join(utils::lowercase(&meta.name));
 
   // Create template directory

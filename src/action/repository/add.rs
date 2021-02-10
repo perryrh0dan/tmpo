@@ -165,11 +165,11 @@ impl Action {
     }
 
     // Try to fetch meta data
-    let meta = match meta::fetch(&git_options) {
+    let meta = match meta::fetch::<meta::RepositoryMeta>(&git_options) {
       Ok(data) => data,
       Err(error) => {
         log::error!("{}", error);
-        meta::Meta::new(meta::Type::REPOSITORY)
+        meta::RepositoryMeta::new(meta::Type::REPOSITORY)
       }
     };
 

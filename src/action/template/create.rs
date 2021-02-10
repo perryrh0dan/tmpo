@@ -51,7 +51,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
   };
 
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+  let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 
   // Get template name from user input
   meta.name = if template_name.is_none() {
@@ -89,7 +89,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
 
 fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+  let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 
   // Get template name from user input
   meta.name = if template_name.is_none() {
