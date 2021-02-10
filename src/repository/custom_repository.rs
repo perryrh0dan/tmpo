@@ -1,3 +1,4 @@
+use linked_hash_set::LinkedHashSet;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
@@ -47,7 +48,7 @@ impl Repository for CustomRepository {
     Ok(())
   }
 
-  fn get_template_values(&self, template_name: &str) -> Result<HashSet<String>, RunError> {
+  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<String>, RunError> {
     let template = self.get_template_by_name(&template_name)?;
 
     // Get list of all super templates
@@ -56,7 +57,7 @@ impl Repository for CustomRepository {
       Err(error) => return Err(error),
     };
 
-    let mut values = HashSet::new();
+    let mut values = LinkedHashSet::new();
     for template in super_templates {
       values.extend(template.meta.get_values());
     }

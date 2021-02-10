@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use linked_hash_set::LinkedHashSet;
 use std::fs;
 use log;
 use std::io::{Error};
@@ -40,10 +40,10 @@ impl Repository for DefaultRepository {
     Ok(())
   }
 
-  fn get_template_values(&self, template_name: &str) -> Result<HashSet<String>, RunError> {
+  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<String>, RunError> {
     let template = self.get_template_by_name(&template_name)?;
 
-    let mut values = HashSet::new();
+    let mut values = LinkedHashSet::new();
     values.extend(template.meta.get_values());
 
     Ok(values)
