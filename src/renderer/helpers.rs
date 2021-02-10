@@ -2,7 +2,7 @@ extern crate convert_case;
 use convert_case::{Case, Casing};
 
 use handlebars::{
-  to_json, Context, Decorator, Handlebars, Helper, JsonRender, Output, RenderContext, RenderError,
+  Context, Handlebars, Helper, JsonRender, Output, RenderContext, RenderError,
 };
 
 pub fn uppercase_helper(
