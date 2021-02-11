@@ -1,5 +1,15 @@
 # What's new in Tmpo
 
+## 2.3.0
+
+### Feature
+
+- Add new `visible` flag to templates.
+
+### Fix
+
+- values are now in the correct order parent -> child
+
 ## 2.2.1
 
 ### Fix
