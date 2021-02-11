@@ -101,7 +101,12 @@ pub fn check(dir: &Path, repository_url: &str) -> bool {
 
   let remote_url = remote.url();
   if remote_url.unwrap() != repository_url {
-    return false
+    match repo.remote_set_url("origin", repository_url) {
+      Ok(()) => (),
+      Err(_error) => {
+        return false
+      }
+    }
   }
 
   return true
