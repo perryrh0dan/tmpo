@@ -101,7 +101,12 @@ pub fn check(dir: &Path, repository_url: &str) -> bool {
 
   let remote_url = remote.url();
   if remote_url.unwrap() != repository_url {
-    return false
+    match repo.remote_set_url("origin", repository_url) {
+      Ok(()) => (),
+      Err(_error) => {
+        return false
+      }
+    }
   }
 
   return true
@@ -121,6 +126,22 @@ pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
     Ok(_) => (),
     Err(error) => {
       return Err(error);
+    }
+  };
+
+  let mut config = match repo.config() {
+    Ok(config) => (config),
+    Err(error) => {
+      return Err(error)
+    }
+  };
+
+  // Disable auto crlf on windows
+  #[cfg(not(windows))]
+  match config.set_str("core.autocrlf", "false") {
+    Ok(()) => (),
+    Err(error) => {
+      return Err(error)
     }
   };
 
