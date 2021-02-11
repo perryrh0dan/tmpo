@@ -67,16 +67,6 @@ impl Config {
     return repositories;
   }
 
-  pub fn get_templates(&self) -> Vec<String> {
-    let mut templates = Vec::<String>::new();
-
-    for template in self.templates.iter() {
-      templates.push(utils::lowercase(&template.name))
-    }
-
-    return templates;
-  }
-
   pub fn get_repository_config(&self, name: &str) -> Option<RepositoryOptions> {
     let config = self
       .repositories
@@ -92,6 +82,17 @@ impl Config {
 
   pub fn save(&self) -> Result<(), Error> {
     save_config(self)
+  }
+
+  pub fn validate(&self) -> Result<(), RunError> {
+    // Check repository names for reserved names
+    for repository in self.get_custom_repository_names() {
+      if repository  == String::from("templates") {
+        return Err(RunError::Config(format!("Reserved repository name {} used", repository)));
+      }
+    }
+
+    Ok(())
   }
 }
 
@@ -111,6 +112,8 @@ pub fn init() -> Result<Config, RunError> {
 
   let config = load_config()?;
 
+  config.validate()?;
+
   // Ensure repository directory
   match ensure_dir(&config.repositories_dir) {
     Ok(()) => (),
@@ -127,6 +130,7 @@ pub fn init() -> Result<Config, RunError> {
     }
   };
 
+  // Ensure temp directory
   match ensure_dir(&temp_dir()) {
     Ok(()) => (),
     Err(error) => {

@@ -1,5 +1,16 @@
 # What's new in Tmpo
 
+## 2.3.0
+
+### Feature
+
+- Add new `visible` flag to templates.
+
+### Fix
+
+- Values are now in the correct order parent -> child
+- Set default path for remote template creation to `.`
+
 ## 2.2.1
 
 ### Fix

@@ -1,3 +1,4 @@
+use linked_hash_set::LinkedHashSet;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
@@ -8,17 +9,17 @@ use crate::config::{Config, RepositoryOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
-use crate::meta;
-use crate::repository::{Repository, CopyOptions};
+use crate::{meta, {meta::TemplateMeta, meta::RepositoryMeta}};
+use crate::repository::{CopyOptions, Repository};
 use crate::template;
-use crate::template::{Template};
+use crate::template::Template;
 use crate::utils;
 
 #[derive(Debug)]
 pub struct CustomRepository {
   pub config: RepositoryOptions,
   pub directory: PathBuf,
-  pub meta: Option<meta::Meta>,
+  pub meta: Option<RepositoryMeta>,
   pub templates: Vec<template::Template>,
 }
 
@@ -47,7 +48,7 @@ impl Repository for CustomRepository {
     Ok(())
   }
 
-  fn get_template_values(&self, template_name: &str) -> Result<HashSet<String>, RunError> {
+  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<String>, RunError> {
     let template = self.get_template_by_name(&template_name)?;
 
     // Get list of all super templates
@@ -56,7 +57,7 @@ impl Repository for CustomRepository {
       Err(error) => return Err(error),
     };
 
-    let mut values = HashSet::new();
+    let mut values = LinkedHashSet::new();
     for template in super_templates {
       values.extend(template.meta.get_values());
     }
@@ -71,6 +72,10 @@ impl Repository for CustomRepository {
     let mut templates = Vec::<String>::new();
 
     for template in &self.templates {
+      if template.meta.visible.is_some() && template.meta.visible.unwrap() == false {
+        continue;
+      }
+
       templates.push(utils::lowercase(&template.name));
     }
 
@@ -195,15 +200,22 @@ impl CustomRepository {
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // initialize git repository
-    match git::init(
+    let valid = git::check(
       &self.directory,
       &self.config.git_options.url.clone().unwrap(),
-    ) {
-      Ok(()) => (),
-      Err(error) => {
-        return Err(error);
-      }
-    };
+    );
+
+    if !valid {
+      match git::init(
+        &self.directory,
+        &self.config.git_options.url.clone().unwrap(),
+      ) {
+        Ok(()) => (),
+        Err(error) => {
+          return Err(error);
+        }
+      };
+    }
 
     // update repository
     match git::update(&self.directory, &self.config.git_options) {
@@ -246,7 +258,7 @@ impl CustomRepository {
         continue;
       }
 
-      let meta = match meta::load(&entry.path()) {
+      let meta = match meta::load::<TemplateMeta>(&entry.path()) {
         Ok(meta) => meta,
         Err(error) => {
           log::error!("{}", error);
@@ -314,7 +326,7 @@ pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunEr
   fs::create_dir(&directory)?;
 
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::REPOSITORY);
+  let mut meta = meta::RepositoryMeta::new(meta::Type::REPOSITORY);
   meta.name = options.name.to_owned();
   meta.description = options.description.to_owned();
 

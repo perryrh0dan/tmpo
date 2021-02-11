@@ -51,7 +51,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
   };
 
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+  let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 
   // Get template name from user input
   meta.name = if template_name.is_none() {
@@ -89,7 +89,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
 
 fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
   // Create meta data
-  let mut meta = meta::Meta::new(meta::Type::TEMPLATE);
+  let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 
   // Get template name from user input
   meta.name = if template_name.is_none() {
@@ -107,7 +107,7 @@ fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
 
   // Get template directory from user input
   let directory: String = if directory.is_none() {
-    match input::text("Enter the target directory", false) {
+    match input::text_with_default("Enter the target directory", ".") {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
