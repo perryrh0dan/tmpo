@@ -1,5 +1,11 @@
 # What's new in Tmpo
 
+## 2.3.1
+
+### Fix
+
+- Use `LF` eol on windows
+
 ## 2.3.0
 
 ### Feature

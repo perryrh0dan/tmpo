@@ -124,6 +124,22 @@ pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
     }
   };
 
+  let mut config = match repo.config() {
+    Ok(config) => (config),
+    Err(error) => {
+      return Err(error)
+    }
+  };
+
+  // Disable auto crlf on windows
+  #[cfg(not(windows))]
+  match config.set_str("core.autocrlf", "false") {
+    Ok(()) => (),
+    Err(error) => {
+      return Err(error)
+    }
+  };
+
   Ok(())
 }
 
