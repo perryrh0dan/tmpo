@@ -8,7 +8,8 @@
 
 ### Fix
 
-- values are now in the correct order parent -> child
+- Values are now in the correct order parent -> child
+- Set default path for remote template creation to `.`
 
 ## 2.2.1
 
