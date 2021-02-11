@@ -107,7 +107,7 @@ fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
 
   // Get template directory from user input
   let directory: String = if directory.is_none() {
-    match input::text("Enter the target directory", false) {
+    match input::text_with_default("Enter the target directory", ".") {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);
