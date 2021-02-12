@@ -50,7 +50,21 @@ impl fmt::Display for Type {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Renderer {
   pub exclude: Option<Vec<String>>,
-  pub values: Option<Vec<String>>,
+  pub values: Option<Values>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Value {
+  pub key: String,
+  pub label: Option<String>,
+  pub default: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum Values {
+  Value(Vec<Value>),
+  StringArray(Vec<String>)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -142,7 +156,7 @@ impl TemplateMeta {
     };
 
     match renderer.values {
-      Some(x) => x,
+      Some(x) => vec![], //TODO
       None => return vec![],
     }
   }
@@ -171,5 +185,65 @@ impl TemplateMeta {
     }
 
     return None;
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn deserialize_template_values_old() {
+    let data = r#"[
+      "value1", "value2"
+    ]"#;
+
+    let result = vec![
+      Value {
+        key: String::from("value1"),
+        label: None,
+        default: None,
+      },
+      Value {
+        key: String::from("value2"),
+        label: None,
+        default: None,
+      },
+    ];
+
+    let meta: Option<Values> = serde_json::from_str(&data).unwrap();
+  }
+
+  #[test]
+  fn deserialize_template_values_new() {
+    let data = r#"[
+      {
+        "key": "value1"
+      },
+      {
+        "key": "value2"
+      }
+    ]"#;
+
+    let result = vec![
+      Value {
+        key: String::from("value1"),
+        label: None,
+        default: None,
+      },
+      Value {
+        key: String::from("value2"),
+        label: None,
+        default: None,
+      },
+    ];
+
+    let generic_values: Values = serde_json::from_str(&data).unwrap();
+    let values = match generic_values {
+      Values::Value(values) => values,
+      Values::StringArray(_) => panic!("wrong type"),
+    };
+
+    assert_eq!(values.len(), 2);
   }
 }
