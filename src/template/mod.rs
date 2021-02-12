@@ -226,6 +226,11 @@ impl Template {
 pub fn create(dir: &Path, meta: &meta::TemplateMeta) -> Result<std::path::PathBuf, RunError> {
   let template_path = dir.join(utils::lowercase(&meta.name));
 
+  // Check if directory already exits
+  if template_path.exists() {
+    return Err(RunError::Input(String::from("Failed to create workspace!: Error: Already exists")));
+  }
+
   // Create template directory
   fs::create_dir(&template_path)?;
 
