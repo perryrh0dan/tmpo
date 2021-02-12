@@ -196,10 +196,21 @@ impl Action {
       String::from("")
     };
 
-    let mut values = HashMap::new();
-    if !ctx.yes {
+    // Create custom input map
+    let mut inputs = HashMap::new();
+
+    // Create context for renderer with custom values
+    let mut render_context = renderer::Context {
+      name: String::from(&workspace_name),
+      repository: String::from(&workspace_repository),
+      username: username,
+      email: email,
+      values: inputs.clone(),
+    };
+
+    if !ctx.yes { //TODO think about
       // Get template specific values
-      let keys = match repository.get_template_values(&template_name) {
+      let values = match repository.get_template_values(&template_name) {
         Ok(keys) => keys,
         Err(error) => {
           log::error!("{}", error);
@@ -208,15 +219,39 @@ impl Action {
         }
       };
 
-      for key in keys {
-        let value = match input::text(&format!("Please enter {}", &key), true) {
-          Ok(value) => value,
-          Err(error) => {
-            log::error!("{}", error);
-            String::from("")
+      for value in values {
+        let input = if value.default.is_some() {
+          // Get and parse default value
+          let default_value = renderer::render(&value.default.to_owned().unwrap(), &render_context);
+
+          match input::text_with_default(&format!("Please enter {}", value.get_label()), &default_value) {
+            Ok(value) => value,
+            Err(error) => {
+              log::error!("{}", error);
+              String::from("")
+            }
+          }
+        } else {
+          let required = if value.required.is_some() {
+            value.required.to_owned().unwrap()
+          } else {
+            false
+          };
+
+          match input::text(&format!("Please enter {}", value.get_label()), !required) {
+            Ok(value) => value,
+            Err(error) => {
+              log::error!("{}", error);
+              String::from("")
+            }
           }
         };
-        values.insert(key, value);
+
+        // Update inputs map
+        inputs.insert(value.key, input);
+
+        // Update render context to use new input
+        render_context.values = inputs.clone()
       }
     }
 
@@ -245,15 +280,6 @@ impl Action {
         }
       }
     }
-
-    // Create context for renderer with custom values
-    let render_context = renderer::Context {
-      name: String::from(&workspace_name),
-      repository: String::from(&workspace_repository),
-      username: username,
-      email: email,
-      values: values,
-    };
 
     // Create copy options
     let copy_options = CopyOptions {

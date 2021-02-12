@@ -1,5 +1,19 @@
 # What's new in Tmpo
 
+## 2.4.0
+
+### Feature
+
+- Add improved values type to template meta. 
+  ``` json
+  {
+    "key": "className", //name to use in templates
+    "label": "class name", //name to show to the user
+    "default": "prefix-{{name}}", //default value
+    "required": false
+  }
+  ```
+
 ## 2.3.1
 
 ### Fix

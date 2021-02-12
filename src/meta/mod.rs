@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fs::File;
+use std::hash::{Hash, Hasher};
 use std::io::{Error, Read};
 use std::path::Path;
 
@@ -50,20 +51,45 @@ impl fmt::Display for Type {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Renderer {
   pub exclude: Option<Vec<String>>,
-  pub values: Option<Values>,
+  pub values: Option<ValuesWrapper>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Value {
   pub key: String,
   pub label: Option<String>,
   pub default: Option<String>,
+  pub required: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+impl PartialEq for Value {
+  fn eq(&self, other: &Self) -> bool {
+    self.key == other.key
+  }
+}
+
+impl Eq for Value {}
+
+impl Hash for Value {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+      self.key.hash(state);
+  }
+}
+
+impl Value {
+  pub fn get_label(&self) -> String {
+    if self.label.is_some() {
+      return self.label.clone().unwrap()
+    } else {
+      return self.key.clone()
+    }
+  }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
-pub enum Values {
-  Value(Vec<Value>),
+pub enum ValuesWrapper {
+  Values(Vec<Value>),
   StringArray(Vec<String>)
 }
 
@@ -86,21 +112,6 @@ pub fn load<T: de::DeserializeOwned>(dir: &Path) -> Result<T, Error> {
 
   Ok(meta)
 }
-
-// pub fn fetch(options: &git::Options) -> Result<GenericMeta, RunError> {
-//   let provider = if options.provider.is_some() {
-//     options.provider.clone().unwrap()
-//   } else {
-//     return Err(RunError::Meta(String::from("No provider was provided")));
-//   };
-
-//   let meta = match provider {
-//     git::Provider::GITHUB => git::github::fetch_meta(options)?,
-//     git::Provider::GITLAB => git::gitlab::fetch_meta(options)?,
-//   };
-
-//   Ok(meta)
-// }
 
 pub fn fetch<T: de::DeserializeOwned>(options: &git::Options) -> Result<T, RunError> {
   let provider = if options.provider.is_some() {
@@ -149,16 +160,34 @@ impl TemplateMeta {
     }
   }
 
-  pub fn get_values(&self) -> Vec<String> {
+  pub fn get_values(&self) -> Vec<Value> {
     let renderer = match self.renderer.to_owned() {
       Some(data) => data,
       None => return vec![],
     };
 
-    match renderer.values {
-      Some(x) => vec![], //TODO
+    let generic_values = match renderer.values {
+      Some(x) => x, //TODO
       None => return vec![],
-    }
+    };
+
+    let values = match generic_values {
+      ValuesWrapper::Values(v) => v,
+      ValuesWrapper::StringArray(v) => {
+        let mut values = vec![];
+        for value in v {
+          values.push(Value{
+            key: value,
+            label: None,
+            default: None,
+            required: None,
+          })
+        }
+        return values
+      },
+    };
+
+    return values
   }
 
   pub fn get_before_install_script(&self) -> Option<String> {
@@ -203,15 +232,23 @@ mod tests {
         key: String::from("value1"),
         label: None,
         default: None,
+        required: None,
       },
       Value {
         key: String::from("value2"),
         label: None,
         default: None,
+        required: None,
       },
     ];
 
-    let meta: Option<Values> = serde_json::from_str(&data).unwrap();
+    let meta: ValuesWrapper = serde_json::from_str(&data).unwrap();
+    let values = match meta {
+      ValuesWrapper::Values(_values) => panic!("wrong deserialization type"),
+      ValuesWrapper::StringArray(_values) => (),
+    };
+
+    assert_eq!(values.len(), result.len());
   }
 
   #[test]
@@ -230,20 +267,22 @@ mod tests {
         key: String::from("value1"),
         label: None,
         default: None,
+        required: None,
       },
       Value {
         key: String::from("value2"),
         label: None,
         default: None,
+        required: None,
       },
     ];
 
-    let generic_values: Values = serde_json::from_str(&data).unwrap();
+    let generic_values: ValuesWrapper = serde_json::from_str(&data).unwrap();
     let values = match generic_values {
-      Values::Value(values) => values,
-      Values::StringArray(_) => panic!("wrong type"),
+      ValuesWrapper::Values(values) => values,
+      ValuesWrapper::StringArray(_) => panic!("wrong deserialization type"),
     };
 
-    assert_eq!(values.len(), 2);
+    assert_eq!(values.len(), result.len());
   }
 }
