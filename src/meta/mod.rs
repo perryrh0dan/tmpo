@@ -133,8 +133,8 @@ impl RepositoryMeta {
     RepositoryMeta {
       kind: kind,
       name: String::from(""),
-      version: None,
-      description: None,
+      version: Some(String::from("1.0.0")),
+      description: Some(String::from("")),
     }
   }
 }
@@ -144,8 +144,8 @@ impl TemplateMeta {
     TemplateMeta {
       kind: kind,
       name: String::from(""),
-      version: None,
-      description: None,
+      version: Some(String::from("1.0.0")),
+      description: Some(String::from("")),
       visible: Some(true),
       scripts: Some(Scripts {
         before_install: None,
