@@ -38,6 +38,7 @@ cargo test
 - Follow [this](https://github.com/flamegraph-rs/flamegraph) steps to install flamegraph
 - Run following command
 ``` bash
+sudo sh -c 'echo 1 >/proc/sys/kernel/perf_event_paranoid'
 cargo flamegraph --dev --bin=tmpo init thomas
 ```
 ## Codecoverage
