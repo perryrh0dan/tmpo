@@ -5,6 +5,7 @@ use std::process::exit;
 use crate::action::Action;
 use crate::cli::input;
 use crate::config::Config;
+use crate::context::Context;
 use crate::meta;
 use crate::out;
 use crate::repository::Repository;
@@ -15,6 +16,8 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_create(&self, args: &ArgMatches) {
+    let ctx = Context::new(args);
+
     let template_name = args.value_of("template");
     let directory = args.value_of("directory");
 
@@ -32,7 +35,7 @@ impl Action {
     };
 
     if template_type == "remote" {
-      create_remote(template_name, directory);
+      create_remote(&ctx, template_name, directory);
     } else {
       create_local(&self.config, template_name);
     }
@@ -87,7 +90,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
   out::success::template_created(&template_path.to_str().unwrap());
 }
 
-fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
+fn create_remote(ctx: &Context, template_name: Option<&str>, directory: Option<&str>) {
   // Create meta data
   let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 
@@ -107,7 +110,7 @@ fn create_remote(template_name: Option<&str>, directory: Option<&str>) {
 
   // Get template directory from user input
   let directory: String = if directory.is_none() {
-    match input::text_with_default("Enter the target directory", ".") {
+    match input::text_with_default(&ctx, "Enter the target directory", ".") {
       Ok(value) => value,
       Err(error) => {
         log::error!("{}", error);

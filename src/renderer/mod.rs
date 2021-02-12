@@ -1,12 +1,14 @@
 use log;
 use std::collections::HashMap;
 
-extern crate handlebars;
-use handlebars::Handlebars;
-
 mod helpers;
 
-#[derive(Clone, serde::Serialize, Debug)]
+extern crate handlebars;
+use handlebars::Handlebars;
+extern crate serde;
+use serde::Serialize;
+
+#[derive(Clone, Serialize, Debug)]
 pub struct Context {
   pub name: String,
   pub repository: String,

@@ -1,3 +1,4 @@
+use crate::context::Context;
 use crate::error::RunError;
 use crate::utils;
 
@@ -15,23 +16,27 @@ pub fn text(text: &str, allow_empty: bool) -> Result<String, RunError> {
   }
 }
 
-pub fn text_with_default(text: &str, default: &str) -> Result<String, RunError> {
-  let input = match Input::<String>::with_theme(&ColorfulTheme::default())
-    .with_prompt(text)
-    .allow_empty(true)
-    .default(String::from(default))
-    .show_default(true)
-    .interact()
-  {
-    Ok(value) => value,
-    Err(error) => return Err(RunError::IO(error)),
-  };
+pub fn text_with_default(ctx: &Context, text: &str, default: &str) -> Result<String, RunError> {
+  if !ctx.yes {
+    let input = match Input::<String>::with_theme(&ColorfulTheme::default())
+      .with_prompt(text)
+      .allow_empty(true)
+      .default(String::from(default))
+      .show_default(true)
+      .interact()
+    {
+      Ok(value) => value,
+      Err(error) => return Err(RunError::IO(error)),
+    };
 
-  if input == "" {
+    if input == "" {
+      return Ok(String::from(default));
+    }
+
+    return Ok(input);
+  } else {
     return Ok(String::from(default));
   }
-
-  return Ok(input);
 }
 
 pub fn confirm(text: &str) -> bool {

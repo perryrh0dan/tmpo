@@ -245,7 +245,7 @@ mod tests {
     let meta: ValuesWrapper = serde_json::from_str(&data).unwrap();
     let values = match meta {
       ValuesWrapper::Values(_values) => panic!("wrong deserialization type"),
-      ValuesWrapper::StringArray(_values) => (),
+      ValuesWrapper::StringArray(values) => values,
     };
 
     assert_eq!(values.len(), result.len());

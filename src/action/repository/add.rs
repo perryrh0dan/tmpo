@@ -3,6 +3,7 @@ use std::process::exit;
 use crate::action::Action;
 use crate::cli::input;
 use crate::config::RepositoryOptions;
+use crate::context::Context;
 use crate::git;
 use crate::meta;
 use crate::meta::Type;
@@ -14,6 +15,8 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn repository_add(&self, args: &ArgMatches) {
+    let ctx = Context::new(args);
+
     let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
     let repository_provider = args.value_of("provider");
@@ -107,7 +110,7 @@ impl Action {
 
     // Get branch
     git_options.branch = if repository_branch.is_none() {
-      match input::text_with_default("Enter remote branch", "master") {
+      match input::text_with_default(&ctx, "Enter remote branch", "master") {
         Ok(value) => Some(value),
         Err(error) => {
           log::error!("{}", error);
@@ -182,7 +185,7 @@ impl Action {
 
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
-      match input::text_with_default("Enter repository name", &meta.name) {
+      match input::text_with_default(&ctx, "Enter repository name", &meta.name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -204,7 +207,7 @@ impl Action {
     // Get repository description from user input
     let repository_description = if repository_description.is_none() {
       let description = meta.description.unwrap_or_default();
-      match input::text_with_default("Enter repository description", &description) {
+      match input::text_with_default(&ctx, "Enter repository description", &description) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);

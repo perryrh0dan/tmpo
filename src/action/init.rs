@@ -9,8 +9,8 @@ use crate::config;
 use crate::context;
 use crate::git;
 use crate::out;
-use crate::repository::{CopyOptions};
 use crate::renderer;
+use crate::repository::CopyOptions;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -86,8 +86,8 @@ impl Action {
     }
 
     // Get workspace directory from user input
-    let workspace_directory = if workspace_directory.is_none() && !ctx.yes {
-      match input::text_with_default("Please enter the target directory", &workspace_name) {
+    let workspace_directory = if workspace_directory.is_none() {
+      match input::text_with_default(&ctx, "Please enter the target directory", &workspace_name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -95,10 +95,8 @@ impl Action {
           exit(1);
         }
       }
-    } else if workspace_directory.is_some() {
-      workspace_directory.unwrap().to_string()
     } else {
-      String::from(".")
+      workspace_directory.unwrap().to_string()
     };
 
     // Get target directory
@@ -152,10 +150,7 @@ impl Action {
         }
       };
 
-      match input::text_with_default(
-        "Please enter your email",
-        &git_email,
-      ) {
+      match input::text_with_default(&ctx, "Please enter your email", &git_email) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -179,10 +174,7 @@ impl Action {
         }
       };
 
-      match input::text_with_default(
-        "Please enter your username",
-        &git_username,
-      ) {
+      match input::text_with_default(&ctx, "Please enter your username", &git_username) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -208,7 +200,8 @@ impl Action {
       values: inputs.clone(),
     };
 
-    if !ctx.yes { //TODO think about
+    if !ctx.yes {
+      //TODO think about
       // Get template specific values
       let values = match repository.get_template_values(&template_name) {
         Ok(keys) => keys,
@@ -224,7 +217,11 @@ impl Action {
           // Get and parse default value
           let default_value = renderer::render(&value.default.to_owned().unwrap(), &render_context);
 
-          match input::text_with_default(&format!("Please enter {}", value.get_label()), &default_value) {
+          match input::text_with_default(
+            &ctx,
+            &format!("Please enter {}", value.get_label()),
+            &default_value,
+          ) {
             Ok(value) => value,
             Err(error) => {
               log::error!("{}", error);
@@ -255,7 +252,9 @@ impl Action {
       }
     }
 
-    let tmp_dir = tempfile::Builder::new().tempdir_in(&config::temp_dir()).unwrap();
+    let tmp_dir = tempfile::Builder::new()
+      .tempdir_in(&config::temp_dir())
+      .unwrap();
 
     // Create the temporary workspace
     let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
@@ -308,7 +307,7 @@ impl Action {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
-      },
+      }
     };
 
     // Move workspace from temporary directroy to target directory
