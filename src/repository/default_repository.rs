@@ -8,7 +8,7 @@ use crate::config::{Config, RepositoryOptions, TemplateOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
-use crate::{meta, {meta::TemplateMeta}};
+use crate::meta::{self, TemplateMeta, Value};
 use crate::template;
 use crate::repository::{CopyOptions, Repository};
 use crate::utils;
@@ -40,7 +40,7 @@ impl Repository for DefaultRepository {
     Ok(())
   }
 
-  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<String>, RunError> {
+  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<Value>, RunError> {
     let template = self.get_template_by_name(&template_name)?;
 
     let mut values = LinkedHashSet::new();

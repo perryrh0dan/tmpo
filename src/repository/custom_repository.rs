@@ -9,7 +9,7 @@ use crate::config::{Config, RepositoryOptions};
 use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
-use crate::{meta, {meta::TemplateMeta, meta::RepositoryMeta}};
+use crate::meta::{self, TemplateMeta, RepositoryMeta, Value};
 use crate::repository::{CopyOptions, Repository};
 use crate::template;
 use crate::template::Template;
@@ -48,7 +48,7 @@ impl Repository for CustomRepository {
     Ok(())
   }
 
-  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<String>, RunError> {
+  fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<Value>, RunError> {
     let template = self.get_template_by_name(&template_name)?;
 
     // Get list of all super templates

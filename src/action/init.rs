@@ -9,8 +9,8 @@ use crate::config;
 use crate::context;
 use crate::git;
 use crate::out;
-use crate::repository::{CopyOptions};
 use crate::renderer;
+use crate::repository::CopyOptions;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -86,8 +86,8 @@ impl Action {
     }
 
     // Get workspace directory from user input
-    let workspace_directory = if workspace_directory.is_none() && !ctx.yes {
-      match input::text_with_default("Please enter the target directory", &workspace_name) {
+    let workspace_directory = if workspace_directory.is_none() {
+      match input::text_with_default(&ctx, "Please enter the target directory", &workspace_name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -95,10 +95,8 @@ impl Action {
           exit(1);
         }
       }
-    } else if workspace_directory.is_some() {
-      workspace_directory.unwrap().to_string()
     } else {
-      String::from(".")
+      workspace_directory.unwrap().to_string()
     };
 
     // Get target directory
@@ -152,10 +150,7 @@ impl Action {
         }
       };
 
-      match input::text_with_default(
-        "Please enter your email",
-        &git_email,
-      ) {
+      match input::text_with_default(&ctx, "Please enter your email", &git_email) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -179,10 +174,7 @@ impl Action {
         }
       };
 
-      match input::text_with_default(
-        "Please enter your username",
-        &git_username,
-      ) {
+      match input::text_with_default(&ctx, "Please enter your username", &git_username) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -196,10 +188,22 @@ impl Action {
       String::from("")
     };
 
-    let mut values = HashMap::new();
+    // Create custom input map
+    let mut inputs = HashMap::new();
+
+    // Create context for renderer with custom values
+    let mut render_context = renderer::Context {
+      name: String::from(&workspace_name),
+      repository: String::from(&workspace_repository),
+      username: username,
+      email: email,
+      values: inputs.clone(),
+    };
+
     if !ctx.yes {
+      //TODO think about
       // Get template specific values
-      let keys = match repository.get_template_values(&template_name) {
+      let values = match repository.get_template_values(&template_name) {
         Ok(keys) => keys,
         Err(error) => {
           log::error!("{}", error);
@@ -208,19 +212,49 @@ impl Action {
         }
       };
 
-      for key in keys {
-        let value = match input::text(&format!("Please enter {}", &key), true) {
-          Ok(value) => value,
-          Err(error) => {
-            log::error!("{}", error);
-            String::from("")
+      for value in values {
+        let input = if value.default.is_some() {
+          // Get and parse default value
+          let default_value = renderer::render(&value.default.to_owned().unwrap(), &render_context);
+
+          match input::text_with_default(
+            &ctx,
+            &format!("Please enter {}", value.get_label()),
+            &default_value,
+          ) {
+            Ok(value) => value,
+            Err(error) => {
+              log::error!("{}", error);
+              String::from("")
+            }
+          }
+        } else {
+          let required = if value.required.is_some() {
+            value.required.to_owned().unwrap()
+          } else {
+            false
+          };
+
+          match input::text(&format!("Please enter {}", value.get_label()), !required) {
+            Ok(value) => value,
+            Err(error) => {
+              log::error!("{}", error);
+              String::from("")
+            }
           }
         };
-        values.insert(key, value);
+
+        // Update inputs map
+        inputs.insert(value.key, input);
+
+        // Update render context to use new input
+        render_context.values = inputs.clone()
       }
     }
 
-    let tmp_dir = tempfile::Builder::new().tempdir_in(&config::temp_dir()).unwrap();
+    let tmp_dir = tempfile::Builder::new()
+      .tempdir_in(&config::temp_dir())
+      .unwrap();
 
     // Create the temporary workspace
     let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
@@ -245,15 +279,6 @@ impl Action {
         }
       }
     }
-
-    // Create context for renderer with custom values
-    let render_context = renderer::Context {
-      name: String::from(&workspace_name),
-      repository: String::from(&workspace_repository),
-      username: username,
-      email: email,
-      values: values,
-    };
 
     // Create copy options
     let copy_options = CopyOptions {
@@ -282,7 +307,7 @@ impl Action {
         log::error!("{}", error);
         eprintln!("{}", error);
         exit(1);
-      },
+      }
     };
 
     // Move workspace from temporary directroy to target directory

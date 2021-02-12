@@ -3,6 +3,7 @@ use std::process::exit;
 use crate::action::Action;
 use crate::config::TemplateOptions;
 use crate::cli::input;
+use crate::context::Context;
 use crate::git;
 use crate::{meta, meta::Type};
 use crate::out;
@@ -13,6 +14,8 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_add(&self, args: &ArgMatches) {
+    let ctx = Context::new(args);
+
     let template_name = args.value_of("name");
     let template_description = args.value_of("description");
     let template_url = args.value_of("repository");
@@ -85,7 +88,7 @@ impl Action {
     };
 
     // Get branch
-    git_options.branch = match input::text_with_default("Enter remote branch", "master") {
+    git_options.branch = match input::text_with_default(&ctx, "Enter remote branch", "master") {
       Ok(value) => Some(value),
       Err(error) => {
         log::error!("{}", error);
@@ -157,7 +160,7 @@ impl Action {
 
     // Get template name from user input
     let template_name = if template_name.is_none() {
-      match input::text_with_default("Enter repository name", &meta.name) {
+      match input::text_with_default(&ctx, "Enter repository name", &meta.name) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -181,7 +184,7 @@ impl Action {
     // Get repository description from user input
     let template_description = if template_description.is_none() {
       let description = meta.description.unwrap_or_default();
-      match input::text_with_default("Enter repository description", &description) {
+      match input::text_with_default(&ctx, "Enter repository description", &description) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);

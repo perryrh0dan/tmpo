@@ -26,7 +26,7 @@ fn template_does_not_exists() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn success() -> Result<(), Box<dyn std::error::Error>> {
+fn success_simple() -> Result<(), Box<dyn std::error::Error>> {
   // Create temp directory for test
   let tmp_dir = tempfile::Builder::new()
     .tempdir_in(::std::env::current_dir().unwrap())
