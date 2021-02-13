@@ -116,7 +116,7 @@ mod tests {
 
     assert_eq!(
       result,
-      "thomasPöhlmann,THOMAS_PÖHLMANN,thomas-pöhlmann,thomaspöhlmann,thomasPöhlmann,thomas_pöhlmann,THOMASPÖHLMANN"
+      "thomasPöhlmann,THOMAS_PÖHLMANN,thomas-pöhlmann,thomaspöhlmann,ThomasPöhlmann,thomas_pöhlmann,THOMASPÖHLMANN"
     );
 
     Ok(())

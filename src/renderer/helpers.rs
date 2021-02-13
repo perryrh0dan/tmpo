@@ -68,7 +68,7 @@ pub fn pascalcase_helper(
       .param(0)
       .ok_or(RenderError::new("Param 0 is required for format helper."))?;
 
-  let rendered = param.value().render().to_string().to_case(Case::Camel);
+  let rendered = param.value().render().to_string().to_case(Case::Pascal);
   out.write(rendered.as_ref())?;
   Ok(())
 }

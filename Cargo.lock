@@ -1671,7 +1671,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "tmpo"
-version = "2.4.0"
+version = "2.4.1"
 dependencies = [
  "assert_cli 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_cmd 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
