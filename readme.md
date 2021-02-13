@@ -7,7 +7,7 @@
 </h4>
 
 <div align="center">
-  <img alt="rustacean" width="40%" src="media/rustacean.svg"/>
+  <img alt="rustacean" width="40%" src="media/logo_v2.svg"/>
 </div>
 
 <div align="center">
