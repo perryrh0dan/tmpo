@@ -1,5 +1,11 @@
 # What's new in Tmpo
 
+## 2.4.1
+
+### Fix
+
+- Fix `PascalCase` transformation method.
+
 ## 2.4.0
 
 ### Feature
