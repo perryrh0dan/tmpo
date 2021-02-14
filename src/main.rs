@@ -187,6 +187,27 @@ fn main() {
                 .takes_value(true)
                 .about("Remote repository branch")
                 .required(false),
+            )
+            .arg(
+              Arg::new("username")
+                .long("username")
+                .takes_value(true)
+                .about("Username for authentication")
+                .required(false),
+            )
+            .arg(
+              Arg::new("password")
+                .long("password")
+                .takes_value(true)
+                .about("Password for basic authentication")
+                .required(false),
+            )
+            .arg(
+              Arg::new("token")
+                .long("token")
+                .takes_value(true)
+                .about("Token for authentication")
+                .required(false),
             ),
         )
         .subcommand(
