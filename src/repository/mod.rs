@@ -14,6 +14,7 @@ pub mod default_repository;
 pub trait Repository {
   fn get_config(&self) -> RepositoryOptions;
   fn copy_template(&self, ctx: &Context, opts: &CopyOptions) -> Result<(), RunError>;
+  fn get_template_info(&self, template_name: &str) -> Result<Option<String>, RunError>;
   fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<Value>, RunError>;
   fn get_template_names(&self) -> Vec<String>;
   fn get_template_by_name(&self, name: &str) -> Result<&template::Template, RunError>;

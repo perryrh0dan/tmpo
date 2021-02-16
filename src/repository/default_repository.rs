@@ -40,8 +40,14 @@ impl Repository for DefaultRepository {
     Ok(())
   }
 
+  fn get_template_info(&self, template_name: &str) -> Result<Option<String>, RunError> {
+    let template = self.get_template_by_name(template_name)?;
+
+    Ok(template.meta.info.to_owned())
+  }
+
   fn get_template_values(&self, template_name: &str) -> Result<LinkedHashSet<Value>, RunError> {
-    let template = self.get_template_by_name(&template_name)?;
+    let template = self.get_template_by_name(template_name)?;
 
     let mut values = LinkedHashSet::new();
     values.extend(template.meta.get_values());

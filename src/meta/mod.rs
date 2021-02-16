@@ -29,6 +29,7 @@ pub struct TemplateMeta {
   pub extend: Option<Vec<String>>,
   pub exclude: Option<Vec<String>>,
   pub renderer: Option<Renderer>,
+  pub info: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -157,6 +158,7 @@ impl TemplateMeta {
         exclude: None,
         values: None,
       }),
+      info: None,
     }
   }
 
