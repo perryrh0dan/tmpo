@@ -1,5 +1,11 @@
 # What's new in Tmpo
 
+### 2.5.1
+
+### Fix
+
+- Setup timebased rolling log files
+
 ## 2.5.0
 
 ### Feature
