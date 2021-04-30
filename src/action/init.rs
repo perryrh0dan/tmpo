@@ -284,7 +284,7 @@ impl Action {
     let copy_options = CopyOptions {
       template_name: template_name.to_owned(),
       target: tmp_workspace_path.to_owned(),
-      render_context: render_context,
+      render_context: render_context.to_owned(),
     };
 
     // Copy the template
@@ -325,6 +325,23 @@ impl Action {
       }
     };
 
+    // Print success message
     out::success::workspace_created(&workspace_name);
+
+    // Get Template info
+    let template_info = match repository.get_template_info(&template_name) {
+      Ok(info) => info,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    };
+
+    // Print template info
+    if template_info.is_some() {
+      let info = renderer::render(&template_info.unwrap(), &render_context);
+      out::success::workspace_info(&info);
+    }
   }
 }

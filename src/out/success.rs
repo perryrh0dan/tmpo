@@ -10,6 +10,11 @@ pub fn workspace_created(name: &str) {
   println!("{}", text);
 }
 
+pub fn workspace_info(info: &str) {
+  println!("");
+  println!("{}", info)
+}
+
 pub fn template_created(path: &str) {
   let text = format!("Created template: {}", path).green();
   println!("{}", text);

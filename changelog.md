@@ -1,5 +1,18 @@
 # What's new in Tmpo
 
+### 2.5.1
+
+### Fix
+
+- Setup timebased rolling log files
+
+## 2.5.0
+
+### Feature
+
+- Add template note. `note` property is printed after initialization of a template
+- Make all repository add inputs available through args
+
 ## 2.4.1
 
 ### Fix

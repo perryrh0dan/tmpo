@@ -23,6 +23,9 @@ impl Action {
     let repository_authentication = args.value_of("authentication");
     let repository_url = args.value_of("url");
     let repository_branch = args.value_of("branch");
+    let username = args.value_of("username");
+    let password = args.value_of("password");
+    let token = args.value_of("token");
 
     let mut git_options = git::Options::new();
 
@@ -125,24 +128,35 @@ impl Action {
     // Get credentials for different auth types
     match git_options.auth.clone().unwrap() {
       git::AuthType::BASIC => {
-        git_options.username = match input::text("Enter your git username", false) {
-          Ok(value) => Some(value),
-          Err(error) => {
-            log::error!("{}", error);
-            eprintln!("{}", error);
-            exit(1);
+        // Get username
+        git_options.username = if username.is_none() {
+          match input::text("Enter your git username", false) {
+            Ok(value) => Some(value),
+            Err(error) => {
+              log::error!("{}", error);
+              eprintln!("{}", error);
+              exit(1);
+            }
           }
+        } else {
+          Some(String::from(username.unwrap()))
         };
-        git_options.password = match input::password("Enter your git password") {
-          Ok(value) => Some(value),
-          Err(error) => {
-            log::error!("{}", error);
-            eprintln!("{}", error);
-            exit(1);
+        // Get password
+        git_options.password = if password.is_none() {
+          match input::password("Enter your git password") {
+            Ok(value) => Some(value),
+            Err(error) => {
+              log::error!("{}", error);
+              eprintln!("{}", error);
+              exit(1);
+            }
           }
+        } else {
+          Some(String::from(password.unwrap()))
         }
       }
       git::AuthType::SSH => {
+        // Get ssh private key
         git_options.token = match input::text("Enter your git username", false) {
           Ok(value) => Some(value),
           Err(error) => {
@@ -153,13 +167,18 @@ impl Action {
         }
       }
       git::AuthType::TOKEN => {
-        git_options.token = match input::text("Enter your access token", false) {
-          Ok(value) => Some(value),
-          Err(error) => {
-            log::error!("{}", error);
-            eprintln!("{}", error);
-            exit(1);
+        // Get token
+        git_options.token = if token.is_none() {
+          match input::text("Enter your access token", false) {
+            Ok(value) => Some(value),
+            Err(error) => {
+              log::error!("{}", error);
+              eprintln!("{}", error);
+              exit(1);
+            }
           }
+        } else {
+          Some(String::from(token.unwrap()))
         }
       }
       git::AuthType::NONE => {

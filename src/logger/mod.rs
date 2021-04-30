@@ -1,3 +1,4 @@
+use chrono::Local;
 use log::LevelFilter;
 use log4rs::{
   append::{
@@ -21,7 +22,7 @@ pub fn init() {
     .build();
 
   // Logging to log file
-  let logfile_path = config::directory().join("log/output.log");
+  let logfile_path = config::directory().join(get_log_file_name());
 
   let logfile = FileAppender::builder()
     .encoder(Box::new(PatternEncoder::new(
@@ -46,4 +47,10 @@ pub fn init() {
     .unwrap();
 
   log4rs::init_config(config).unwrap();
+}
+
+fn get_log_file_name() -> String {
+  let local = Local::now();
+  let timestamp = local.format("%Y-%m-%d").to_string();
+  return String::from("log/") + &timestamp + ".log";
 }
