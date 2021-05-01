@@ -45,3 +45,9 @@ cargo flamegraph --dev --bin=tmpo init thomas
 
 - Install [grcov](https://github.com/mozilla/grcov)
 - Run ./scripts/coverage.sh
+
+## Override specific dependency
+
+``` bash
+cargo update -p libgit2-sys --precise 0.12.13+1.0.1
+```

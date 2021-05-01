@@ -129,6 +129,7 @@ pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
     }
   };
 
+  #[cfg(target_os = "windows")]
   let mut config = match repo.config() {
     Ok(config) => (config),
     Err(error) => {
@@ -137,7 +138,7 @@ pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
   };
 
   // Disable auto crlf on windows
-  #[cfg(not(windows))]
+  #[cfg(target_os = "windows")]
   match config.set_str("core.autocrlf", "false") {
     Ok(()) => (),
     Err(error) => {

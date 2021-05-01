@@ -13,16 +13,18 @@ build() {
 
   if [ $target = "x86_64-pc-windows-gnu" ]
   then
-    cp target/$target/release/$CRATE_NAME.exe stage/
+    cp target/$target/release/$CRATE_NAME.exe staging/
   else
-    cp target/$target/release/$CRATE_NAME stage/
+    cp target/$target/release/$CRATE_NAME staging/
   fi
-  cd stage
-  tar czf $CRATE_NAME-$TAG-$target.tar.gz *
 
-  cp $CRATE_NAME-$TAG-$target.tar.gz ../out
+  echo "Create gziped tarball"
+  cd staging
+  tar czf ../out/$CRATE_NAME-$TAG-$target.tar.gz *
   cd ..
-  rm -r staging
+
+  echo "Clear staging directory"
+  rm -r staging/*
 }
 
 echo "Build x86_64-unknown-linux-gnu"
@@ -30,3 +32,6 @@ build x86_64-unknown-linux-gnu
 
 echo "Build x86_64-pc-windows-gnu"
 build x86_64-pc-windows-gnu
+
+echo "Cleanup"
+rm -r staging
