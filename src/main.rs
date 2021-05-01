@@ -11,9 +11,9 @@ mod logger;
 mod meta;
 mod migration;
 mod out;
+mod renderer;
 mod repository;
 mod template;
-mod renderer;
 mod update;
 mod utils;
 
@@ -64,6 +64,13 @@ fn main() {
     .about("Cli to create new workspaces based on templates")
     .setting(AppSettings::ArgRequiredElseHelp)
     .setting(AppSettings::HelpRequired)
+    .arg(
+      Arg::new("verbose")
+        .about("Adds more details to output logging")
+        .short('v')
+        .takes_value(false)
+        .required(false)
+    )
     .subcommand(
       App::new("init")
         .about("Initialize new workspace")

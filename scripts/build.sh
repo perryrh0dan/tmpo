@@ -3,7 +3,7 @@ TAG=$1
 CRATE_NAME=tmpo
 
 # Create staging directory
-mkdir stage
+mkdir staging
 mkdir out
 
 build() {
@@ -22,7 +22,7 @@ build() {
 
   cp $CRATE_NAME-$TAG-$target.tar.gz ../out
   cd ..
-  rm -r stage/*
+  rm -r staging
 }
 
 echo "Build x86_64-unknown-linux-gnu"

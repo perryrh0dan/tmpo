@@ -19,6 +19,7 @@ impl Action {
   pub fn init(&self, args: &ArgMatches) {
     let ctx = context::Context::new(args);
 
+    // Parse arguments
     let workspace_name = args.value_of("name");
     let repository_name = args.value_of("repository");
     let template_name = args.value_of("template");
@@ -201,7 +202,7 @@ impl Action {
     };
 
     if !ctx.yes {
-      //TODO think about
+      //T ODO think about
       // Get template specific values
       let values = match repository.get_template_values(&template_name) {
         Ok(keys) => keys,
