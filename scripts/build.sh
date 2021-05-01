@@ -19,13 +19,12 @@ build() {
   fi
 
   echo "Create gziped tarball"
-  tar czf $CRATE_NAME-$TAG-$target.tar.gz staging/*
+  cd staging
+  tar czf ../out/$CRATE_NAME-$TAG-$target.tar.gz *
+  cd ..
 
-  echo "Copy tarball to out"
-  cp $CRATE_NAME-$TAG-$target.tar.gz out
-
-  echo "Remove staging directory"
-  rm -r staging
+  echo "Clear staging directory"
+  rm -r staging/*
 }
 
 echo "Build x86_64-unknown-linux-gnu"
@@ -33,3 +32,6 @@ build x86_64-unknown-linux-gnu
 
 echo "Build x86_64-pc-windows-gnu"
 build x86_64-pc-windows-gnu
+
+echo "Cleanup"
+rm -r staging
