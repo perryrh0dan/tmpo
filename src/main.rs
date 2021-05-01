@@ -62,14 +62,22 @@ fn main() {
     .global_setting(AppSettings::VersionlessSubcommands)
     .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
     .about("Cli to create new workspaces based on templates")
-    .setting(AppSettings::ArgRequiredElseHelp)
+    .setting(AppSettings::SubcommandRequiredElseHelp)
     .setting(AppSettings::HelpRequired)
     .arg(
       Arg::new("verbose")
-        .about("Adds more details to output logging")
         .short('v')
+        .long("verbose")
         .takes_value(false)
         .required(false)
+        .about("Adds more details to output logging")
+    )
+    .arg(
+      Arg::new("yes")
+        .short('y')
+        .long("yes")
+        .takes_value(false)
+        .about("Skips all optional questions"),
     )
     .subcommand(
       App::new("init")
@@ -125,13 +133,6 @@ fn main() {
             .takes_value(true)
             .about("E-Mail of the user")
             .required(false),
-        )
-        .arg(
-          Arg::new("yes")
-            .short('y')
-            .long("yes")
-            .takes_value(false)
-            .about("Skip all optional questions"),
         )
         .arg(
           Arg::new("no-script")
