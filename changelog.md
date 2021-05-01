@@ -1,5 +1,12 @@
 # What's new in Tmpo
 
+### 2.5.2
+
+### Fix
+
+- Update dependencies
+- Make subcommand required else print help
+
 ### 2.5.1
 
 ### Fix
