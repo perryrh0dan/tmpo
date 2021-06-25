@@ -8,13 +8,13 @@ use crate::git;
 use crate::meta;
 use crate::meta::Type;
 use crate::out;
-use crate::repository::custom_repository;
+use crate::repository::remote_repository;
 use crate::utils;
 
 use clap::ArgMatches;
 
 impl Action {
-  pub fn repository_add(&self, args: &ArgMatches) {
+  pub fn repository_add_remote(&self, args: &ArgMatches) {
     let ctx = Context::new(args);
 
     let repository_name = args.value_of("name");
@@ -186,7 +186,6 @@ impl Action {
       }
     }
 
-    // Try to fetch meta data
     let meta = match meta::fetch::<meta::RepositoryMeta>(&git_options) {
       Ok(data) => data,
       Err(error) => {
@@ -240,6 +239,8 @@ impl Action {
 
     let options = RepositoryOptions {
       name: repository_name.to_owned(),
+      kind: Some(String::from("remote")),
+      directory: None,
       description: Some(repository_description),
       git_options: git_options,
     };
@@ -248,7 +249,7 @@ impl Action {
     new_config.repositories.push(options.clone());
 
     // Add repository
-    match custom_repository::add(&new_config, &options) {
+    match remote_repository::add(&new_config, &options) {
       Ok(repository) => repository,
       Err(error) => {
         log::error!("{}", error);

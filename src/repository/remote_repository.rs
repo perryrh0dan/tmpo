@@ -16,14 +16,14 @@ use crate::template::Template;
 use crate::utils;
 
 #[derive(Debug)]
-pub struct CustomRepository {
+pub struct RemoteRepositor {
   pub config: RepositoryOptions,
   pub directory: PathBuf,
   pub meta: Option<RepositoryMeta>,
   pub templates: Vec<template::Template>,
 }
 
-impl Repository for CustomRepository {
+impl Repository for RemoteRepositor {
   fn get_config(&self) -> RepositoryOptions {
     return self.config.clone();
   }
@@ -116,8 +116,8 @@ impl Repository for CustomRepository {
   }
 }
 
-impl CustomRepository {
-  pub fn new(config: &Config, name: &str) -> Result<CustomRepository, RunError> {
+impl RemoteRepositor {
+  pub fn new(config: &Config, name: &str) -> Result<RemoteRepositor, RunError> {
     log::info!("Loading repository: {}", name);
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
@@ -128,7 +128,7 @@ impl CustomRepository {
 
     let directory = config.repositories_dir.join(&utils::lowercase(name));
 
-    let mut repository = CustomRepository {
+    let mut repository = RemoteRepositor {
       config: cfg,
       directory: directory,
       meta: None,
@@ -311,7 +311,7 @@ impl CustomRepository {
 pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
   let directory = Path::new(&config.repositories_dir).join(&utils::lowercase(&options.name));
 
-  let repository = CustomRepository {
+  let repository = RemoteRepositor {
     config: options.clone(),
     directory: directory,
     meta: None,

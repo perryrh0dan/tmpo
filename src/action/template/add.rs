@@ -28,7 +28,7 @@ impl Action {
     // Get provider
     git_options.provider = match input::select(
       "Provider",
-      &vec![String::from("github"), String::from("gitlab")],
+      &vec![String::from("github"), String::from("gitlab"), String::from("directory")],
     ) {
       Ok(value) => {
         if value == "github" {

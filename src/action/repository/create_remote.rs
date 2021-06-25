@@ -6,13 +6,13 @@ use crate::cli::input;
 use crate::config::{RepositoryOptions};
 use crate::git;
 use crate::out;
-use crate::repository::custom_repository;
+use crate::repository::remote_repository;
 use crate::utils;
 
 use clap::ArgMatches;
 
 impl Action {
-  pub fn repository_create(&self, args: &ArgMatches) {
+  pub fn repository_create_remote(&self, args: &ArgMatches) {
     let name = args.value_of("name");
     let description = args.value_of("description");
     let directory = args.value_of("directory");
@@ -55,6 +55,8 @@ impl Action {
 
     let mut options = RepositoryOptions {
       name: name.to_owned(),
+      kind: Some(String::from("remote")),
+      directory: None,
       description: Some(description),
       git_options: git::Options::new(),
     };
@@ -90,7 +92,7 @@ impl Action {
     options.git_options.url = Some(remote);
 
     // Create repository
-    match custom_repository::create(&Path::new(&directory), &options) {
+    match remote_repository::create(&Path::new(&directory), &options) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);
