@@ -4,7 +4,6 @@ use std::process::exit;
 use crate::action::Action;
 use crate::cli::input;
 use crate::config::{RepositoryOptions};
-use crate::git;
 use crate::out;
 use crate::repository::external_repository;
 use crate::utils;
@@ -57,7 +56,7 @@ impl Action {
       kind: Some(String::from("external")),
       directory: None,
       description: Some(description),
-      git_options: git::Options::new(),
+      git_options: None,
     };
 
     // Get directory from user input

@@ -242,7 +242,7 @@ impl Action {
       kind: Some(String::from("remote")),
       directory: None,
       description: Some(repository_description),
-      git_options: git_options,
+      git_options: Some(git_options),
     };
 
     let mut new_config = self.config.clone();

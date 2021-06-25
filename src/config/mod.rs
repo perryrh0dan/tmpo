@@ -34,7 +34,7 @@ pub struct RepositoryOptions {
   pub kind: Option<String>,
   pub directory: Option<String>,
   pub description: Option<String>,
-  pub git_options: git::Options,
+  pub git_options: Option<git::Options>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -205,9 +205,12 @@ fn load_config() -> Result<Config, RunError> {
   // Need to solve config change when switching from 1.5.1 => 1.5.2
   let mut changed = false;
   for rep_option in &mut config.repositories {
-    if rep_option.git_options.provider.is_none() {
-      rep_option.git_options.provider = Some(git::Provider::GITHUB);
-      changed = true;
+    if rep_option.git_options.is_some() {
+      let mut git_options = rep_option.git_options.clone().unwrap();
+      if git_options.provider.is_none() {
+        git_options.provider = Some(git::Provider::GITHUB);
+        changed = true;
+      }
     }
   }
 
@@ -246,7 +249,7 @@ pub fn get_default_config() -> Config {
     kind: Some(String::from("remote")),
     directory: None,
     description: Some(String::from("Default template repository from tpoe")),
-    git_options: git_options,
+    git_options: Some(git_options),
   });
 
   let config = Config {

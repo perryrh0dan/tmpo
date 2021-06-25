@@ -53,14 +53,6 @@ impl Action {
       utils::lowercase(description.unwrap())
     };
 
-    let mut options = RepositoryOptions {
-      name: name.to_owned(),
-      kind: Some(String::from("remote")),
-      directory: None,
-      description: Some(description),
-      git_options: git::Options::new(),
-    };
-
     // Get directory from user input
     let directory = if directory.is_none() {
       match input::text("Enter the target directory", false) {
@@ -89,7 +81,16 @@ impl Action {
       remote.unwrap().to_string()
     };
 
-    options.git_options.url = Some(remote);
+    let mut git_options = git::Options::new();
+    git_options.url = Some(remote);
+
+    let options = RepositoryOptions {
+      name: name.to_owned(),
+      kind: Some(String::from("remote")),
+      directory: None,
+      description: Some(description),
+      git_options: Some(git_options),
+    };
 
     // Create repository
     match remote_repository::create(&Path::new(&directory), &options) {

@@ -26,7 +26,7 @@ impl Repository for DefaultRepository {
       kind: Some(String::from("default")),
       directory: None,
       description: Some(String::from("Mono repository templates")),
-      git_options: git::Options::new(),
+      git_options: None,
     };
   }
 

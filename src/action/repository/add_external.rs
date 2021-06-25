@@ -5,11 +5,9 @@ use crate::action::Action;
 use crate::cli::input;
 use crate::config::RepositoryOptions;
 use crate::context::Context;
-use crate::git;
 use crate::meta;
 use crate::meta::Type;
 use crate::out;
-use crate::repository::remote_repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -21,11 +19,6 @@ impl Action {
     let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
     let repository_directory = args.value_of("directory");
-
-    let mut git_options = git::Options::new();
-
-    // Disable remote
-    git_options.enabled = false;
 
     // Get repository directory
     let directory = if repository_directory.is_none() {
@@ -97,21 +90,11 @@ impl Action {
       kind: Some(String::from("external")),
       directory: Some(directory),
       description: Some(repository_description),
-      git_options: git_options,
+      git_options: None,
     };
 
     let mut new_config = self.config.clone();
     new_config.repositories.push(options.clone());
-
-    // Add repository
-    match remote_repository::add(&new_config, &options) {
-      Ok(repository) => repository,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
-      }
-    };
 
     match new_config.save() {
       Ok(()) => (),

@@ -8,7 +8,7 @@ use crate::cli::input;
 use crate::config::Config;
 use crate::error::RunError;
 use crate::repository::Repository;
-use crate::repository::remote_repository::RemoteRepositor;
+use crate::repository::remote_repository::RemoteRepository;
 use crate::repository::default_repository::DefaultRepository;
 use crate::repository::external_repository::ExternalRepository;
 
@@ -48,7 +48,7 @@ impl Action {
       let repository = ExternalRepository::new(&self.config, &repository_name)?;
       Box::new(repository)
     } else {
-      let repository = RemoteRepositor::new(&self.config, &repository_name)?;
+      let repository = RemoteRepository::new(&self.config, &repository_name)?;
       Box::new(repository)
     };
 
