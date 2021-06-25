@@ -147,12 +147,14 @@ fn main() {
     .subcommand(
       App::new("repository")
         .about("Maintain repositories")
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::HelpRequired)
         .subcommand(
           App::new("add")
+            .setting(AppSettings::SubcommandRequiredElseHelp)
+            .setting(AppSettings::HelpRequired)
             .subcommand(
-              App::new("external").arg(
+              App::new("external").about("Add external repository").arg(
                 Arg::new("directory")
                   .short('d')
                   .long("directory")
@@ -232,6 +234,8 @@ fn main() {
         )
         .subcommand(
           App::new("create")
+            .setting(AppSettings::SubcommandRequiredElseHelp)
+            .setting(AppSettings::HelpRequired)
             .subcommand(
               App::new("external")
                 .about("Create a new external repository")
