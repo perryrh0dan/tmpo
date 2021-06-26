@@ -37,6 +37,13 @@ pub fn remote_repository_created(name: &str, target: &str) {
   println!("{}", text);
 }
 
+pub fn external_repository_created(name: &str, target: &str) {
+  let title = format!("Created external repository: {} under: {}", name, target).green();
+  let text = "Navigate into the repository and start adding new templates.\nTo use the repository add it via tmpo repository add.";
+  println!("{}", title);
+  println!("{}", text);
+}
+
 pub fn template_tested() {
   let text = format!("Test successful").green();
   println!("{}", text);

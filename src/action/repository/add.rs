@@ -318,7 +318,7 @@ impl Action {
       Ok(path) => path,
       Err(error) => {
         log::error!("{}", error);
-        eprintln!("Cant canonicalize directory");
+        eprintln!("Wrong path");
         exit(1);
       }
     };

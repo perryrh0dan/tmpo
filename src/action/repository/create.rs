@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 use std::process::exit;
 
@@ -54,13 +55,6 @@ impl Action {
     } else {
       utils::lowercase(name.unwrap())
     };
-
-    // validate name
-    let repositories = self.config.get_repository_names();
-    if repositories.contains(&name) {
-      out::error::repository_exists(&name);
-      exit(1);
-    }
 
     // Get repository name from user input
     let description = if description.is_none() {
@@ -150,13 +144,6 @@ impl Action {
       utils::lowercase(name.unwrap())
     };
 
-    // validate name
-    let repositories = self.config.get_repository_names();
-    if repositories.contains(&name) {
-      out::error::repository_exists(&name);
-      exit(1);
-    }
-
     // Get repository name from user input
     let description = if description.is_none() {
       match input::text("Enter the repository description", false) {
@@ -203,9 +190,18 @@ impl Action {
       }
     };
 
-    out::success::remote_repository_created(
+    let absolute_directory = match fs::canonicalize(&directory) {
+      Ok(path) => path,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("Cant canonicalize directory");
+        exit(1);
+      }
+    };
+
+    out::success::external_repository_created(
       &options.name,
-      &self.config.repositories_dir.to_string_lossy(),
+      &absolute_directory.as_path().display().to_string(),
     );
   }
 }

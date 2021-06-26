@@ -125,7 +125,7 @@ pub fn init() -> Result<Config, RunError> {
   };
 
   // Ensure template directory
-  match ensure_dir(&config.repositories_dir) {
+  match ensure_dir(&config.templates_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
