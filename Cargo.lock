@@ -1754,7 +1754,7 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tmpo"
-version = "2.5.2"
+version = "2.6.0"
 dependencies = [
  "assert_cli",
  "assert_cmd",

@@ -151,130 +151,107 @@ fn main() {
         .setting(AppSettings::HelpRequired)
         .subcommand(
           App::new("add")
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .setting(AppSettings::HelpRequired)
-            .subcommand(
-              App::new("external").about("Add external repository").arg(
-                Arg::new("directory")
-                  .short('d')
-                  .long("directory")
-                  .takes_value(true)
-                  .required(false),
-              ),
+            .about("Add repository")
+            .arg(
+              Arg::new("type")
+                .short('t')
+                .long("type")
+                .takes_value(true)
+                .about("Type of the repository")
+                .required(false),
             )
-            .subcommand(
-              App::new("remote")
-                .about("Add remote repository")
-                .arg(
-                  Arg::new("name")
-                    .short('n')
-                    .long("name")
-                    .takes_value(true)
-                    .about("Name of the repository")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("description")
-                    .short('d')
-                    .long("description")
-                    .takes_value(true)
-                    .about("Description of the repository")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("provider")
-                    .long("provider")
-                    .takes_value(true)
-                    .about("Remote provider")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("authentication")
-                    .long("authentication")
-                    .takes_value(true)
-                    .about("Authentication type")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("url")
-                    .long("url")
-                    .takes_value(true)
-                    .about("Remote url of the repository")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("branch")
-                    .long("branch")
-                    .takes_value(true)
-                    .about("Remote repository branch")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("username")
-                    .long("username")
-                    .takes_value(true)
-                    .about("Username for authentication")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("password")
-                    .long("password")
-                    .takes_value(true)
-                    .about("Password for basic authentication")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("token")
-                    .long("token")
-                    .takes_value(true)
-                    .about("Token for authentication")
-                    .required(false),
-                ),
+            .arg(
+              Arg::new("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("description")
+                .short('d')
+                .long("description")
+                .takes_value(true)
+                .about("Description of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("provider")
+                .long("provider")
+                .takes_value(true)
+                .about("Remote provider")
+                .required(false),
+            )
+            .arg(
+              Arg::new("authentication")
+                .long("authentication")
+                .takes_value(true)
+                .about("Authentication type")
+                .required(false),
+            )
+            .arg(
+              Arg::new("url")
+                .long("url")
+                .takes_value(true)
+                .about("Remote url of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("branch")
+                .long("branch")
+                .takes_value(true)
+                .about("Remote repository branch")
+                .required(false),
+            )
+            .arg(
+              Arg::new("username")
+                .long("username")
+                .takes_value(true)
+                .about("Username for authentication")
+                .required(false),
+            )
+            .arg(
+              Arg::new("password")
+                .long("password")
+                .takes_value(true)
+                .about("Password for basic authentication")
+                .required(false),
+            )
+            .arg(
+              Arg::new("token")
+                .long("token")
+                .takes_value(true)
+                .about("Token for authentication")
+                .required(false),
             ),
         )
         .subcommand(
           App::new("create")
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .setting(AppSettings::HelpRequired)
-            .subcommand(
-              App::new("external")
-                .about("Create a new external repository")
-                .arg(
-                  Arg::new("name")
-                    .short('n')
-                    .long("name")
-                    .takes_value(true)
-                    .about("Name of the repository")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("description")
-                    .short('d')
-                    .long("description")
-                    .takes_value(true)
-                    .about("Description of the repository")
-                    .required(false),
-                ),
+            .about("Create a new repository")
+            .arg(
+              Arg::new("type")
+                .short('t')
+                .long("type")
+                .takes_value(true)
+                .about("Type of the repository")
+                .required(false),
             )
-            .subcommand(
-              App::new("remote")
-                .about("Create a new remote repository")
-                .arg(
-                  Arg::new("name")
-                    .short('n')
-                    .long("name")
-                    .takes_value(true)
-                    .about("Name of the repository")
-                    .required(false),
-                )
-                .arg(
-                  Arg::new("description")
-                    .short('d')
-                    .long("description")
-                    .takes_value(true)
-                    .about("Description of the repository")
-                    .required(false),
-                ),
+            .arg(
+              Arg::new("name")
+                .short('n')
+                .long("name")
+                .takes_value(true)
+                .about("Name of the repository")
+                .required(false),
+            )
+            .arg(
+              Arg::new("description")
+                .short('d')
+                .long("description")
+                .takes_value(true)
+                .about("Description of the repository")
+                .required(false),
             ),
         )
         .subcommand(
@@ -415,20 +392,8 @@ fn main() {
     }
     Some(("repository", args)) => {
       match args.subcommand() {
-        Some(("add", args)) => {
-          match args.subcommand() {
-            Some(("external", args)) => action.repository_add_external(args),
-            Some(("remote", args)) => action.repository_add_remote(args),
-            _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
-          }
-        }
-        Some(("create", args)) => {
-          match args.subcommand() {
-            Some(("external", args)) => action.repository_create_external(args),
-            Some(("remote", args)) => action.repository_create_remote(args),
-            _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
-          }
-        }
+        Some(("add", args)) => action.repository_add(args),
+        Some(("create", args)) => action.repository_create(args),
         Some(("list", _args)) => {
           action.repository_list();
         }
