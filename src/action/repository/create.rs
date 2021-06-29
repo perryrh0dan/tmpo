@@ -18,7 +18,7 @@ impl Action {
 
     let kind = match input::select(
       "Type",
-      &vec![String::from("remote"), String::from("external")],
+      &vec![String::from("remote"), String::from("local")],
     ) {
       Ok(value) => value,
       Err(error) => {
@@ -30,7 +30,7 @@ impl Action {
 
     if kind == "remote" {
       self.repository_create_remote(args);
-    } else if kind == "external" {
+    } else if kind == "local" {
       self.repository_create_external(args);
     }
   }
