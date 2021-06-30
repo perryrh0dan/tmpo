@@ -16,30 +16,34 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn repository_add(&self, args: &ArgMatches) {
-    let _ctx = Context::new(args);
+    let ctx = Context::new(args);
 
-    let kind = match input::select(
-      "Type",
-      &vec![String::from("remote"), String::from("directory")],
-    ) {
-      Ok(value) => value,
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1)
+    let kind = args.value_of("type");
+
+    let kind = if kind.is_none() {
+      match input::select(
+        "Type",
+        &vec![String::from("remote"), String::from("directory")],
+      ) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1)
+        }
       }
+    } else {
+      String::from(kind.unwrap())
     };
 
     if kind == "remote" {
-      self.repository_add_remote(args);
+      self.repository_add_remote(&ctx, args);
     } else if kind == "directory" {
-      self.repository_add_external(args);
+      self.repository_add_external(&ctx, args);
     }
   }
 
-  pub fn repository_add_remote(&self, args: &ArgMatches) {
-    let ctx = Context::new(args);
-
+  pub fn repository_add_remote(&self, ctx: &Context, args: &ArgMatches) {
     let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
     let repository_provider = args.value_of("provider");
@@ -293,9 +297,7 @@ impl Action {
     out::success::repository_added(&repository_name);
   }
 
-  pub fn repository_add_external(&self, args: &ArgMatches) {
-    let ctx = Context::new(args);
-
+  pub fn repository_add_external(&self, ctx: &Context, args: &ArgMatches) {
     let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
     let repository_directory = args.value_of("directory");

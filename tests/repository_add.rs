@@ -16,11 +16,12 @@ use std::process::Command; // Run programs
 // }
 
 #[test]
-fn repository_already_exists() -> Result<(), Box<dyn std::error::Error>> {
+fn remote_repository_already_exists() -> Result<(), Box<dyn std::error::Error>> {
   let mut cmd = Command::cargo_bin("tmpo")?;
 
   cmd.arg("repository");
   cmd.arg("add");
+  cmd.arg("-t").arg("remote");
   cmd.arg("-n").arg("templates");
   cmd.arg("-d").arg("just a repository");
   cmd.arg("--provider").arg("github");

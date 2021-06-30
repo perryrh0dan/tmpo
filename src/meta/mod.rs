@@ -27,7 +27,7 @@ pub enum TemplateType {
 }
 
 impl TemplateType {
-  fn default() -> Self { TemplateType::PROJECT }
+  pub fn default() -> Self { TemplateType::PROJECT }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

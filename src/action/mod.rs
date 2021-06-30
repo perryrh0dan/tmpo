@@ -40,7 +40,7 @@ impl Action {
 
     let config = match self.config.get_repository_config(&repository_name) {
       Some(config) => config,
-      None => return Err(RunError::Config(String::from("Config not found"))),
+      None => return Err(RunError::Repository(String::from("Not found"))),
     };
 
     // Load repository
