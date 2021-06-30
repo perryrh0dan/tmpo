@@ -8,6 +8,7 @@ use crate::cli::input;
 use crate::config;
 use crate::context;
 use crate::git;
+use crate::meta::TemplateType;
 use crate::out;
 use crate::renderer;
 use crate::repository::CopyOptions;
@@ -24,10 +25,7 @@ impl Action {
     let repository_name = args.value_of("repository");
     let template_name = args.value_of("template");
     let workspace_directory = args.value_of("directory");
-    let remote_url = args.value_of("remote");
-    let username = args.value_of("username");
-    let email = args.value_of("email");
-
+    
     out::info::initiate_workspace();
 
     // Check if repositories exist
@@ -38,7 +36,7 @@ impl Action {
 
     // Get workspace name form user input
     let workspace_name = if workspace_name.is_none() {
-      match input::text("Please enter the project name", false) {
+      match input::text("Please enter the project/snippet name", false) {
         Ok(value) => value,
         Err(error) => {
           log::error!("{}", error);
@@ -80,11 +78,14 @@ impl Action {
       String::from(template_name.unwrap())
     };
 
-    // Check if template exist
-    if !templates.contains(&template_name) {
-      out::error::template_not_found();
-      exit(1);
-    }
+    let template = match repository.get_template_by_name(&template_name) {
+      Ok(template) => template,
+      Err(error) => {
+        log::error!("{}", error);
+        out::error::template_not_found();
+        exit(1);
+      }
+    };
 
     // Get workspace directory from user input
     let workspace_directory = if workspace_directory.is_none() {
@@ -125,84 +126,14 @@ impl Action {
       exit(1);
     }
 
-    // Get workspace git repository url from user input
-    let workspace_repository = if remote_url.is_none() && !ctx.yes {
-      match input::text("Please enter a git remote url", true) {
-        Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          eprintln!("{}", error);
-          exit(1);
-        }
-      }
-    } else if remote_url.is_some() {
-      remote_url.unwrap().to_string()
+    let mut render_context = if template.meta.sub_type == TemplateType::PROJECT {
+      self.init_project(&ctx, &workspace_name, args)
     } else {
-      String::from("")
-    };
-
-    // Get email from user input or global git config
-    let email = if email.is_none() && !ctx.yes {
-      let git_email = match git::utils::get_email() {
-        Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          String::from("")
-        }
-      };
-
-      match input::text_with_default(&ctx, "Please enter your email", &git_email) {
-        Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          eprintln!("{}", error);
-          exit(1);
-        }
-      }
-    } else if email.is_some() {
-      email.unwrap().to_owned()
-    } else {
-      String::from("")
-    };
-
-    // Get username from user input or global git config
-    let username = if username.is_none() && !ctx.yes {
-      let git_username = match git::utils::get_username() {
-        Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          String::from("")
-        }
-      };
-
-      match input::text_with_default(&ctx, "Please enter your username", &git_username) {
-        Ok(value) => value,
-        Err(error) => {
-          log::error!("{}", error);
-          eprintln!("{}", error);
-          exit(1);
-        }
-      }
-    } else if username.is_some() {
-      username.unwrap().to_owned()
-    } else {
-      String::from("")
-    };
-
-    // Create custom input map
-    let mut inputs = HashMap::new();
-
-    // Create context for renderer with custom values
-    let mut render_context = renderer::Context {
-      name: String::from(&workspace_name),
-      repository: String::from(&workspace_repository),
-      username: username,
-      email: email,
-      values: inputs.clone(),
+      self.init_snippet(&ctx, &workspace_name,args)
     };
 
     if !ctx.yes {
-      //T ODO think about
+      // TODO think about
       // Get template specific values
       let values = match repository.get_template_values(&template_name) {
         Ok(keys) => keys,
@@ -246,10 +177,10 @@ impl Action {
         };
 
         // Update inputs map
-        inputs.insert(value.key, input);
+        render_context.values.insert(value.key, input);
 
-        // Update render context to use new input
-        render_context.values = inputs.clone()
+        // // Update render context to use new input
+        // render_context.values = inputs.clone()
       }
     }
 
@@ -270,8 +201,8 @@ impl Action {
 
     // Initialize git if repository is given
     // Done here so that the repository can be used in the scripts
-    if workspace_repository != "" {
-      match git::init(&tmp_workspace_path, &workspace_repository) {
+    if render_context.repository != "" {
+      match git::init(&tmp_workspace_path, &render_context.repository) {
         Ok(()) => (),
         Err(error) => {
           log::error!("{}", error);
@@ -344,5 +275,99 @@ impl Action {
       let info = renderer::render(&template_info.unwrap(), &render_context);
       out::success::workspace_info(&info);
     }
+  }
+
+  fn init_project(&self, ctx: &context::Context, workspace_name: &str, args: &ArgMatches) -> renderer::Context {
+    let remote_url = args.value_of("remote");
+    let username = args.value_of("username");
+    let email = args.value_of("email");
+
+    // Get workspace git repository url from user input
+    let workspace_repository = if remote_url.is_none() && !ctx.yes {
+      match input::text("Please enter a git remote url", true) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else if remote_url.is_some() {
+      remote_url.unwrap().to_string()
+    } else {
+      String::from("")
+    };
+
+    // Get email from user input or global git config
+    let email = if email.is_none() && !ctx.yes {
+      let git_email = match git::utils::get_email() {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          String::from("")
+        }
+      };
+
+      match input::text_with_default(&ctx, "Please enter your email", &git_email) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else if email.is_some() {
+      email.unwrap().to_owned()
+    } else {
+      String::from("")
+    };
+
+    // Get username from user input or global git config
+    let username = if username.is_none() && !ctx.yes {
+      let git_username = match git::utils::get_username() {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          String::from("")
+        }
+      };
+
+      match input::text_with_default(&ctx, "Please enter your username", &git_username) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else if username.is_some() {
+      username.unwrap().to_owned()
+    } else {
+      String::from("")
+    };
+
+    // Create context for renderer with custom values
+    let render_context = renderer::Context {
+      name: String::from(workspace_name),
+      repository: String::from(&workspace_repository),
+      username: username,
+      email: email,
+      values: HashMap::new(),
+    };
+
+    return render_context;
+  }
+
+  fn init_snippet(&self, _ctx: &context::Context, workspace_name: &str, _args: &ArgMatches) -> renderer::Context {
+    // Create context for renderer with custom values
+    let render_context = renderer::Context {
+      name: String::from(workspace_name),
+      repository: String::from(""),
+      username: String::from(""),
+      email: String::from(""),
+      values: HashMap::new(),
+    };
+
+    return render_context;
   }
 }

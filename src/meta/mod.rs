@@ -43,8 +43,9 @@ pub struct TemplateMeta {
   #[serde(alias = "kind")]
   #[serde(rename(serialize = "type", deserialize = "type"))]
   pub kind: Type,
+  #[serde(rename(serialize = "subType", deserialize = "subType"))]
   #[serde(default = "TemplateType::default")]
-  pub subType: TemplateType,
+  pub sub_type: TemplateType,
   pub name: String,
   pub version: Option<String>,
   pub description: Option<String>,
@@ -160,7 +161,7 @@ impl TemplateMeta {
   pub fn new(kind: Type) -> TemplateMeta {
     TemplateMeta {
       kind: kind,
-      subType: TemplateType::PROJECT,
+      sub_type: TemplateType::PROJECT,
       name: String::from(""),
       version: Some(String::from("1.0.0")),
       description: Some(String::from("")),
