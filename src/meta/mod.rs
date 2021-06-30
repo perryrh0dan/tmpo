@@ -10,8 +10,28 @@ use crate::git;
 extern crate serde;
 use serde::{de, Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub enum Type {
+  #[serde(alias = "repository")]
+  REPOSITORY,
+  #[serde(alias = "template")]
+  TEMPLATE,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub enum TemplateType {
+  PROJECT,
+  SNIPPET,
+}
+
+impl TemplateType {
+  fn default() -> Self { TemplateType::PROJECT }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RepositoryMeta {
+  #[serde(alias = "kind")]
+  #[serde(rename(serialize = "type", deserialize = "type"))]
   pub kind: Type,
   pub name: String,
   pub version: Option<String>,
@@ -20,7 +40,11 @@ pub struct RepositoryMeta {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TemplateMeta {
+  #[serde(alias = "kind")]
+  #[serde(rename(serialize = "type", deserialize = "type"))]
   pub kind: Type,
+  #[serde(default = "TemplateType::default")]
+  pub subType: TemplateType,
   pub name: String,
   pub version: Option<String>,
   pub description: Option<String>,
@@ -30,14 +54,6 @@ pub struct TemplateMeta {
   pub exclude: Option<Vec<String>>,
   pub renderer: Option<Renderer>,
   pub info: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub enum Type {
-  #[serde(alias = "repository")]
-  REPOSITORY,
-  #[serde(alias = "template")]
-  TEMPLATE,
 }
 
 impl fmt::Display for Type {
@@ -144,6 +160,7 @@ impl TemplateMeta {
   pub fn new(kind: Type) -> TemplateMeta {
     TemplateMeta {
       kind: kind,
+      subType: TemplateType::PROJECT,
       name: String::from(""),
       version: Some(String::from("1.0.0")),
       description: Some(String::from("")),
