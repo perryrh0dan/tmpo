@@ -20,7 +20,9 @@ pub enum Type {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum TemplateType {
+  #[serde(alias = "project")]
   PROJECT,
+  #[serde(alias = "snippet")]
   SNIPPET,
 }
 
