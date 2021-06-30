@@ -70,7 +70,7 @@ fn main() {
         .long("verbose")
         .takes_value(false)
         .required(false)
-        .about("Adds more details to output logging")
+        .about("Adds more details to output logging"),
     )
     .arg(
       Arg::new("yes")
@@ -147,11 +147,19 @@ fn main() {
     .subcommand(
       App::new("repository")
         .about("Maintain repositories")
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::HelpRequired)
         .subcommand(
           App::new("add")
-            .about("Add remote repository")
+            .about("Add repository")
+            .arg(
+              Arg::new("type")
+                .short('t')
+                .long("type")
+                .takes_value(true)
+                .about("Type of the repository")
+                .required(false),
+            )
             .arg(
               Arg::new("name")
                 .short('n')
@@ -221,6 +229,14 @@ fn main() {
         .subcommand(
           App::new("create")
             .about("Create a new repository")
+            .arg(
+              Arg::new("type")
+                .short('t')
+                .long("type")
+                .takes_value(true)
+                .about("Type of the repository")
+                .required(false),
+            )
             .arg(
               Arg::new("name")
                 .short('n')

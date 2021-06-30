@@ -8,8 +8,9 @@ use crate::cli::input;
 use crate::config::Config;
 use crate::error::RunError;
 use crate::repository::Repository;
-use crate::repository::custom_repository::CustomRepository;
+use crate::repository::remote_repository::RemoteRepository;
 use crate::repository::default_repository::DefaultRepository;
+use crate::repository::external_repository::ExternalRepository;
 
 pub struct Action {
   config: Config,
@@ -32,12 +33,22 @@ impl Action {
       String::from(repository_name.unwrap())
     };
 
-    // Load repository
-    let repository: Box<dyn Repository> = if repository_name == "templates" {
+    if repository_name == "templates" {
       let repository = DefaultRepository::new(&self.config)?;
+      return Ok(Box::new(repository));
+    }
+
+    let config = match self.config.get_repository_config(&repository_name) {
+      Some(config) => config,
+      None => return Err(RunError::Repository(String::from("Not found"))),
+    };
+
+    // Load repository
+    let repository: Box<dyn Repository> = if config.kind == Some(String::from("external")) {
+      let repository = ExternalRepository::new(&self.config, &repository_name)?;
       Box::new(repository)
     } else {
-      let repository = CustomRepository::new(&self.config, &repository_name)?;
+      let repository = RemoteRepository::new(&self.config, &repository_name)?;
       Box::new(repository)
     };
 

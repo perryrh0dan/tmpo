@@ -24,7 +24,7 @@ impl Action {
     // TODO create template in given directory
     let template_type = match input::select(
       "Template type",
-      &vec![String::from("remote"), String::from("local")],
+      &vec![String::from("directory"), String::from("local")],
     ) {
       Ok(value) => value,
       Err(error) => {
@@ -34,7 +34,7 @@ impl Action {
       }
     };
 
-    if template_type == "remote" {
+    if template_type == "directory" {
       create_remote(&ctx, template_name, directory);
     } else {
       create_local(&self.config, template_name);

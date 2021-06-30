@@ -9,7 +9,7 @@
             // "args": ["update"],
             "cwd": "${workspaceRoot}",
             "console": "externalTerminal",
-            "args": ["init", "test", "-r", "default", "--no-script"],
+            "args": ["init"],
         },
         {
             "name": "(OSX) Launch",
@@ -20,7 +20,7 @@
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
             // "args": ["repository", "add"],
             // "args": ["template", "add"],
-            "args": ["init", "test"],
+            "args": ["init"],
             // "args": ["template", "create"],
             "cwd": "${workspaceRoot}",
         }

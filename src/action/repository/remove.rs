@@ -3,7 +3,7 @@ use std::process::exit;
 use crate::action::Action;
 use crate::cli::input;
 use crate::out;
-use crate::repository::custom_repository::CustomRepository;
+use crate::repository::remote_repository::RemoteRepository;
 
 use clap::ArgMatches;
 
@@ -13,7 +13,7 @@ impl Action {
 
     // Get repository
     let repository_name = if repository_name.is_none() {
-      let repositories = self.config.get_custom_repository_names();
+      let repositories = self.config.get_remote_repository_names();
       input::select("repository", &repositories).unwrap()
     } else {
       String::from(repository_name.unwrap())
@@ -24,7 +24,7 @@ impl Action {
     }
 
     // Load repository
-    let repository = CustomRepository::new(&self.config, &repository_name).unwrap();
+    let repository = RemoteRepository::new(&self.config, &repository_name).unwrap();
 
     // Confirm
     let text = format!(

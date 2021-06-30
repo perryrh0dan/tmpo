@@ -8,8 +8,9 @@ use crate::meta::Value;
 use crate::template;
 use crate::renderer;
 
-pub mod custom_repository;
+pub mod remote_repository;
 pub mod default_repository;
+pub mod external_repository;
 
 pub trait Repository {
   fn get_config(&self) -> RepositoryOptions;

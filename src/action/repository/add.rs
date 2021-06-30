@@ -1,3 +1,4 @@
+use std::fs;
 use std::process::exit;
 
 use crate::action::Action;
@@ -8,7 +9,7 @@ use crate::git;
 use crate::meta;
 use crate::meta::Type;
 use crate::out;
-use crate::repository::custom_repository;
+use crate::repository::remote_repository;
 use crate::utils;
 
 use clap::ArgMatches;
@@ -17,6 +18,32 @@ impl Action {
   pub fn repository_add(&self, args: &ArgMatches) {
     let ctx = Context::new(args);
 
+    let kind = args.value_of("type");
+
+    let kind = if kind.is_none() {
+      match input::select(
+        "Type",
+        &vec![String::from("remote"), String::from("directory")],
+      ) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1)
+        }
+      }
+    } else {
+      String::from(kind.unwrap())
+    };
+
+    if kind == "remote" {
+      self.repository_add_remote(&ctx, args);
+    } else if kind == "directory" {
+      self.repository_add_external(&ctx, args);
+    }
+  }
+
+  pub fn repository_add_remote(&self, ctx: &Context, args: &ArgMatches) {
     let repository_name = args.value_of("name");
     let repository_description = args.value_of("description");
     let repository_provider = args.value_of("provider");
@@ -186,7 +213,6 @@ impl Action {
       }
     }
 
-    // Try to fetch meta data
     let meta = match meta::fetch::<meta::RepositoryMeta>(&git_options) {
       Ok(data) => data,
       Err(error) => {
@@ -240,15 +266,17 @@ impl Action {
 
     let options = RepositoryOptions {
       name: repository_name.to_owned(),
+      kind: Some(String::from("remote")),
+      directory: None,
       description: Some(repository_description),
-      git_options: git_options,
+      git_options: Some(git_options),
     };
 
     let mut new_config = self.config.clone();
     new_config.repositories.push(options.clone());
 
     // Add repository
-    match custom_repository::add(&new_config, &options) {
+    match remote_repository::add(&new_config, &options) {
       Ok(repository) => repository,
       Err(error) => {
         log::error!("{}", error);
@@ -268,4 +296,108 @@ impl Action {
 
     out::success::repository_added(&repository_name);
   }
+
+  pub fn repository_add_external(&self, ctx: &Context, args: &ArgMatches) {
+    let repository_name = args.value_of("name");
+    let repository_description = args.value_of("description");
+    let repository_directory = args.value_of("directory");
+
+    // Get repository directory
+    let directory = if repository_directory.is_none() {
+      match input::text("Enter repository directory", false) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else {
+      String::from(repository_directory.unwrap())
+    };
+
+    let absolute_directory = match fs::canonicalize(&directory) {
+      Ok(path) => path,
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("Wrong path");
+        exit(1);
+      }
+    };
+
+    let meta = match meta::load::<meta::RepositoryMeta>(&absolute_directory) {
+      Ok(data) => data,
+      Err(error) => {
+        log::error!("{}", error);
+        meta::RepositoryMeta::new(meta::Type::REPOSITORY)
+      }
+    };
+
+    // Check for meta type repository
+    if meta.kind != Type::REPOSITORY {
+      log::error!("{}", format!("Wrong type: {}", meta.kind));
+      eprintln!("{}", format!("Wrong type: {}", meta.kind));
+      exit(1)
+    }
+
+    // Get repository name from user input
+    let repository_name = if repository_name.is_none() {
+      match input::text_with_default(&ctx, "Enter repository name", &meta.name) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else {
+      utils::lowercase(repository_name.unwrap())
+    };
+
+    // Validate name
+    let repositories = self.config.get_repository_names();
+    if repositories.contains(&repository_name) {
+      out::error::repository_exists(&repository_name);
+      exit(1);
+    }
+
+    // Get repository description from user input
+    let repository_description = if repository_description.is_none() {
+      let description = meta.description.unwrap_or_default();
+      match input::text_with_default(&ctx, "Enter repository description", &description) {
+        Ok(value) => value,
+        Err(error) => {
+          log::error!("{}", error);
+          eprintln!("{}", error);
+          exit(1);
+        }
+      }
+    } else {
+      repository_description.unwrap().to_owned()
+    };
+
+    let options = RepositoryOptions {
+      name: repository_name.to_owned(),
+      kind: Some(String::from("external")),
+      directory: Some(absolute_directory.as_path().display().to_string()),
+      description: Some(repository_description),
+      git_options: None,
+    };
+
+    let mut new_config = self.config.clone();
+    new_config.repositories.push(options.clone());
+
+    match new_config.save() {
+      Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1)
+      }
+    }
+
+    out::success::repository_added(&repository_name);
+  }
 }
+
+

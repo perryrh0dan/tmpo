@@ -16,14 +16,14 @@ use crate::template::Template;
 use crate::utils;
 
 #[derive(Debug)]
-pub struct CustomRepository {
+pub struct RemoteRepository {
   pub config: RepositoryOptions,
   pub directory: PathBuf,
   pub meta: Option<RepositoryMeta>,
   pub templates: Vec<template::Template>,
 }
 
-impl Repository for CustomRepository {
+impl Repository for RemoteRepository {
   fn get_config(&self) -> RepositoryOptions {
     return self.config.clone();
   }
@@ -116,8 +116,8 @@ impl Repository for CustomRepository {
   }
 }
 
-impl CustomRepository {
-  pub fn new(config: &Config, name: &str) -> Result<CustomRepository, RunError> {
+impl RemoteRepository {
+  pub fn new(config: &Config, name: &str) -> Result<RemoteRepository, RunError> {
     log::info!("Loading repository: {}", name);
     let cfg = match config.get_repository_config(name) {
       Option::Some(cfg) => cfg,
@@ -128,7 +128,7 @@ impl CustomRepository {
 
     let directory = config.repositories_dir.join(&utils::lowercase(name));
 
-    let mut repository = CustomRepository {
+    let mut repository = RemoteRepository {
       config: cfg,
       directory: directory,
       meta: None,
@@ -145,7 +145,7 @@ impl CustomRepository {
     };
 
     // Ensure git setup if enabled
-    if repository.config.git_options.enabled {
+    if repository.config.git_options.clone().unwrap().enabled {
       match repository.ensure_repository_git() {
         Ok(()) => (),
         Err(_) => (),
@@ -222,15 +222,17 @@ impl CustomRepository {
 
   fn ensure_repository_git(&self) -> Result<(), git2::Error> {
     // initialize git repository
+    let git_options = &self.config.git_options.clone().unwrap();
+
     let valid = git::check(
       &self.directory,
-      &self.config.git_options.url.clone().unwrap(),
+      &git_options.url.clone().unwrap(),
     );
 
     if !valid {
       match git::init(
         &self.directory,
-        &self.config.git_options.url.clone().unwrap(),
+        &git_options.url.clone().unwrap(),
       ) {
         Ok(()) => (),
         Err(error) => {
@@ -240,7 +242,7 @@ impl CustomRepository {
     }
 
     // update repository
-    match git::update(&self.directory, &self.config.git_options) {
+    match git::update(&self.directory, &git_options) {
       Ok(()) => (),
       Err(error) => {
         return Err(error);
@@ -311,7 +313,7 @@ impl CustomRepository {
 pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError> {
   let directory = Path::new(&config.repositories_dir).join(&utils::lowercase(&options.name));
 
-  let repository = CustomRepository {
+  let repository = RemoteRepository {
     config: options.clone(),
     directory: directory,
     meta: None,
@@ -328,7 +330,7 @@ pub fn add(config: &Config, options: &RepositoryOptions) -> Result<(), RunError>
   };
 
   // Ensure git setup if enabled
-  if repository.config.git_options.enabled {
+  if repository.config.git_options.clone().unwrap().enabled {
     match repository.ensure_repository_git() {
       Ok(()) => (),
       Err(error) => {
@@ -364,8 +366,9 @@ pub fn create(directory: &Path, options: &RepositoryOptions) -> Result<(), RunEr
   };
 
   // Initialize git repository
-  if options.git_options.enabled && options.git_options.url.is_some() {
-    match git::init(&directory, &options.git_options.url.clone().unwrap()) {
+  let git_options = options.git_options.clone().unwrap();
+  if git_options.enabled && git_options.url.is_some() {
+    match git::init(&directory, &git_options.url.unwrap()) {
       Ok(()) => (),
       Err(error) => {
         log::error!("{}", error);

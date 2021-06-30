@@ -31,8 +31,10 @@ pub struct Config {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RepositoryOptions {
   pub name: String,
+  pub kind: Option<String>,
+  pub directory: Option<String>,
   pub description: Option<String>,
-  pub git_options: git::Options,
+  pub git_options: Option<git::Options>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -49,7 +51,7 @@ pub struct ConfigVersion {
 
 impl Config {
   pub fn get_repository_names(&self) -> Vec<String> {
-    let mut repositories = self.get_custom_repository_names();
+    let mut repositories = self.get_remote_repository_names();
 
     // Used for single repository templates
     repositories.push(String::from("templates"));
@@ -57,7 +59,7 @@ impl Config {
     return repositories;
   }
 
-  pub fn get_custom_repository_names(&self) -> Vec<String> {
+  pub fn get_remote_repository_names(&self) -> Vec<String> {
     let mut repositories = Vec::<String>::new();
 
     for entry in self.repositories.iter() {
@@ -86,7 +88,7 @@ impl Config {
 
   pub fn validate(&self) -> Result<(), RunError> {
     // Check repository names for reserved names
-    for repository in self.get_custom_repository_names() {
+    for repository in self.get_remote_repository_names() {
       if repository  == String::from("templates") {
         return Err(RunError::Config(format!("Reserved repository name {} used", repository)));
       }
@@ -123,7 +125,7 @@ pub fn init() -> Result<Config, RunError> {
   };
 
   // Ensure template directory
-  match ensure_dir(&config.repositories_dir) {
+  match ensure_dir(&config.templates_dir) {
     Ok(()) => (),
     Err(error) => {
       return Err(RunError::IO(error));
@@ -203,9 +205,12 @@ fn load_config() -> Result<Config, RunError> {
   // Need to solve config change when switching from 1.5.1 => 1.5.2
   let mut changed = false;
   for rep_option in &mut config.repositories {
-    if rep_option.git_options.provider.is_none() {
-      rep_option.git_options.provider = Some(git::Provider::GITHUB);
-      changed = true;
+    if rep_option.git_options.is_some() {
+      let mut git_options = rep_option.git_options.clone().unwrap();
+      if git_options.provider.is_none() {
+        git_options.provider = Some(git::Provider::GITHUB);
+        changed = true;
+      }
     }
   }
 
@@ -241,8 +246,10 @@ pub fn get_default_config() -> Config {
 
   repo_options.push(RepositoryOptions {
     name: String::from("Default"),
+    kind: Some(String::from("remote")),
+    directory: None,
     description: Some(String::from("Default template repository from tpoe")),
-    git_options: git_options,
+    git_options: Some(git_options),
   });
 
   let config = Config {

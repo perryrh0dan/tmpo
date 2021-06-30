@@ -1,3 +1,7 @@
 {
   "crates.listPreReleases": true,
+  "cSpell.words": [
+    "canonicalize",
+    "dialoguer"
+  ],
 }

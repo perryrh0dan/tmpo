@@ -9,8 +9,8 @@ use crate::context::Context;
 use crate::error::RunError;
 use crate::git;
 use crate::meta::{self, TemplateMeta, Value};
-use crate::template;
 use crate::repository::{CopyOptions, Repository};
+use crate::template;
 use crate::utils;
 
 #[derive(Debug)]
@@ -23,8 +23,10 @@ impl Repository for DefaultRepository {
   fn get_config(&self) -> RepositoryOptions {
     return RepositoryOptions {
       name: String::from("Templates"),
+      kind: Some(String::from("default")),
+      directory: None,
       description: Some(String::from("Mono repository templates")),
-      git_options: git::Options::new(),
+      git_options: None,
     };
   }
 
