@@ -7,7 +7,7 @@ fn success() -> Result<(), Box<dyn std::error::Error>> {
   let mut cmd = Command::cargo_bin("tmpo")?;
 
   cmd.arg("config");
-  cmd.assert().success().stdout(predicate::str::contains("Config loaded from: /home"));
+  cmd.assert().success().stdout(predicate::str::contains("Config loaded from: "));
 
   Ok(())
 }

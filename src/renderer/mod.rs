@@ -39,8 +39,10 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
+  let escaped_text = text.replace(r"\", r"\\");
+
   // render the template
-  let result = match handlebars.render_template_with_context(text, &context) {
+  let result = match handlebars.render_template_with_context(&escaped_text, &context) {
     Ok(result) => result,
     Err(error) => {
       log::error!("Error rendering template: Error: {}", error);
@@ -141,6 +143,29 @@ mod tests {
     assert_eq!(
       result,
       "lets add one custom value: Thomas Pöhlmann or a second one Pöhlmann and an unknown: "
+    );
+
+    Ok(())
+  }
+
+  #[test]
+  fn test_render_path() -> Result<(), Box<dyn std::error::Error>> {
+    let text = r"C:\test\test1234\{{name}}.graphql.ts";
+    let mut values = HashMap::new();
+    values.insert(String::from("name"), String::from("ProductView"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
+
+    let result = render(text, &content);
+
+    assert_eq!(
+      result,
+      r"C:\\test\\test1234\Tmpo.graphql.ts"
     );
 
     Ok(())
