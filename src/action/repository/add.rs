@@ -399,5 +399,3 @@ impl Action {
     out::success::repository_added(&repository_name);
   }
 }
-
-
