@@ -1,7 +1,7 @@
 [package]
 name = "tmpo"
 description = "Command line utility to create new workspaces based on predefined templates"
-version = "2.7.0"
+version = "2.8.0"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
 license = "MIT"
