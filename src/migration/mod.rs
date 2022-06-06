@@ -4,8 +4,7 @@ use semver::Version;
 
 use crate::config;
 use crate::error::RunError;
-
-use clap::crate_version;
+use crate::crate_version;
 
 pub fn check() -> Result<(), RunError> {
   let config_version = config::version()?;

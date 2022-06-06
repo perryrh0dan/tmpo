@@ -4,6 +4,7 @@ use std::io::{Error, Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::crate_version;
 use crate::error::RunError;
 use crate::git;
 use crate::utils;
@@ -13,7 +14,6 @@ extern crate serde;
 use serde::{Deserialize, Serialize};
 extern crate serde_yaml;
 extern crate clap;
-use clap::crate_version;
 extern crate semver;
 use semver::Version;
 

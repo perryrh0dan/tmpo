@@ -1,3 +1,6 @@
+#[macro_use]
+mod macros;
+
 pub fn capitalize(text: &str) -> String {
   let mut v: Vec<char> = text.chars().collect();
   v[0] = v[0].to_uppercase().nth(0).unwrap();

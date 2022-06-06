@@ -3,11 +3,12 @@ use std::fs::File;
 
 use crate::error::RunError;
 
+
+use crate::crate_version;
 extern crate flate2;
 extern crate self_update;
 extern crate tar;
 extern crate semver;
-use clap::crate_version;
 use flate2::read::GzDecoder;
 use tar::Archive;
 use semver::Version;

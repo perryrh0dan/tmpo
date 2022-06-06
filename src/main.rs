@@ -1,7 +1,9 @@
 use log;
 use std::process::exit;
+use std::thread;
 
 mod action;
+mod app;
 mod cli;
 mod config;
 mod context;
@@ -16,8 +18,6 @@ mod repository;
 mod template;
 mod update;
 mod utils;
-
-use clap::{crate_version, App, AppSettings, Arg};
 // TODO check for autocompletion for bash/zsh/powershell
 // use clap_generate::{generate, generators::Bash};
 
@@ -57,330 +57,22 @@ fn main() {
 
   let action = action::Action::new(config);
 
-  let matches = App::new("tmpo")
-    .version(crate_version!())
-    .global_setting(AppSettings::VersionlessSubcommands)
-    .author("Thomas P. <thomaspoehlmann96@googlemail.com>")
-    .about("Cli to create new workspaces based on templates")
-    .setting(AppSettings::SubcommandRequiredElseHelp)
-    .setting(AppSettings::HelpRequired)
-    .arg(
-      Arg::new("verbose")
-        .short('v')
-        .long("verbose")
-        .takes_value(false)
-        .required(false)
-        .about("Adds more details to output logging"),
-    )
-    .arg(
-      Arg::new("yes")
-        .short('y')
-        .long("yes")
-        .takes_value(false)
-        .about("Skips all optional questions"),
-    )
-    .subcommand(
-      App::new("init")
-        .about("Initialize new workspace")
-        .visible_alias("i")
-        .arg(
-          Arg::new("name")
-            .about("Name of the new workspace and the project.")
-            .required(false)
-            .index(1),
-        )
-        .arg(
-          Arg::new("directory")
-            .short('d')
-            .long("directory")
-            .takes_value(true)
-            .about("Directory name to create the workspace in.")
-            .required(false),
-        )
-        .arg(
-          Arg::new("remote")
-            .long("remote")
-            .takes_value(true)
-            .about("Remote URL")
-            .required(false),
-        )
-        .arg(
-          Arg::new("repository")
-            .short('r')
-            .long("repository")
-            .takes_value(true)
-            .about("Repository to use")
-            .required(false),
-        )
-        .arg(
-          Arg::new("template")
-            .short('t')
-            .long("template")
-            .takes_value(true)
-            .about("Template to use for generation")
-            .required(false),
-        )
-        .arg(
-          Arg::new("username")
-            .long("username")
-            .takes_value(true)
-            .about("Username of the user")
-            .required(false),
-        )
-        .arg(
-          Arg::new("email")
-            .long("email")
-            .takes_value(true)
-            .about("E-Mail of the user")
-            .required(false),
-        )
-        .arg(
-          Arg::new("no-script")
-            .long("no-script")
-            .takes_value(false)
-            .about("Dont execute template scripts")
-            .required(false),
-        ),
-    )
-    .subcommand(App::new("config").about("View configuration"))
-    .subcommand(App::new("update").about("Update to the latest release"))
-    .subcommand(
-      App::new("repository")
-        .about("Maintain repositories")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .setting(AppSettings::HelpRequired)
-        .subcommand(
-          App::new("add")
-            .about("Add repository")
-            .arg(
-              Arg::new("type")
-                .short('t')
-                .long("type")
-                .takes_value(true)
-                .about("Type of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("name")
-                .short('n')
-                .long("name")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("description")
-                .short('d')
-                .long("description")
-                .takes_value(true)
-                .about("Description of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("provider")
-                .long("provider")
-                .takes_value(true)
-                .about("Remote provider")
-                .required(false),
-            )
-            .arg(
-              Arg::new("authentication")
-                .long("authentication")
-                .takes_value(true)
-                .about("Authentication type")
-                .required(false),
-            )
-            .arg(
-              Arg::new("url")
-                .long("url")
-                .takes_value(true)
-                .about("Remote url of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("branch")
-                .long("branch")
-                .takes_value(true)
-                .about("Remote repository branch")
-                .required(false),
-            )
-            .arg(
-              Arg::new("username")
-                .long("username")
-                .takes_value(true)
-                .about("Username for authentication")
-                .required(false),
-            )
-            .arg(
-              Arg::new("password")
-                .long("password")
-                .takes_value(true)
-                .about("Password for basic authentication")
-                .required(false),
-            )
-            .arg(
-              Arg::new("token")
-                .long("token")
-                .takes_value(true)
-                .about("Token for authentication")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("create")
-            .about("Create a new repository")
-            .arg(
-              Arg::new("type")
-                .short('t')
-                .long("type")
-                .takes_value(true)
-                .about("Type of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("name")
-                .short('n')
-                .long("name")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("description")
-                .short('d')
-                .long("description")
-                .takes_value(true)
-                .about("Description of the repository")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("list")
-            .about("List all available repository")
-            .alias("ls"),
-        )
-        .subcommand(
-          App::new("remove")
-            .about("Remove a repository")
-            .alias("rm")
-            .arg(
-              Arg::new("repository")
-                .short('r')
-                .long("repository")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("view").about("View repository details").arg(
-            Arg::new("repository")
-              .short('r')
-              .long("repository")
-              .takes_value(true)
-              .about("Name of the repository")
-              .required(false),
-          ),
-        ),
-    )
-    .subcommand(
-      App::new("template")
-        .about("Maintain templates")
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .setting(AppSettings::HelpRequired)
-        .subcommand(
-          App::new("add")
-            .about("Add a single template repository")
-            .arg(
-              Arg::new("url")
-                .long("url")
-                .takes_value(true)
-                .about("Remote url of the template")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("create")
-            .about("Create new template")
-            .arg(
-              Arg::new("repository")
-                .short('r')
-                .long("repository")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("name")
-                .short('n')
-                .long("name")
-                .takes_value(true)
-                .about("Name of the template")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("list")
-            .about("List all available templates")
-            .alias("ls")
-            .arg(
-              Arg::new("repository")
-                .short('r')
-                .long("repository")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("remove")
-            .about("Remove a template")
-            .alias("rm")
-            .arg(
-              Arg::new("template")
-                .short('t')
-                .long("template")
-                .takes_value(true)
-                .about("Template name")
-                .required(false),
-            ),
-        )
-        .subcommand(
-          App::new("test")
-            .about("Test template at a given location")
-            .arg(
-              Arg::new("directory")
-                .short('d')
-                .long("directory")
-                .takes_value(true)
-                .about("Directory of the template")
-                .required(true),
-            ),
-        )
-        .subcommand(
-          App::new("view")
-            .about("View template details")
-            .arg(
-              Arg::new("repository")
-                .short('r')
-                .long("repository")
-                .takes_value(true)
-                .about("Name of the repository")
-                .required(false),
-            )
-            .arg(
-              Arg::new("template")
-                .short('t')
-                .long("template")
-                .takes_value(true)
-                .about("Name of the template")
-                .required(false),
-            ),
-        ),
-    )
-    .get_matches();
+  // We build the command tree in a separate thread to eliminate
+  // possible stack overflow crashes at runtime. OSX, for instance,
+  // will crash with our large tree. This is a known issue:
+  // https://github.com/kbknapp/clap-rs/issues/86
+  let child = thread::Builder::new()
+    .stack_size(8 * 1024 * 1024)
+    .spawn(move || {
+      let app = app::build();
 
-  match matches.subcommand() {
+      return app.get_matches()
+    })
+    .unwrap();
+
+  let app_matches = child.join().unwrap();
+
+  match app_matches.subcommand() {
     Some(("config", _args)) => {
       action.config();
     }

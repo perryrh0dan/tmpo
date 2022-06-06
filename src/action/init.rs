@@ -15,17 +15,20 @@ use crate::repository::CopyOptions;
 use crate::utils;
 
 use clap::ArgMatches;
+use fs_extra::dir;
 
 impl Action {
   pub fn init(&self, args: &ArgMatches) {
-    let ctx = context::Context::new(args);
+    let mut ctx = context::Context::new(args);
+
+    ctx.set_no_script(args.is_present("no_script"));
 
     // Parse arguments
     let workspace_name = args.value_of("name");
     let repository_name = args.value_of("repository");
     let template_name = args.value_of("template");
     let workspace_directory = args.value_of("directory");
-    
+
     out::info::initiate_workspace();
 
     // Check if repositories exist
@@ -242,14 +245,25 @@ impl Action {
       }
     };
 
-    // Move workspace from temporary directroy to target directory
+    // Move workspace from temporary directory to target directory
     log::info!(
       "Move workspace from: {} to: {}",
       tmp_workspace_path.to_string_lossy(),
       target_dir.to_string_lossy()
     );
-    match std::fs::rename(tmp_workspace_path, target_dir) {
+
+    // Create target directory
+    match fs::create_dir_all(target_dir.clone()) {
       Ok(()) => (),
+      Err(error) => {
+        log::error!("{}", error);
+        eprintln!("{}", error);
+        exit(1);
+      }
+    }
+
+    match dir::copy(tmp_workspace_path, target_dir, &dir::CopyOptions::new()) {
+      Ok(_result) => (),
       Err(error) => {
         log::error!("{}", error);
         eprintln!("{}", error);

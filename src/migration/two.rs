@@ -2,9 +2,8 @@ use std::fs::{OpenOptions};
 use std::io::prelude::*;
 
 use crate::config;
+use crate::crate_version;
 
-extern crate clap;
-use clap::crate_version;
 
 pub fn migrate() {
   configuration();
