@@ -131,7 +131,7 @@ pub fn init(dir: &Path, repository_url: &str) -> Result<(), git2::Error> {
 
   #[cfg(target_os = "windows")]
   let mut config = match repo.config() {
-    Ok(config) => (config),
+    Ok(config) => config,
     Err(error) => {
       return Err(error)
     }

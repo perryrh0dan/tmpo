@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use chrono::Local;
 use log::LevelFilter;
 use log4rs::{
@@ -22,7 +24,7 @@ pub fn init() {
     .build();
 
   // Logging to log file
-  let logfile_path = config::directory().join(get_log_file_name());
+  let logfile_path = get_log_file_path();
 
   let logfile = FileAppender::builder()
     .encoder(Box::new(PatternEncoder::new(
@@ -47,6 +49,10 @@ pub fn init() {
     .unwrap();
 
   log4rs::init_config(config).unwrap();
+}
+
+pub fn get_log_file_path() -> PathBuf {
+  return config::directory().join(get_log_file_name());
 }
 
 fn get_log_file_name() -> String {
