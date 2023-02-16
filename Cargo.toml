@@ -1,7 +1,7 @@
 [package]
 name = "tmpo"
 description = "Command line utility to create new workspaces based on predefined templates"
-version = "2.8.0"
+version = "2.8.1"
 authors = ["Thomas Pöhlmann <thomaspoehlmann96@googlemail.com>"]
 edition = "2018"
 license = "MIT"
@@ -27,7 +27,7 @@ semver = "1.0.3"
 convert_case = "0.5.0"
 linked_hash_set = "0.1.4"
 chrono = "0.4.13"
-fs_extra = "1.2.0"
+fs_extra = "1.3.0"
 
 [dependencies.log4rs]
 version = "1.0.0"

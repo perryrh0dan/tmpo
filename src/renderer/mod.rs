@@ -41,11 +41,11 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
-  // let escaped_text = text.replace(r"\", r"\\");
+  let escaped_text = text.replace(r"\", r"\\");
   handlebars.register_escape_fn(no_escape);
 
   // render the template
-  let result = match handlebars.render_template_with_context(&text, &context) {
+  let result = match handlebars.render_template_with_context(&escaped_text, &context) {
     Ok(result) => result,
     Err(error) => {
       log::error!("Error rendering template: Error: {}", error);
@@ -53,7 +53,7 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
-  return result;
+  return result.replace(r"\\", r"\");
 }
 
 #[cfg(test)]
@@ -177,7 +177,7 @@ mod tests {
 
   #[test]
   fn test_render_path() -> Result<(), Box<dyn std::error::Error>> {
-    let text = r"C:\test\test1234\\{{name}}.graphql.ts";
+    let text = r"C:\test\test1234\{{name}}.graphql.ts";
     let mut values = HashMap::new();
     values.insert(String::from("name"), String::from("ProductView"));
     let content: Context = Context {

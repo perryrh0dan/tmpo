@@ -117,15 +117,15 @@ impl Action {
     // TODO find better solution
     // try to avoid . in path
     let target_dir = if workspace_directory != "." && workspace_directory != "./" {
-      current_dir.join(workspace_directory)
+      current_dir.join(&workspace_directory)
     } else {
       current_dir
     };
 
     // Check if directory already exits
     if target_dir.exists() {
-      log::error!("Failed to create workspace!: Error: Already exists");
-      eprintln!("Failed to create workspace!: Error: Already exists");
+      log::error!("Failed to create workspace! {}: Error: Already exists", target_dir.to_string_lossy());
+      eprintln!("Failed to create workspace! {}: Error: Already exists", target_dir.to_string_lossy());
       exit(1);
     }
 
@@ -181,9 +181,6 @@ impl Action {
 
         // Update inputs map
         render_context.values.insert(value.key, input);
-
-        // // Update render context to use new input
-        // render_context.values = inputs.clone()
       }
     }
 
@@ -192,15 +189,15 @@ impl Action {
       .unwrap();
 
     // Create the temporary workspace
-    let tmp_workspace_path = tmp_dir.path().join(&workspace_name);
-    match fs::create_dir(&tmp_workspace_path) {
-      Ok(()) => (),
-      Err(error) => {
-        log::error!("{}", error);
-        eprintln!("{}", error);
-        exit(1);
-      }
-    };
+    let tmp_workspace_path = tmp_dir.path();
+    // match fs::create_dir(&tmp_workspace_path) {
+    //   Ok(()) => (),
+    //   Err(error) => {
+    //     log::error!("{}", error);
+    //     eprintln!("{}", error);
+    //     exit(1);
+    //   }
+    // };
 
     // Initialize git if repository is given
     // Done here so that the repository can be used in the scripts
@@ -233,7 +230,7 @@ impl Action {
       }
     };
 
-    // Create parent directories if they dont´t exist
+    // Create parent directories if they don´t exist
     let mut parent_dir = target_dir.to_owned();
     parent_dir.pop();
     match fs::create_dir_all(&parent_dir) {
@@ -262,7 +259,8 @@ impl Action {
       }
     }
 
-    match dir::copy(tmp_workspace_path, target_dir, &dir::CopyOptions::new()) {
+    let copy_options = dir::CopyOptions::new().content_only(true);
+    match dir::copy(tmp_workspace_path, target_dir, &copy_options) {
       Ok(_result) => (),
       Err(error) => {
         log::error!("{}", error);
