@@ -5,6 +5,7 @@ mod helpers;
 
 extern crate handlebars;
 use handlebars::Handlebars;
+use handlebars::no_escape;
 extern crate serde;
 use serde::Serialize;
 
@@ -41,6 +42,7 @@ pub fn render(text: &str, content: &Context) -> String {
   };
 
   let escaped_text = text.replace(r"\", r"\\");
+  handlebars.register_escape_fn(no_escape);
 
   // render the template
   let result = match handlebars.render_template_with_context(&escaped_text, &context) {
@@ -51,7 +53,7 @@ pub fn render(text: &str, content: &Context) -> String {
     }
   };
 
-  return result;
+  return result.replace(r"\\", r"\");
 }
 
 #[cfg(test)]
@@ -150,6 +152,30 @@ mod tests {
   }
 
   #[test]
+  fn test_render_transformation_value_error() -> Result<(), Box<dyn std::error::Error>> {
+    let text =
+      "{{ testcase values.full_name }}";
+    let mut values = HashMap::new();
+    values.insert(String::from("full_name"), String::from("ThomasPöhlmann"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
+
+    let result = render(text, &content);
+
+    assert_eq!(
+      result,
+      "{{ testcase values.full_name }}"
+    );
+
+    Ok(())
+  }
+
+  #[test]
   fn test_render_path() -> Result<(), Box<dyn std::error::Error>> {
     let text = r"C:\test\test1234\{{name}}.graphql.ts";
     let mut values = HashMap::new();
@@ -166,7 +192,30 @@ mod tests {
 
     assert_eq!(
       result,
-      r"C:\\test\\test1234\Tmpo.graphql.ts"
+      r"C:\test\test1234\Tmpo.graphql.ts"
+    );
+
+    Ok(())
+  }
+
+  #[test]
+  fn test_render_escaped_string() -> Result<(), Box<dyn std::error::Error>> {
+    let text = r#""prettier:cli": "lb-prettier \"**/*.ts\" \"**/*.js\"","#;
+    let mut values = HashMap::new();
+    values.insert(String::from("name"), String::from("ProductView"));
+    let content: Context = Context {
+      name: String::from("Tmpo"),
+      repository: String::from("https://github.com/perryrh0dan/tmpo"),
+      username: String::from("perryrh0dan"),
+      email: String::from("thomaspoehlmann96@googlemail.com"),
+      values: values,
+    };
+
+    let result = render(text, &content);
+
+    assert_eq!(
+      result,
+      r#""prettier:cli": "lb-prettier \"**/*.ts\" \"**/*.js\"","#
     );
 
     Ok(())

@@ -7,7 +7,7 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_list(&self, args: &ArgMatches) {
-    let repository_name = args.value_of("repository");
+    let repository_name = args.get_one::<String>("repository");
 
     // Get repository
     let repository = match self.get_repository(repository_name) {

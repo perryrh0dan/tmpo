@@ -1,6 +1,9 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+use crate::logger;
+use crate::out;
+
 pub fn run(script: &String, target: &Path) {
   // Check if script is empty
   if script == "" {
@@ -32,6 +35,8 @@ pub fn run(script: &String, target: &Path) {
   let status = match cmd.wait() {
     Ok(status) => status,
     Err(error) => {
+      let logfile_path = logger::get_log_file_path().into_os_string().into_string().unwrap();
+      out::warn::script_execution_failed(&logfile_path);
       log::error!("Script exited with error: {}", error);
       return;
     }

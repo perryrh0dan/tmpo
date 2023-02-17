@@ -9,7 +9,7 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_test(&self, args: &ArgMatches) {
-    let directory = args.value_of("directory");
+    let directory = args.get_one::<String>("directory");
 
     // Get directory from user input
     let directory = if directory.is_none() {

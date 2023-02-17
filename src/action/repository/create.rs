@@ -37,10 +37,10 @@ impl Action {
   }
 
   pub fn repository_create_remote(&self, args: &ArgMatches) {
-    let name = args.value_of("name");
-    let description = args.value_of("description");
-    let directory = args.value_of("directory");
-    let remote = args.value_of("remote");
+    let name = args.get_one::<String>("name");
+    let description = args.get_one::<String>("description");
+    let directory = args.get_one::<String>("directory");
+    let remote = args.get_one::<String>("remote");
 
     // Get repository name from user input
     let name = if name.is_none() {
@@ -126,9 +126,9 @@ impl Action {
   }
 
   pub fn repository_create_external(&self, args: &ArgMatches) {
-    let name = args.value_of("name");
-    let description = args.value_of("description");
-    let directory = args.value_of("directory");
+    let name = args.get_one::<String>("name");
+    let description = args.get_one::<String>("description");
+    let directory = args.get_one::<String>("directory");
 
     // Get repository name from user input
     let name = if name.is_none() {

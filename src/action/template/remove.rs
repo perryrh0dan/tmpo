@@ -10,7 +10,7 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_remove(&self, args: &ArgMatches) {
-    let template_name = args.value_of("template");
+    let template_name = args.get_one::<String>("template");
 
     // Load repository
     let repository = DefaultRepository::new(&self.config).unwrap();

@@ -18,8 +18,8 @@ impl Action {
   pub fn template_create(&self, args: &ArgMatches) {
     let ctx = Context::new(args);
 
-    let template_name = args.value_of("template");
-    let directory = args.value_of("directory");
+    let template_name = args.get_one::<String>("template");
+    let directory = args.get_one::<String>("directory");
 
     // TODO create template in given directory
     let template_type = match input::select(
@@ -42,7 +42,7 @@ impl Action {
   }
 }
 
-fn create_local(config: &Config, template_name: Option<&str>) {
+fn create_local(config: &Config, template_name: Option<&String>) {
   // Load repository
   let repository = match DefaultRepository::new(config) {
     Ok(repository) => repository,
@@ -90,7 +90,7 @@ fn create_local(config: &Config, template_name: Option<&str>) {
   out::success::template_created(&template_path.to_str().unwrap());
 }
 
-fn create_remote(ctx: &Context, template_name: Option<&str>, directory: Option<&str>) {
+fn create_remote(ctx: &Context, template_name: Option<&String>, directory: Option<&String>) {
   // Create meta data
   let mut meta = meta::TemplateMeta::new(meta::Type::TEMPLATE);
 

@@ -12,15 +12,15 @@ extern crate base64;
 
 #[derive(Deserialize, Debug)]
 struct FileResponse {
-  file_name: String,
-  file_path: String,
-  size: usize,
-  encoding: String,
-  content_sha256: String,
-  r#ref: String,
-  blob_id: String,
-  commit_id: String,
-  last_commit_id: String,
+  // file_name: String,
+  // file_path: String,
+  // size: usize,
+  // encoding: String,
+  // content_sha256: String,
+  // r#ref: String,
+  // blob_id: String,
+  // commit_id: String,
+  // last_commit_id: String,
   content: String,
 }
 

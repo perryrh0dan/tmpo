@@ -9,8 +9,8 @@ use clap::ArgMatches;
 
 impl Action {
   pub fn template_view(&self, args: &ArgMatches) {
-    let repository_name = args.value_of("repository");
-    let template_name = args.value_of("template");
+    let repository_name = args.get_one::<String>("repository");
+    let template_name = args.get_one::<String>("template");
 
     // Get repository
     let repository = match self.get_repository(repository_name) {
