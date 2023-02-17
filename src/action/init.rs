@@ -21,13 +21,13 @@ impl Action {
   pub fn init(&self, args: &ArgMatches) {
     let mut ctx = context::Context::new(args);
 
-    ctx.set_no_script(args.is_present("no_script"));
+    ctx.set_no_script(args.get_flag("no_script"));
 
     // Parse arguments
-    let workspace_name = args.value_of("name");
-    let repository_name = args.value_of("repository");
-    let template_name = args.value_of("template");
-    let workspace_directory = args.value_of("directory");
+    let workspace_name = args.get_one::<String>("name");
+    let repository_name = args.get_one::<String>("repository");
+    let template_name = args.get_one::<String>("template");
+    let workspace_directory = args.get_one::<String>("directory");
 
     out::info::initiate_workspace();
 
@@ -290,9 +290,9 @@ impl Action {
   }
 
   fn init_project(&self, ctx: &context::Context, workspace_name: &str, args: &ArgMatches) -> renderer::Context {
-    let remote_url = args.value_of("remote");
-    let username = args.value_of("username");
-    let email = args.value_of("email");
+    let remote_url = args.get_one::<String>("remote");
+    let username = args.get_one::<String>("username");
+    let email = args.get_one::<String>("email");
 
     // Get workspace git repository url from user input
     let workspace_repository = if remote_url.is_none() && !ctx.yes {

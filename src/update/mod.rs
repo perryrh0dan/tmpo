@@ -49,7 +49,7 @@ pub fn check_version() -> Option<(Version, self_update::update::ReleaseAsset)> {
     target = "x86_64-pc-windows-gnu";
   }
 
-  let asset = match releases[0].asset_for(target) {
+  let asset = match releases[0].asset_for(target, None) {
     Some(value) => value,
     None => {
       log::info!("New release is not compatible");

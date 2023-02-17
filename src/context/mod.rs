@@ -15,8 +15,8 @@ impl Context {
       verbose: false,
     };
 
-    ctx.set_yes(args.is_present("yes"));
-    ctx.set_verbose(args.is_present("verbose"));
+    ctx.set_yes(args.get_flag("yes"));
+    ctx.set_verbose(args.get_flag("verbose"));
 
     return ctx;
   }

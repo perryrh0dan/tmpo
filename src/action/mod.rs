@@ -23,8 +23,8 @@ impl Action {
     return act;
   }
 
-  /// Validat given repository name or open a new selection
-  fn get_repository(&self, repository_name: Option<&str>) -> Result<Box<dyn Repository>, RunError> {
+  /// Validate given repository name or open a new selection
+  fn get_repository(&self, repository_name: Option<&String>) -> Result<Box<dyn Repository>, RunError> {
     // Get repository name from user input
     let repository_name = if repository_name.is_none() {
       let repositories = self.config.get_repository_names();

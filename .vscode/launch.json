@@ -9,7 +9,8 @@
             // "args": ["update"],
             "cwd": "${workspaceRoot}",
             "console": "externalTerminal",
-            "args": ["init"],
+            // "args": ["init"],
+            "args": ["repository", "add"],
         },
         {
             "name": "(OSX) Launch",
@@ -18,9 +19,9 @@
             "program": "${workspaceRoot}/target/debug/tmpo",
             // "args": ["update"],
             // "args": ["init", "-r", "https://github.com/perryrh0dan/templates", "-t", "typescript"],
-            // "args": ["repository", "add"],
+            "args": ["repository", "add"],
             // "args": ["template", "add"],
-            "args": ["init"],
+            // "args": ["init"],
             // "args": ["template", "create"],
             "cwd": "${workspaceRoot}",
         }

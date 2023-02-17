@@ -18,7 +18,7 @@ impl Action {
   pub fn repository_add(&self, args: &ArgMatches) {
     let ctx = Context::new(args);
 
-    let kind = args.value_of("type");
+    let kind = args.get_one::<String>("type");
 
     let kind = if kind.is_none() {
       match input::select(
@@ -44,15 +44,15 @@ impl Action {
   }
 
   pub fn repository_add_remote(&self, ctx: &Context, args: &ArgMatches) {
-    let repository_name = args.value_of("name");
-    let repository_description = args.value_of("description");
-    let repository_provider = args.value_of("provider");
-    let repository_authentication = args.value_of("authentication");
-    let repository_url = args.value_of("url");
-    let repository_branch = args.value_of("branch");
-    let username = args.value_of("username");
-    let password = args.value_of("password");
-    let token = args.value_of("token");
+    let repository_name = args.get_one::<String>("name");
+    let repository_description = args.get_one::<String>("description");
+    let repository_provider = args.get_one::<String>("provider");
+    let repository_authentication = args.get_one::<String>("authentication");
+    let repository_url = args.get_one::<String>("url");
+    let repository_branch = args.get_one::<String>("branch");
+    let username = args.get_one::<String>("username");
+    let password = args.get_one::<String>("password");
+    let token = args.get_one::<String>("token");
 
     let mut git_options = git::Options::new();
 
@@ -298,9 +298,9 @@ impl Action {
   }
 
   pub fn repository_add_external(&self, ctx: &Context, args: &ArgMatches) {
-    let repository_name = args.value_of("name");
-    let repository_description = args.value_of("description");
-    let repository_directory = args.value_of("directory");
+    let repository_name = args.get_one::<String>("name");
+    let repository_description = args.get_one::<String>("description");
+    let repository_directory = args.get_one::<String>("directory");
 
     // Get repository directory
     let directory = if repository_directory.is_none() {

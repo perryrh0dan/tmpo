@@ -16,9 +16,9 @@ impl Action {
   pub fn template_add(&self, args: &ArgMatches) {
     let ctx = Context::new(args);
 
-    let template_name = args.value_of("name");
-    let template_description = args.value_of("description");
-    let template_url = args.value_of("repository");
+    let template_name = args.get_one::<String>("name");
+    let template_description = args.get_one::<String>("description");
+    let template_url = args.get_one::<String>("repository");
 
     let mut git_options = git::Options::new();
 
